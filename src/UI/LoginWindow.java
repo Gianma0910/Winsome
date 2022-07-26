@@ -11,6 +11,9 @@ import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.Socket;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -42,93 +45,98 @@ public class LoginWindow extends JFrame implements ActionListener{
 		
 	private BufferedWriter writerOutput;
 	private BufferedReader readerInput;
+	private Socket clientSocket;
 	
-	public LoginWindow(BufferedWriter writerOutput, BufferedReader readerInput) {
-		this.writerOutput = writerOutput;
-		this.readerInput = readerInput;
-		
-		//set some properties of frame
-		this.setSize(new Dimension(400, 400));
-		this.setLocationRelativeTo(null);
-		this.setTitle("Winsome");
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setResizable(false);
-		
-		//set some properties of title frame
-		title.setHorizontalAlignment(JLabel.CENTER);
-		title.setVerticalAlignment(JLabel.NORTH);
-		title.setFont(new Font("MV Boli", Font.PLAIN, 25));
-		
-		//set the color of writing of JLabel "error"
-		error.setForeground(Color.red);
-		//set the dimension of JLabel "error"
-		error.setPreferredSize(new Dimension(400, 50));
-		error.setFont(new Font(null, Font.PLAIN, 22));
-		error.setHorizontalAlignment(JLabel.CENTER);
-		error.setVerticalAlignment(JLabel.CENTER);
-		error.setOpaque(true);
-		
-		//set coordinates and dimension of JPanel
-		panel.setBounds(0, 50, 400, 200);
-		panel.setLayout(new GridBagLayout());
-		panel.setOpaque(true);
-		
-		panelError.setBounds(0, 255, 400, 100);
-		panelError.setOpaque(true);
-		
-		//add JLabel "error" to panelError
-		panelError.add(error);
-		
-		//constraints for the GridBagLayout
-		//It is used to arrenge the components inside the GridBagLayout
-		GridBagConstraints constraints = new GridBagConstraints();
-		
-		//set the dimensione of the two JTextField
-		username.setPreferredSize(new Dimension(200, 30));
-		password.setPreferredSize(new Dimension(200, 30));
-		
-		//In this case, with this kind of constraints, we arrange the components vertically
-		
-		constraints.fill = GridBagConstraints.HORIZONTAL;
-		constraints.gridx = 0;
-		constraints.gridy = 0;
-		constraints.insets = new Insets(0, 0, 0, 0);
-		panel.add(text1, constraints);
-		
-		constraints.fill = GridBagConstraints.HORIZONTAL;
-		constraints.gridx = 0;
-		constraints.gridy = 1;
-		constraints.insets = new Insets(0, 0, 10, 0);
-		panel.add(username, constraints);
-	
-		constraints.fill = GridBagConstraints.HORIZONTAL;
-		constraints.gridx = 0;
-		constraints.gridy = 2;
-		constraints.insets = new Insets(0, 0, 0, 0);
-		panel.add(text2, constraints);
-	
-		constraints.fill = GridBagConstraints.HORIZONTAL;
-		constraints.gridx = 0;
-		constraints.gridy = 3;
-		constraints.insets = new Insets(0, 0, 10, 0);
-		panel.add(password, constraints);
-		
-		constraints.fill = GridBagConstraints.NORTHWEST;
-		constraints.gridx = 0;
-		constraints.gridy = 4;
-		constraints.insets = new Insets(0, 0, 0, 0);
-		panel.add(loginButton, constraints);
-		
-		//add an ActionLister to JButton "loginButton"
-		//The ActionListener work when the specified JButton is clicked
-		loginButton.addActionListener(this);
-		
-		//add components to the frame
-		this.add(panelError);
-		this.add(panel);
-		this.add(title);
-		
-	}
+	public LoginWindow(Socket clientSocket) {
+		try {
+			this.clientSocket = clientSocket;
+			this.writerOutput = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+			this.readerInput = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+			//set some properties of frame
+			this.setSize(new Dimension(400, 400));
+			this.setLocationRelativeTo(null);
+			this.setTitle("Winsome");
+			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			this.setResizable(false);
+
+			//set some properties of title frame
+			title.setHorizontalAlignment(JLabel.CENTER);
+			title.setVerticalAlignment(JLabel.NORTH);
+			title.setFont(new Font("MV Boli", Font.PLAIN, 25));
+
+			//set the color of writing of JLabel "error"
+			error.setForeground(Color.red);
+			//set the dimension of JLabel "error"
+			error.setPreferredSize(new Dimension(400, 50));
+			error.setFont(new Font(null, Font.PLAIN, 22));
+			error.setHorizontalAlignment(JLabel.CENTER);
+			error.setVerticalAlignment(JLabel.CENTER);
+			error.setOpaque(true);
+
+			//set coordinates and dimension of JPanel
+			panel.setBounds(0, 50, 400, 200);
+			panel.setLayout(new GridBagLayout());
+			panel.setOpaque(true);
+
+			panelError.setBounds(0, 255, 400, 100);
+			panelError.setOpaque(true);
+
+			//add JLabel "error" to panelError
+			panelError.add(error);
+
+			//constraints for the GridBagLayout
+			//It is used to arrenge the components inside the GridBagLayout
+			GridBagConstraints constraints = new GridBagConstraints();
+
+			//set the dimensione of the two JTextField
+			username.setPreferredSize(new Dimension(200, 30));
+			password.setPreferredSize(new Dimension(200, 30));
+
+			//In this case, with this kind of constraints, we arrange the components vertically
+
+			constraints.fill = GridBagConstraints.HORIZONTAL;
+			constraints.gridx = 0;
+			constraints.gridy = 0;
+			constraints.insets = new Insets(0, 0, 0, 0);
+			panel.add(text1, constraints);
+
+			constraints.fill = GridBagConstraints.HORIZONTAL;
+			constraints.gridx = 0;
+			constraints.gridy = 1;
+			constraints.insets = new Insets(0, 0, 10, 0);
+			panel.add(username, constraints);
+
+			constraints.fill = GridBagConstraints.HORIZONTAL;
+			constraints.gridx = 0;
+			constraints.gridy = 2;
+			constraints.insets = new Insets(0, 0, 0, 0);
+			panel.add(text2, constraints);
+
+			constraints.fill = GridBagConstraints.HORIZONTAL;
+			constraints.gridx = 0;
+			constraints.gridy = 3;
+			constraints.insets = new Insets(0, 0, 10, 0);
+			panel.add(password, constraints);
+
+			constraints.fill = GridBagConstraints.NORTHWEST;
+			constraints.gridx = 0;
+			constraints.gridy = 4;
+			constraints.insets = new Insets(0, 0, 0, 0);
+			panel.add(loginButton, constraints);
+
+			//add an ActionLister to JButton "loginButton"
+			//The ActionListener work when the specified JButton is clicked
+			loginButton.addActionListener(this);
+
+			//add components to the frame
+			this.add(panelError);
+			this.add(panel);
+			this.add(title);
+		} catch (IOException e) {
+			System.err.println(e.getMessage());
+		}
+}
 
 	@Override
 	public void actionPerformed(ActionEvent event) {
@@ -139,10 +147,8 @@ public class LoginWindow extends JFrame implements ActionListener{
 
 			//check if the "loginButton" was clicked
 			if(event.getSource().equals(loginButton)) {
-				if(username.getText().trim().isEmpty()) {
-					error.setText("Username insert is empty");
-				}else if(String.valueOf(password.getPassword()).trim().isEmpty()) {
-					error.setText("Password insert is empty");
+				if(username.getText().trim().isEmpty() || String.valueOf(password.getPassword()).trim().isEmpty()) {
+					error.setText("Empty parameter");
 				}else {
 					//get all the text was written int the two JTextField 
 					usr = username.getText();
@@ -172,8 +178,9 @@ public class LoginWindow extends JFrame implements ActionListener{
 					}else if(response.equals(TypeError.SUCCESS)) {
 						error.setForeground(Color.green);
 						error.setText("Login completed successfully");
-
-						//apro home feed di Winsome
+						LogoutWindow logoutWindow = new LogoutWindow(clientSocket);
+						logoutWindow.setVisible(true);
+						this.setVisible(false);
 					}
 				}
 			}	

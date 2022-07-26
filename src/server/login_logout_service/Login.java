@@ -2,6 +2,11 @@ package server.login_logout_service;
 
 import java.net.Socket;
 
+/**
+ * Service that allow a user to login in Winsome
+ * @author Gianmarco Petrocchi
+ *
+ */
 public interface Login {
 	
 	/**

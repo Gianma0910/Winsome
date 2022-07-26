@@ -31,6 +31,7 @@ import javax.swing.JTextField;
 
 import RMI.RMIRegistration;
 import configuration.ClientConfiguration;
+import server.login_logout_service.Login;
 import utility.TypeError;
 
 public class RegWindow extends JFrame implements ActionListener{
@@ -281,12 +282,8 @@ public class RegWindow extends JFrame implements ActionListener{
 					}else if(error.equals(TypeError.SUCCESS)) { //if the register completed successfully
 						//Create TCP socket by using SERVERADRRESS and TCPPORT properties of clientConfig
 						Socket clientSocket = new Socket(clientConf.SERVERADDRESS, clientConf.TCPPORT);
-						//create PrintWriter by using socket's output stream
-						BufferedWriter writerOuput = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-						//create BufferedReader by using socket's input stream
-						BufferedReader readerInput = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-						//istantiated LoginWindow with input and output stream and than show the LoginWindow GUI
-						LoginWindow loginWindow = new LoginWindow(writerOuput, readerInput);
+						//istantiated LoginWindow with client socket
+						LoginWindow loginWindow = new LoginWindow(clientSocket);
 						loginWindow.setVisible(true);
 						this.setVisible(false);
 					}
@@ -297,10 +294,10 @@ public class RegWindow extends JFrame implements ActionListener{
 				}
 				
 			}else if(e.getSource().equals(alreadyRegistered)) { //check if the "alreadyRegistered" button was clicked
+				//Create TCP socket by using SERVERADRRESS and TCPPORT properties of clientConfig
 				Socket clientSocket = new Socket(clientConf.SERVERADDRESS, clientConf.TCPPORT);
-				BufferedWriter writerOuput = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-				BufferedReader readerInput = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-				LoginWindow loginWindow = new LoginWindow(writerOuput, readerInput);
+				//istantiated LoginWindow with client socket
+				LoginWindow loginWindow = new LoginWindow(clientSocket);
 				loginWindow.setVisible(true);
 				this.setVisible(false);
 			}

@@ -75,21 +75,24 @@ public class Database {
 		Objects.requireNonNull(username, "Username is null");
 		
 		userLoggedIn.putIfAbsent(socketClient, username);
+		System.out.println(userLoggedIn);
 	}
 	
 	/**
-	 * Return a String that represents the user's username by using the client socket that communicate with the server
-	 * @param socketClient Client socket. Cannot be null
-	 * @return A String that represents the username logged in Winsome
+	 * Method used for a logout request. Remove the socket and the mapped value, so the client is no longer logged in
+	 * @param socket Client socket to logout. Cannot be null
+	 * @return true if the element is removed, false otherwise
 	 */
-	public String getUsernameBySocket(Socket socketClient) {
-		Objects.requireNonNull(socketClient, "Parameter socket is null");
+	public boolean removeUserLoggedIn(Socket socket) {
+		Objects.requireNonNull(socket, "Parameter socket is null");
 		
-		return userLoggedIn.get(socketClient);
+		boolean result = userLoggedIn.remove(socket, userLoggedIn.get(socket));
+		System.out.println(userLoggedIn);
+		
+		return result;
 	}
 	
 	/**
-	 * 
 	 * @return The ConcurrentHashMap of user that are already logged in
 	 */
 	public ConcurrentHashMap<Socket, String> getUserLoggedIn(){

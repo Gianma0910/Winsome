@@ -20,4 +20,6 @@ public class TypeError {
 	public static final String PWDWRONG = "PWDWRONG";
 	/** This error occurs only when a client try to login with a username of a user that is already logged in*/
 	public static final String USRALREADYLOGGED = "USRALREADYLOGGED";
+	/** This error occurs only when the logout method is executed */
+	public static final String LOGOUTERROR = "LOGOUTERROR";
 }

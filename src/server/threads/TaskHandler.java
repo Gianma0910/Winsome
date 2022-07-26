@@ -8,9 +8,12 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 import server.database.Database;
 import server.login_logout_service.LoginImpl;
+import server.login_logout_service.LogoutImpl;
+import utility.TypeError;
 
 /**
  * Thread that connect to client and receive the client request
@@ -49,39 +52,51 @@ public class TaskHandler implements Runnable {
 		System.out.println("Connected " + socket);
 		
 		try {
-			String requestClient;
-		
-			//read the request client (receive)
-			requestClient = readerInput.readLine();
 			
-			//socket.setSoTimeout(10000);
-	
-			System.out.println(requestClient);
-	
-			//split the request client using the caharacter ":"
-			String [] requestSplitted = requestClient.split(":");
-			//take the first string parsed
-			String command = requestSplitted[0];
+			while(socket.isConnected()) {
 			
-			//check the string command and then execute the right method
-			switch(command) {
+				String requestClient;
+
+				//read the request client (receive)
+				requestClient = readerInput.readLine();
+
+				//socket.setSoTimeout(10000);
+
+				System.out.println(requestClient);
+
+				//split the request client using the caharacter ":"
+				String [] requestSplitted = requestClient.split(":");
+				//take the first string parsed
+				String command = requestSplitted[0];
+
+				//check the string command and then execute the right method
+				switch(command) {
 				case "login" :{
 					//take the username written in the request client
 					String username = requestSplitted[1];
 					//take the password written in the request client
 					String password = requestSplitted[2];
-					
-					//istantiated the LoginImpl
+
 					LoginImpl loginService = new LoginImpl(db);
 					
-					//call the method login and get the return value of method
 					String error = loginService.login(username, password, socket);
 					
-					//write the String error to client (send)
+					//send the result of login 
+					writerOutput.write(error);
+					writerOutput.newLine();
+					writerOutput.flush();
+					
+				}
+				case "logout":{					
+					LogoutImpl logoutService = new LogoutImpl(db);
+					
+					String error = logoutService.logout(socket);
+					
 					writerOutput.write(error);
 					writerOutput.newLine();
 					writerOutput.flush();
 					break;
+				}
 				}
 			}
 		}catch(SocketTimeoutException ex) {
