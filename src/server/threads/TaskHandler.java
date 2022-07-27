@@ -85,7 +85,7 @@ public class TaskHandler implements Runnable {
 					writerOutput.write(error);
 					writerOutput.newLine();
 					writerOutput.flush();
-					
+					break;
 				}
 				case "logout":{					
 					LogoutImpl logoutService = new LogoutImpl(db);

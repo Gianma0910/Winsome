@@ -178,8 +178,8 @@ public class LoginWindow extends JFrame implements ActionListener{
 					}else if(response.equals(TypeError.SUCCESS)) {
 						error.setForeground(Color.green);
 						error.setText("Login completed successfully");
-						LogoutWindow logoutWindow = new LogoutWindow(clientSocket);
-						logoutWindow.setVisible(true);
+						HomeFeedWindow homeFeedWindow = new HomeFeedWindow(clientSocket);
+						homeFeedWindow.setVisible(true);
 						this.setVisible(false);
 					}
 				}
