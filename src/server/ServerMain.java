@@ -1,5 +1,7 @@
+package server;
 import java.io.File;
 import java.io.IOException;
+import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.AlreadyBoundException;
@@ -16,7 +18,6 @@ import RMI.RMIRegistrationImpl;
 import configuration.ServerConfiguration;
 import exceptions.InvalidConfigurationException;
 import server.database.Database;
-import server.threads.TaskHandler;
 
 public class ServerMain {
 
@@ -32,7 +33,8 @@ public class ServerMain {
 		
 		ServerConfiguration serverConf = new ServerConfiguration(configurationFile);
 		
-		ServerSocket serverSocket = new ServerSocket(serverConf.TCPPORT);
+		ServerSocket serverSocketTCP = new ServerSocket(serverConf.TCPPORT);
+		DatagramSocket serverSocketUDP = new DatagramSocket();
 		
 		BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(serverConf.THREADBLOCKINGQUEUE);
 		ThreadPoolExecutor threadPool = new ThreadPoolExecutor(serverConf.COREPOOLSIZE, serverConf.MAXIMUMCOREPOOLSIZE, serverConf.KEEPALIVETIME, TimeUnit.MILLISECONDS, queue);
@@ -50,8 +52,8 @@ public class ServerMain {
 		System.out.println("File properties read successfully, server is running...\n");
 		
 		while(true) {
-			Socket socket = serverSocket.accept();
-			threadPool.execute(new TaskHandler(socket, db));
+			Socket socket = serverSocketTCP.accept();
+			threadPool.execute(new TaskHandler(socket, db, serverConf));
 		}
 	}
 

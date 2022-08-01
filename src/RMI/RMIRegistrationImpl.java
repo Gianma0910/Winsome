@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import exceptions.UserAlreadyExistsException;
 import server.database.Database;
 import utility.TypeError;
-import server.User;
+import utility.User;
 
 public class RMIRegistrationImpl implements RMIRegistration {
 

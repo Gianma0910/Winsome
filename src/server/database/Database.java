@@ -4,7 +4,7 @@ import java.net.Socket;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import server.User;
+import utility.User;
 
 /**
  * Class that contains all the data of Winsome (Users, Posts, Comments, Votes, Transactions Wallet, follower and following)
@@ -45,10 +45,10 @@ public class Database {
 	/** 
 	 * Check if the user is registered
 	 * @param username User's username. Cannot be null
-	 * @return true if the user is registerd, flase otherwise
+	 * @return true if the user is registerd, false otherwise
 	 */
 	public boolean isUserRegistered(String username) {		
-		return userToBeBackuped.get(username) != null ? true : false;
+		return userToBeBackuped.containsKey(username);
 	}
 	
 	/**
@@ -75,7 +75,6 @@ public class Database {
 		Objects.requireNonNull(username, "Username is null");
 		
 		userLoggedIn.putIfAbsent(socketClient, username);
-		System.out.println(userLoggedIn);
 	}
 	
 	/**
@@ -86,9 +85,7 @@ public class Database {
 	public boolean removeUserLoggedIn(Socket socket) {
 		Objects.requireNonNull(socket, "Parameter socket is null");
 		
-		boolean result = userLoggedIn.remove(socket, userLoggedIn.get(socket));
-		System.out.println(userLoggedIn);
-		
+		boolean result = userLoggedIn.remove(socket, userLoggedIn.get(socket));		
 		return result;
 	}
 	

@@ -220,7 +220,7 @@ public class ServerConfiguration {
 	 * @return Multicast info for client (MULTICAST_ADDRESS, MULTICAST_PORT)
 	 */
 	public String getMulticastInfo() {
-		return "multicast_address:" + MULTICASTADDRESS + ":multicast_port:" + MULTICASTPORT;
+		return MULTICASTADDRESS.toString() + ":" + MULTICASTPORT;
 	}
 	
 }

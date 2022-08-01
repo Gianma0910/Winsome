@@ -1,4 +1,4 @@
-package server.threads;
+package server;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -10,10 +10,15 @@ import java.net.SocketTimeoutException;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import configuration.ServerConfiguration;
 import server.database.Database;
 import server.login_logout_service.LoginImpl;
 import server.login_logout_service.LogoutImpl;
 import utility.TypeError;
+import utility.User;
 
 /**
  * Thread that connect to client and receive the client request
@@ -26,19 +31,21 @@ public class TaskHandler implements Runnable {
 	private Database db;
 	private BufferedWriter writerOutput;
 	private BufferedReader readerInput;
+	private ServerConfiguration serverConf;
 	
 	/**
 	 * Basic constructor of TaskHandler class
 	 * @param socket Socket created by ServerSocket.accept(), it communicate with the client. Cannot be null
 	 * @param db Database. Cannot be null
 	 */
-	public TaskHandler(Socket socket, Database db) {
+	public TaskHandler(Socket socket, Database db, ServerConfiguration serverConf) {
 		Objects.requireNonNull(socket, "Socket is null");
 		Objects.requireNonNull(db, "Database is null");
 		
 		this.socket = socket;
 		this.db = db;
-	
+		this.serverConf = serverConf;
+		
 		try {
 			this.writerOutput = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 			this.readerInput = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -63,7 +70,7 @@ public class TaskHandler implements Runnable {
 				//socket.setSoTimeout(10000);
 
 				System.out.println(requestClient);
-
+				
 				//split the request client using the caharacter ":"
 				String [] requestSplitted = requestClient.split(":");
 				//take the first string parsed
@@ -72,6 +79,7 @@ public class TaskHandler implements Runnable {
 				//check the string command and then execute the right method
 				switch(command) {
 				case "login" :{
+					
 					//take the username written in the request client
 					String username = requestSplitted[1];
 					//take the password written in the request client
@@ -85,6 +93,11 @@ public class TaskHandler implements Runnable {
 					writerOutput.write(error);
 					writerOutput.newLine();
 					writerOutput.flush();
+					
+					writerOutput.write(serverConf.getMulticastInfo());
+					writerOutput.newLine();
+					writerOutput.flush();
+					
 					break;
 				}
 				case "logout":{					
@@ -95,6 +108,9 @@ public class TaskHandler implements Runnable {
 					writerOutput.write(error);
 					writerOutput.newLine();
 					writerOutput.flush();
+					
+					socket.close();
+					
 					break;
 				}
 				}
