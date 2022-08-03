@@ -13,6 +13,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import RMI.RMICallback;
+import RMI.RMICallbackImpl;
 import RMI.RMIRegistration;
 import RMI.RMIRegistrationImpl;
 import configuration.ServerConfiguration;
@@ -48,6 +50,11 @@ public class ServerMain {
 		LocateRegistry.createRegistry(serverConf.RMIREGISTRYPORT);
 		Registry registry = LocateRegistry.getRegistry(serverConf.RMIREGISTRYPORT);
 		registry.bind(serverConf.REGISTRATIONSERVICENAME, stubRegistration);
+		
+		RMICallbackImpl callbackImpl = new RMICallbackImpl();
+		RMICallback stubCallbackRegistration = (RMICallback) UnicastRemoteObject.exportObject(callbackImpl, 0);
+		registry = LocateRegistry.getRegistry(serverConf.RMIREGISTRYPORT);
+		registry.bind(serverConf.CALLBACKSERVICENAME, stubCallbackRegistration);
 		
 		System.out.println("File properties read successfully, server is running...\n");
 		

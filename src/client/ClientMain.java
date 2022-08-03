@@ -13,9 +13,11 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import RMI.RMICallback;
 import RMI.RMIRegistration;
 import configuration.ClientConfiguration;
 import exceptions.InvalidConfigurationException;
@@ -44,6 +46,7 @@ public class ClientMain {
 		String request;
 		Scanner scan = new Scanner(System.in);
 		boolean shutdown = false;
+		String username;
 		
 		while(!shutdown) {
 			request = scan.nextLine();
@@ -52,14 +55,18 @@ public class ClientMain {
 			
 			switch(command) {
 			case "register" : {
-				performRegisterAction(requestSplitted, clientConf);
-				readerInput = new BufferedReader(new InputStreamReader(socketTCP.getInputStream()));
-				writerOutput = new BufferedWriter(new OutputStreamWriter(socketTCP.getOutputStream()));					
+				performRegisterAction(requestSplitted, clientConf);				
 				break;
 			}
 			case "login" : {
-				performLoginAction(requestSplitted, clientConf, writerOutput, readerInput);
+				if(requestSplitted.length != 3)
+					throw new IllegalArgumentException("Number of arguments insert for the login operation is invalid, you must type: login <username> <password>");
+
+				username = requestSplitted[1];
+				String password = requestSplitted[2];
+				performLoginAction(username, password, clientConf, writerOutput, readerInput);
 				break;
+				
 			}
 			case "logout" : {
 				boolean logout = performLogoutAction(command, writerOutput, readerInput);
@@ -70,9 +77,15 @@ public class ClientMain {
 				}
 				break;
 			}
+			default: {
+				System.err.println("This command doesn't exists, please check the documentation");
+				break;
+			}
 			}
 			
 		}
+		
+		System.exit(1);
 		
 	}
 
@@ -116,12 +129,7 @@ public class ClientMain {
 	}
 	
 
-	private static void performLoginAction(String[] requestSplitted, ClientConfiguration clientConf, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException {
-		if(requestSplitted.length != 3)
-			throw new IllegalArgumentException("Number of arguments insert for the login operation is invalid, you must type: login <username> <password>");
-		
-		String username = requestSplitted[1];
-		String password = requestSplitted[2];
+	private static String performLoginAction(String username, String password, ClientConfiguration clientConf, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException {
 		
 		StringBuilder requestClient = new StringBuilder();
 		requestClient.append("login").append(":").append(username).append(":").append(password);
@@ -154,10 +162,28 @@ public class ClientMain {
 			
 			MulticastClient multicastClient = new MulticastClient(socketMulticast);
 		
-			System.out.println("User signed for multicast service");
+			System.out.println("User " + username + " signed for multicast service");
+			
+			try {
+				Registry reg = LocateRegistry.getRegistry(clientConf.RMIREGISTRYHOST, clientConf.RMIREGISTRYPORT);
+				RMICallback callbackService = (RMICallback) reg.lookup(clientConf.CALLBACKSERVICENAME);
+			
+				FollowerDatabase callbackObj = new FollowerDatabaseImpl();
+				FollowerDatabase stubClientDatabase = (FollowerDatabase) UnicastRemoteObject.exportObject(callbackObj, 0);
+				
+				callbackService.registerForCallback(stubClientDatabase, username);
+				
+				System.out.println("User " + username + " has just been registered to callback follower/following update service");
+			} catch (NotBoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			return username;
 		}
+		
+		return null;
 	
-		return;
 	}
 	
 	private static boolean performLogoutAction(String command, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException {
@@ -169,13 +195,14 @@ public class ClientMain {
 		
 		if(response.equals(TypeError.LOGOUTERROR)) {
 			System.err.println("Error occurs during logout operation, probably the user is not logged in");
+			return false;
 		}else if(response.equals(TypeError.SUCCESS)) {
 			System.out.println("The server perform the logout operation successfully");
 			
 			return true;
 		}
 		
-		return false;
+		return true;
 	}
 	
 }
