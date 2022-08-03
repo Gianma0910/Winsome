@@ -1,6 +1,7 @@
 package server.database;
 
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,6 +22,8 @@ public class Database {
 	 * <K, V>: K is the client socket; V is a String that reppresents the logged user's username */
 	private ConcurrentHashMap<Socket, String> userLoggedIn;
 	
+	private ConcurrentHashMap<String, ArrayList<String>> userFollowing;
+	
 	/**
 	 * Basic constructor for Database class
 	 */
@@ -28,6 +31,7 @@ public class Database {
 		this.userToBeBackuped = new ConcurrentHashMap<String, User>();
 		//this.userBackuped = new ConcurrentHashMap<String, User>();
 		this.userLoggedIn = new ConcurrentHashMap<Socket, String>();
+		this.userFollowing = new ConcurrentHashMap<String, ArrayList<String>>();
 	}
 	
 	/**
@@ -89,10 +93,30 @@ public class Database {
 		return result;
 	}
 	
+	public String getUsernameBySocket(Socket socket) {
+		Objects.requireNonNull(socket, "Parameter socket is null");
+		
+		return userLoggedIn.get(socket);
+	}
+	
 	/**
 	 * @return The ConcurrentHashMap of user that are already logged in
 	 */
 	public ConcurrentHashMap<Socket, String> getUserLoggedIn(){
 		return userLoggedIn;
+	}
+	
+	public void addFollowing(String usernameUpdateFollowing, String usernameNewFollowing) {
+		Objects.requireNonNull(usernameUpdateFollowing, "Username used to update his following is null");
+		Objects.requireNonNull(usernameNewFollowing, "Username new following is null");
+		
+		ArrayList<String> following = userFollowing.get(usernameUpdateFollowing);
+		
+		if(following == null) {
+			following = new ArrayList<>();
+			following.add(usernameNewFollowing);
+		}else {
+			following.add(usernameNewFollowing);
+		}
 	}
 }

@@ -4,7 +4,6 @@ import java.rmi.RemoteException;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import client.FollowerDatabase;
 import exceptions.ClientNotRegisteredException;
 
 public class RMICallbackImpl implements RMICallback {
@@ -25,13 +24,23 @@ public class RMICallbackImpl implements RMICallback {
 	}
 
 	@Override
-	public void unregisterForCallback(String username) throws RemoteException, ClientNotRegisteredException {
-		Objects.requireNonNull(username, "Username associated to the stub is null");
+	public void unregisterForCallback(FollowerDatabase stub) throws RemoteException, ClientNotRegisteredException {
+		Objects.requireNonNull(stub, "The specified stub is null");
 		
-		if(!clientsStubs.containsKey(username))
-			throw new ClientNotRegisteredException("Doesn't exists a client registered to the follower/following service with the specified username");
+		if(!clientsStubs.containsValue(stub))
+			throw new ClientNotRegisteredException("Doesn't exists this client registered to the follower/following service");
 	
-		clientsStubs.remove(username, clientsStubs.get(username));
+		for(String username : clientsStubs.keySet()) {
+			if((clientsStubs.get(username)).equals(stub)) {
+				clientsStubs.remove(username, stub);
+				return;
+			}else continue;
+		}
+	}
+	
+	@Override
+	public FollowerDatabase getCallback(String username) {
+		return clientsStubs.get(username);
 	}
 	
 }

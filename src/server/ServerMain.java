@@ -60,7 +60,7 @@ public class ServerMain {
 		
 		while(true) {
 			Socket socket = serverSocketTCP.accept();
-			threadPool.execute(new TaskHandler(socket, db, serverConf));
+			threadPool.execute(new TaskHandler(socket, db, serverConf, stubCallbackRegistration));
 		}
 	}
 

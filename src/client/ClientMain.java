@@ -5,9 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.MulticastSocket;
 import java.net.Socket;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -17,15 +15,18 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import RMI.FollowerDatabase;
 import RMI.RMICallback;
 import RMI.RMIRegistration;
 import configuration.ClientConfiguration;
+import exceptions.ClientNotRegisteredException;
 import exceptions.InvalidConfigurationException;
 import utility.TypeError;
+import utility.User;
 
 public class ClientMain {
 	
-	public static void main(String[] args) throws InvalidConfigurationException, IOException {
+	public static void main(String[] args) throws InvalidConfigurationException, IOException, NotBoundException, ClientNotRegisteredException {
 		if(args.length != 1) {
 			System.err.println("Usage: java ClientMain <path configuration file>\n");
 			System.err.println("Check the documentation\n");
@@ -42,11 +43,14 @@ public class ClientMain {
 		Socket socketTCP = new Socket(clientConf.SERVERADDRESS, clientConf.TCPPORT);
 		BufferedWriter writerOutput = new BufferedWriter(new OutputStreamWriter(socketTCP.getOutputStream()));
 		BufferedReader readerInput = new BufferedReader(new InputStreamReader(socketTCP.getInputStream()));
-				
+			
+		MulticastClient multicastClient = new MulticastClient();
+		
+		FollowerDatabaseImpl stubClientDatabase = new FollowerDatabaseImpl();
+		
 		String request;
 		Scanner scan = new Scanner(System.in);
 		boolean shutdown = false;
-		String username;
 		
 		while(!shutdown) {
 			request = scan.nextLine();
@@ -59,22 +63,54 @@ public class ClientMain {
 				break;
 			}
 			case "login" : {
-				if(requestSplitted.length != 3)
-					throw new IllegalArgumentException("Number of arguments insert for the login operation is invalid, you must type: login <username> <password>");
-
-				username = requestSplitted[1];
-				String password = requestSplitted[2];
-				performLoginAction(username, password, clientConf, writerOutput, readerInput);
+				performLoginAction(requestSplitted, clientConf, writerOutput, readerInput, multicastClient, stubClientDatabase);
 				break;
 				
 			}
 			case "logout" : {
-				boolean logout = performLogoutAction(command, writerOutput, readerInput);
-				if(logout) {
+				if(requestSplitted.length != 1)
+					throw new IllegalArgumentException("Number of arguments insert for logout operation is not valid, you must type only: logout");
+				
+				writerOutput.write(requestSplitted[0]);
+				writerOutput.newLine();
+				writerOutput.flush();
+				
+				String response = readerInput.readLine();
+				
+				if(response.equals(TypeError.LOGOUTERROR)) {
+					System.err.println("Error during logout operation");
+				}else if(response.equals(TypeError.SUCCESS)) {
+					System.out.println("Logout operation complete succesfully");
+					multicastClient.interrupt();
+					
+					Registry reg = LocateRegistry.getRegistry(clientConf.RMIREGISTRYHOST, clientConf.RMIREGISTRYPORT);
+					RMICallback callbackService = (RMICallback) reg.lookup(clientConf.CALLBACKSERVICENAME);
+					
+					callbackService.unregisterForCallback(stubClientDatabase);
+					
 					socketTCP.close();
-					scan.close();
+					
 					shutdown = true;
 				}
+				
+				break;
+			}
+			case "list": {
+				if(requestSplitted.length != 2)
+					throw new IllegalArgumentException("Number of arguments insert for view list operation is not valid, you must type: list users, list followers, list following");
+				
+				if(requestSplitted[1].equals("users")) {
+					
+				}else if(requestSplitted[1].equals("followers")) {
+					performViewFollowers(stubClientDatabase);
+				}else if(requestSplitted[1].equals("following")){
+					
+				}
+				
+				break;
+			}
+			case "follow" : {
+				performAddFollowerAction(requestSplitted, readerInput, writerOutput);
 				break;
 			}
 			default: {
@@ -85,6 +121,7 @@ public class ClientMain {
 			
 		}
 		
+		scan.close();
 		System.exit(1);
 		
 	}
@@ -129,7 +166,12 @@ public class ClientMain {
 	}
 	
 
-	private static String performLoginAction(String username, String password, ClientConfiguration clientConf, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException {
+	private static void performLoginAction(String [] requestSplitted, ClientConfiguration clientConf, BufferedWriter writerOutput, BufferedReader readerInput, MulticastClient multicastClient, FollowerDatabaseImpl stubClientDatabase) throws IOException {
+		if(requestSplitted.length != 3)
+			throw new IllegalArgumentException("Number of arguments insert for the login operation is invalid, you must type: login <username> <password>");
+
+		String username = requestSplitted[1];
+		String password = requestSplitted[2];
 		
 		StringBuilder requestClient = new StringBuilder();
 		requestClient.append("login").append(":").append(username).append(":").append(password);
@@ -142,34 +184,37 @@ public class ClientMain {
 		
 		if(response.equals(TypeError.PWDWRONG)) {
 			System.err.println("Password insert to login is wrong, insert the correct password");
+			return;
 		}else if(response.equals(TypeError.USERNAMEWRONG)) {
 			System.err.println("Username insert to login is wrong, insert the correct username");
+			return;
 		}else if(response.equals(TypeError.USRALREADYLOGGED)) {
 			System.err.println("A user with the username " + username + " is already logged in Winsome");
+			return;
 		}else if(response.equals(TypeError.SUCCESS)) {
 			System.out.println(username + " is logged in Winsome");
 			
 			System.out.println("Receiving multicast address and multicast port...");
 			
 			String multicastInfo = readerInput.readLine();
-			String [] multicastInfoSplitted = multicastInfo.split(":");
-					
+			String [] multicastInfoSplitted = multicastInfo.split(":");		
+			
+			int multicastPort = Integer.parseInt(multicastInfoSplitted[1]);
 			String address = multicastInfoSplitted[0].substring(1, multicastInfoSplitted[0].length());
 			InetAddress multicastAddress = InetAddress.getByName(address);
-			int multicastPort = Integer.parseInt(multicastInfoSplitted[1]);
-			MulticastSocket socketMulticast = new MulticastSocket(multicastPort);
-			socketMulticast.joinGroup(multicastAddress);
 			
-			MulticastClient multicastClient = new MulticastClient(socketMulticast);
-		
+			multicastClient.setMulticastPort(multicastPort);
+			multicastClient.setMulticastGroup(multicastAddress);
+			multicastClient.setMulticastSocket();
+			multicastClient.start();
+			
+			stubClientDatabase.setUsername(username);
+			
 			System.out.println("User " + username + " signed for multicast service");
 			
 			try {
 				Registry reg = LocateRegistry.getRegistry(clientConf.RMIREGISTRYHOST, clientConf.RMIREGISTRYPORT);
 				RMICallback callbackService = (RMICallback) reg.lookup(clientConf.CALLBACKSERVICENAME);
-			
-				FollowerDatabase callbackObj = new FollowerDatabaseImpl();
-				FollowerDatabase stubClientDatabase = (FollowerDatabase) UnicastRemoteObject.exportObject(callbackObj, 0);
 				
 				callbackService.registerForCallback(stubClientDatabase, username);
 				
@@ -179,30 +224,45 @@ public class ClientMain {
 				e.printStackTrace();
 			}
 
-			return username;
+			return;
 		}
 		
-		return null;
-	
 	}
 	
-	private static boolean performLogoutAction(String command, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException {
-		writerOutput.write(command);
+	private static void performViewFollowers(FollowerDatabaseImpl stubClientDatabase) {
+		ArrayList<String> followers = stubClientDatabase.getFollowers();
+		
+		System.out.print("Followers: ");
+		
+		for(String s : followers) {
+			System.out.print(s + ", ");
+		}
+		
+		System.out.println();
+		
+		return;
+		
+	}
+	
+	private static void performAddFollowerAction(String[] requestSplitted, BufferedReader readerInput, BufferedWriter writerOutput) throws IOException {
+		if(requestSplitted.length != 2)
+			throw new IllegalArgumentException("Number of arguments insert for following operation is not valid, you must type only: follow <username>");
+		
+		String username = requestSplitted[1];
+		StringBuilder requestClient = new StringBuilder();
+		
+		requestClient.append("follow").append(":").append(username);
+		
+		writerOutput.write(requestClient.toString());
 		writerOutput.newLine();
 		writerOutput.flush();
 		
 		String response = readerInput.readLine();
 		
-		if(response.equals(TypeError.LOGOUTERROR)) {
-			System.err.println("Error occurs during logout operation, probably the user is not logged in");
-			return false;
-		}else if(response.equals(TypeError.SUCCESS)) {
-			System.out.println("The server perform the logout operation successfully");
-			
-			return true;
-		}
+		if(response.equals(TypeError.FOLLOWERERROR))
+			System.err.println("You can't follow user " + username + " because you already followed him");
 		
-		return true;
+		return;
 	}
 	
 }

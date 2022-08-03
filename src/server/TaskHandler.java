@@ -8,17 +8,15 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
+import RMI.FollowerDatabase;
+import RMI.RMICallback;
+import client.FollowerDatabaseImpl;
 import configuration.ServerConfiguration;
 import server.database.Database;
 import server.login_logout_service.LoginImpl;
 import server.login_logout_service.LogoutImpl;
 import utility.TypeError;
-import utility.User;
 
 /**
  * Thread that connect to client and receive the client request
@@ -32,19 +30,21 @@ public class TaskHandler implements Runnable {
 	private BufferedWriter writerOutput;
 	private BufferedReader readerInput;
 	private ServerConfiguration serverConf;
+	private RMICallback stubCallbackRegistration;
 	
 	/**
 	 * Basic constructor of TaskHandler class
 	 * @param socket Socket created by ServerSocket.accept(), it communicate with the client. Cannot be null
 	 * @param db Database. Cannot be null
 	 */
-	public TaskHandler(Socket socket, Database db, ServerConfiguration serverConf) {
+	public TaskHandler(Socket socket, Database db, ServerConfiguration serverConf, RMICallback stubCallbackRegistration) {
 		Objects.requireNonNull(socket, "Socket is null");
 		Objects.requireNonNull(db, "Database is null");
 		
 		this.socket = socket;
 		this.db = db;
 		this.serverConf = serverConf;
+		this.stubCallbackRegistration = stubCallbackRegistration;
 		
 		try {
 			this.writerOutput = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
@@ -110,6 +110,25 @@ public class TaskHandler implements Runnable {
 					writerOutput.flush();
 					
 					socket.close();
+					
+					break;
+				}
+				case "follow":{
+					
+					String usernameToFollow = requestSplitted[1];
+					
+					FollowerDatabase stubUsernameAssociated = stubCallbackRegistration.getCallback(usernameToFollow);
+					
+					String usernameNewFollow = db.getUsernameBySocket(socket);
+					String error = stubUsernameAssociated.addFollower(usernameNewFollow);
+					
+					if(error.equals(TypeError.FOLLOWERERROR)) {
+						writerOutput.write(error);
+						writerOutput.newLine();
+						writerOutput.flush();
+					}else if(error.equals(TypeError.SUCCESS)){
+						db.addFollowing(usernameNewFollow, usernameToFollow);
+					}
 					
 					break;
 				}

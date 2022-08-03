@@ -22,4 +22,6 @@ public class TypeError {
 	public static final String USRALREADYLOGGED = "USRALREADYLOGGED";
 	/** This error occurs only when the logout method is executed */
 	public static final String LOGOUTERROR = "LOGOUTERROR";
+	/** This error occurs only when a user try to become a new follower of a user that he already follow */
+	public static final String FOLLOWERERROR = "FOLLOWERERROR";
 }
