@@ -4,8 +4,6 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
-import utility.User;
-
 public interface FollowerDatabase extends Remote{
 
 	String addFollower(String u) throws RemoteException;

@@ -24,4 +24,16 @@ public class TypeError {
 	public static final String LOGOUTERROR = "LOGOUTERROR";
 	/** This error occurs only when a user try to become a new follower of a user that he already follow */
 	public static final String FOLLOWERERROR = "FOLLOWERERROR";
+	/** This error occurs only when a user try to create a post with a title length greater than 20 characters */
+	public static final String TITLELENGTHERROR = "TITLELENGTHERROR";
+	/** This error occurs only when a user try to create a post with a content length greater than 500 characters */
+	public static final String CONTENTLENGTHERROR = "CONTENTLENGTHERROR";
+	/** This error occurs only when a user try to vote a post that not exists */
+	public static final String VOTEPOSTNOTEXISTS = "VOTEPOSTNOTEXISTS";
+	/** This error occurs only when a user try to vote a post that he is already voted */
+	public static final String VOTEALREADYEXISTS = "VOTEALREADYEXISTS";
+	/** This error occurs only when a user try to vote a post that it isn't in his feed */
+	public static final String VOTEPOSTNOTINFEED = "VOTEPOSTNOTINFEED";
+	/** This error occurs only when a user try to vote his post */
+	public static final String VOTEAUTHORPOST = "VOTEAUTHORPOST";
 }

@@ -1,9 +1,16 @@
 package server.database;
 
+import java.lang.reflect.Type;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
 import utility.User;
 
@@ -24,6 +31,8 @@ public class Database {
 	
 	private ConcurrentHashMap<String, ArrayList<String>> userFollowing;
 	
+	private ConcurrentHashMap<String, ArrayList<String>> userFollower;
+	
 	/**
 	 * Basic constructor for Database class
 	 */
@@ -32,6 +41,7 @@ public class Database {
 		//this.userBackuped = new ConcurrentHashMap<String, User>();
 		this.userLoggedIn = new ConcurrentHashMap<Socket, String>();
 		this.userFollowing = new ConcurrentHashMap<String, ArrayList<String>>();
+		this.userFollower = new ConcurrentHashMap<String, ArrayList<String>>();
 	}
 	
 	/**
@@ -106,6 +116,53 @@ public class Database {
 		return userLoggedIn;
 	}
 	
+	public void setFollowerListUser(String username) {
+		Objects.requireNonNull(username, "Username is null");
+		
+		userFollower.putIfAbsent(username, new ArrayList<>());
+		
+		return;
+	}
+	
+	public void addFollower(String usernameUpdateFollower, String usernameNewFollower) {
+		Objects.requireNonNull(usernameUpdateFollower, "Username used to update his followers is null");
+		Objects.requireNonNull(usernameNewFollower, "Username new follower is null");
+		
+		ArrayList<String> followers = userFollower.get(usernameUpdateFollower);
+		
+		if(followers == null) {
+			followers = new ArrayList<>();
+			followers.add(usernameNewFollower);
+		}else {
+			followers.add(usernameNewFollower);
+		}
+		
+		return;
+	}
+	
+	public void removeFollower(String usernameUpdateFollower, String usernameToRemove) {
+		Objects.requireNonNull(usernameUpdateFollower, "Username used to update his followers is null");
+		Objects.requireNonNull(usernameToRemove, "Username to remove from followers is null");
+		
+		ArrayList<String> followers = userFollower.get(usernameUpdateFollower);
+		
+		followers.remove(usernameToRemove);
+	}
+	
+	public ArrayList<String> getFollowerListByUsername(String username) {
+		Objects.requireNonNull(username, "Username is null");
+		
+		return userFollower.get(username);
+	}
+	
+	public void setFollowingListForUser(String username) {
+		Objects.requireNonNull(username, "Username is null");
+		
+		userFollowing.putIfAbsent(username, new ArrayList<>());
+		
+		return;
+	}
+	
 	public void addFollowing(String usernameUpdateFollowing, String usernameNewFollowing) {
 		Objects.requireNonNull(usernameUpdateFollowing, "Username used to update his following is null");
 		Objects.requireNonNull(usernameNewFollowing, "Username new following is null");
@@ -118,5 +175,78 @@ public class Database {
 		}else {
 			following.add(usernameNewFollowing);
 		}
+		return;
+	}
+	
+	public void removeFollowing(String usernameUpdateFollowing, String usernameToRemove) {
+		Objects.requireNonNull(usernameUpdateFollowing, "Username user to update his following is null");
+		Objects.requireNonNull(usernameToRemove, "Username to be removed from following is null");
+		
+		ArrayList<String> following = userFollowing.get(usernameUpdateFollowing);
+		
+		following.remove(usernameToRemove);
+		
+		return;
+	}
+	
+	public String toStringFollowingListByUsername(String username) {
+		Objects.requireNonNull(username, "Username is null");
+		StringBuilder response = new StringBuilder();
+		
+		ArrayList<String> following = userFollowing.get(username);
+		
+		response.append("[");
+		for(String s : following) {
+			response.append(s).append(", ");
+		}
+		response.append("]");
+		
+		return response.toString();
+	}
+	
+	public ArrayList<String> getFollowingListByUsername(String username){
+		Objects.requireNonNull(username, "Username is null");
+		
+		return userFollowing.get(username);
+	}
+	
+	public String getRegisteredUsersJson(String username) {
+		User user = userToBeBackuped.get(username);
+		ArrayList<String> tagList = user.getTagList();
+		
+		Gson gson = new GsonBuilder().setExclusionStrategies(new ExclusionStrategy() {
+
+			@Override
+			public boolean shouldSkipClass(Class<?> arg0) {
+				return false;
+			}
+
+			@Override
+			public boolean shouldSkipField(FieldAttributes f) {
+				return (f.getDeclaringClass() == User.class && f.getName().equals("password"));
+			}
+			
+		}).create();
+		
+		StringBuilder serializationUsers = new StringBuilder();
+		serializationUsers.append("[");
+		
+		for(String s : userToBeBackuped.keySet()) {
+			if(s.equals(username)) continue;
+			else {
+				User u = userToBeBackuped.get(s);
+				
+				for(String tag : tagList) {
+					if(u.getTagList().contains(tag)) {
+						serializationUsers.append(gson.toJson(u));
+						serializationUsers.append(",");
+						break;
+					}else continue;
+				}
+			}
+		}
+		serializationUsers.append("]");
+		
+		return serializationUsers.toString();
 	}
 }

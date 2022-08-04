@@ -1,12 +1,13 @@
 package utility;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  * Class that represents a single user in Winsome
  * @author Gianmarco Petrocchi
  */
-public class User {
+public class User{
 
 	/** User's username */
 	private String username;

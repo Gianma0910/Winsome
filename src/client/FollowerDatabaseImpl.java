@@ -8,7 +8,6 @@ import java.util.Objects;
 
 import RMI.FollowerDatabase;
 import utility.TypeError;
-import utility.User;
 
 public class FollowerDatabaseImpl extends UnicastRemoteObject implements FollowerDatabase, Serializable {
 

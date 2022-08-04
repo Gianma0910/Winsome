@@ -7,11 +7,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.Objects;
 
 import RMI.FollowerDatabase;
 import RMI.RMICallback;
-import client.FollowerDatabaseImpl;
 import configuration.ServerConfiguration;
 import server.database.Database;
 import server.login_logout_service.LoginImpl;
@@ -94,9 +94,14 @@ public class TaskHandler implements Runnable {
 					writerOutput.newLine();
 					writerOutput.flush();
 					
-					writerOutput.write(serverConf.getMulticastInfo());
-					writerOutput.newLine();
-					writerOutput.flush();
+					if(error.equals(TypeError.SUCCESS)) {
+						writerOutput.write(serverConf.getMulticastInfo());
+						writerOutput.newLine();
+						writerOutput.flush();
+						
+						db.setFollowingListForUser(username);
+						db.setFollowerListUser(username);
+					}
 					
 					break;
 				}
@@ -128,9 +133,56 @@ public class TaskHandler implements Runnable {
 						writerOutput.flush();
 					}else if(error.equals(TypeError.SUCCESS)){
 						db.addFollowing(usernameNewFollow, usernameToFollow);
+						db.addFollower(usernameToFollow, usernameNewFollow);
+						
+						writerOutput.write(error);
+						writerOutput.newLine();
+						writerOutput.flush();
 					}
 					
 					break;
+				}
+				case "unfollow": { 
+					
+					String usernameToUnfollow = requestSplitted[1];
+					
+					FollowerDatabase stubUsernameAssociated = stubCallbackRegistration.getCallback(usernameToUnfollow);
+					
+					String usernameRemoveFollow = db.getUsernameBySocket(socket);
+					String error = stubUsernameAssociated.removeFollower(usernameRemoveFollow);
+					
+					if(error.equals(TypeError.FOLLOWERERROR)) {
+						writerOutput.write(error);
+						writerOutput.newLine();
+						writerOutput.flush();
+					}else if(error.equals(TypeError.SUCCESS)) {
+						db.removeFollowing(usernameRemoveFollow, usernameToUnfollow);
+						db.removeFollower(usernameToUnfollow, usernameRemoveFollow);
+						
+						writerOutput.write(error);
+						writerOutput.newLine();
+						writerOutput.flush();
+					}
+					
+					break;
+				}
+				case "list" : {
+					if(requestSplitted[1].equals("users")) {
+						String usersRegisteredJson = db.getRegisteredUsersJson(db.getUsernameBySocket(socket));
+						
+						writerOutput.write(usersRegisteredJson);
+						writerOutput.newLine();
+						writerOutput.flush();
+						
+						break;
+					}else if(requestSplitted[1].equals("following")) {
+						String usersFollowing = db.toStringFollowingListByUsername(db.getUsernameBySocket(socket));
+						
+						writerOutput.write(usersFollowing);
+						writerOutput.newLine();
+						writerOutput.flush();
+					}
+					
 				}
 				}
 			}
