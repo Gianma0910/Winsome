@@ -56,6 +56,18 @@ public class FollowerDatabaseImpl extends UnicastRemoteObject implements Followe
 		System.out.println("Followers has just been setted");
 	}
 	
+	@Override
+	public void setFollowing(ArrayList<String> following) {
+		Objects.requireNonNull(following, "Following list is null");
+		
+		this.following = following;
+	}
+	
+	@Override
+	public ArrayList<String> getFollowing(){
+		return following;
+	}
+	
 	public ArrayList<String> getFollowers(){
 		return followers;
 	}
@@ -69,15 +81,4 @@ public class FollowerDatabaseImpl extends UnicastRemoteObject implements Followe
 	public String getUsername() {
 		return username;
 	}
-	
-	public void setFollowing(ArrayList<String> following) {
-		Objects.requireNonNull(following, "Following list is null");
-		
-		this.following = following;
-	}
-	
-	public ArrayList<String> getFollowing(){
-		return following;
-	}
-	
 }

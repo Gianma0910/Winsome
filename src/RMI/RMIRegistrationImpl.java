@@ -32,8 +32,6 @@ public class RMIRegistrationImpl implements RMIRegistration {
 	
 		//create a new User
 		User user = new User(username, password, tags);
-	
-		System.out.println(user.getTagList());
 		
 		//add the new User into Database
 		db.addUserToDatabase(username, user);

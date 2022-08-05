@@ -1,8 +1,8 @@
 package server.database;
 
-import java.lang.reflect.Type;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -10,8 +10,6 @@ import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-
 import utility.User;
 
 /**
@@ -194,10 +192,13 @@ public class Database {
 		StringBuilder response = new StringBuilder();
 		
 		ArrayList<String> following = userFollowing.get(username);
+		Iterator<String> it = following.iterator();
 		
 		response.append("[");
-		for(String s : following) {
-			response.append(s).append(", ");
+		while(it.hasNext()) {
+			response.append(it.next());
+			if(it.hasNext())
+				response.append(", ");
 		}
 		response.append("]");
 		
@@ -229,23 +230,32 @@ public class Database {
 		}).create();
 		
 		StringBuilder serializationUsers = new StringBuilder();
-		serializationUsers.append("[");
+		ArrayList<User> registeredUsers = new ArrayList<>();
 		
 		for(String s : userToBeBackuped.keySet()) {
-			if(s.equals(username)) continue;
-			else {
-				User u = userToBeBackuped.get(s);
-				
-				for(String tag : tagList) {
-					if(u.getTagList().contains(tag)) {
-						serializationUsers.append(gson.toJson(u));
+			if(userToBeBackuped.get(s).getUsername().equals(username)) continue;
+			else registeredUsers.add(userToBeBackuped.get(s));
+		}
+		
+		Iterator<User> it = registeredUsers.iterator();
+		serializationUsers.append("[");
+		
+		while(it.hasNext()) {
+			User u = it.next();
+			for(String s : tagList) {
+				if(u.getTagList().contains(s)) {
+					serializationUsers.append(gson.toJson(u));
+					if(it.hasNext())
 						serializationUsers.append(",");
-						break;
-					}else continue;
+					
+					break;
 				}
+				else continue;
 			}
 		}
 		serializationUsers.append("]");
+		
+		System.out.println(serializationUsers.toString());
 		
 		return serializationUsers.toString();
 	}

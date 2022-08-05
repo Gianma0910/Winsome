@@ -1,6 +1,5 @@
 package utility;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
@@ -14,7 +13,7 @@ public class User{
 	/** User's password*/
 	private String password;
 	/** User's tag list*/
-	private ArrayList<String> tags;
+	private ArrayList<String> tagList;
 	
 	/**
 	 * Basic constructor for a User
@@ -25,7 +24,7 @@ public class User{
 	public User(String username, String password, ArrayList<String> tags) {	
 		this.username = username;
 		this.password = password;
-		this.tags = tags;
+		this.tagList = tags;
 	}
 
 	/** Return user's username*/
@@ -40,7 +39,7 @@ public class User{
 	
 	/** Return user's tag list*/
 	public ArrayList<String> getTagList(){
-		return tags;
+		return tagList;
 	}
 	
 }

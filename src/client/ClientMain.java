@@ -106,7 +106,7 @@ public class ClientMain {
 				}else if(requestSplitted[1].equals("followers")) {
 					performViewFollowers(stubClientDatabase);
 				}else if(requestSplitted[1].equals("following")){
-					performViewFollowing(requestSplitted, readerInput, writerOutput);
+					performViewFollowing(requestSplitted, writerOutput, readerInput);
 				}
 				
 				break;
@@ -197,6 +197,9 @@ public class ClientMain {
 		}else if(response.equals(TypeError.USRALREADYLOGGED)) {
 			System.err.println("A user with the username " + username + " is already logged in Winsome");
 			return;
+		}else if(response.equals(TypeError.CLIENTALREADYLOGGED)) {
+			System.err.println("This client is already logged in Winsome");
+			return;
 		}else if(response.equals(TypeError.SUCCESS)) {
 			System.out.println(username + " is logged in Winsome");
 			
@@ -252,17 +255,19 @@ public class ClientMain {
 		
 		ArrayList<UserWrapper> outputUserList = gson.fromJson(serializationRegisteredUser, listOfUsers);
 	
-		System.out.println("--------------------------------------------");
-		System.out.printf("%5s %10s", "Username", "Tag list");
+		System.out.println("---------------------------------------------------------------------------");
+		System.out.println("          List of registerd users with at least one tag in common          ");
+		System.out.println("---------------------------------------------------------------------------");
+		System.out.printf("%5s %20s", "Username", "Tag list");
 		System.out.println();
-		System.out.println("--------------------------------------------");
+		System.out.println("---------------------------------------------------------------------------");
 		
 		for(UserWrapper uw : outputUserList) {
-			System.out.format("%7s %15s", uw.getUsername(), uw.getTagList());
+			System.out.format("%7s %20s", uw.getUsername(), uw.getTagList());
 			System.out.println();
 		}
 		
-		System.out.println("--------------------------------------------");
+		System.out.println("---------------------------------------------------------------------------");
 
 	}
 	
@@ -285,7 +290,22 @@ public class ClientMain {
 		
 	}
 	
-	private static void performViewFollowing(String[] requestSplitted, BufferedReader readerInput, BufferedWriter writerOutput) throws IOException {
+	private static void performViewFollowing(String [] requestSplitted, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException {
+//		ArrayList<String> following = stubClientDatabase.getFollowing();
+//		
+//		System.out.print("Following: ");
+//		
+//		Iterator<String> it = following.iterator();
+//		
+//		while(it.hasNext()) {
+//			System.out.print(it.next());
+//			if(it.hasNext())
+//				System.out.println(", ");
+//		}
+//		
+//		System.out.println();
+//		
+//		return;
 		StringBuilder requestClient = new StringBuilder();
 		
 		requestClient.append(requestSplitted[0]).append(":").append(requestSplitted[1]);
@@ -299,6 +319,8 @@ public class ClientMain {
 		response = response.substring(1, response.length()-1);
 		
 		System.out.println("Following: " + response);
+		
+		return;
 	}
 	
 	private static void performAddFollowerAction(String[] requestSplitted, BufferedReader readerInput, BufferedWriter writerOutput) throws IOException {

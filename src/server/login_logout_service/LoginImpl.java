@@ -29,6 +29,9 @@ public class LoginImpl implements Login{
 		if(usrLogged.containsValue(username)) 
 			return TypeError.USRALREADYLOGGED;
 		
+		if(usrLogged.containsKey(socketClient))
+			return TypeError.CLIENTALREADYLOGGED;
+		
 		//add the socketClient that identified the client into the Database.
 		//That operation indicates that the client is logged with a certain username
 		db.addUserLoggedIn(socketClient, username);

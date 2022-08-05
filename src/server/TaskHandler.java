@@ -12,6 +12,7 @@ import java.util.Objects;
 
 import RMI.FollowerDatabase;
 import RMI.RMICallback;
+import client.FollowerDatabaseImpl;
 import configuration.ServerConfiguration;
 import server.database.Database;
 import server.login_logout_service.LoginImpl;
@@ -135,6 +136,10 @@ public class TaskHandler implements Runnable {
 						db.addFollowing(usernameNewFollow, usernameToFollow);
 						db.addFollower(usernameToFollow, usernameNewFollow);
 						
+						ArrayList<String> followingListUser = db.getFollowingListByUsername(usernameToFollow);
+						FollowerDatabase stub = stubCallbackRegistration.getCallback(usernameToFollow);
+						stub.setFollowing(followingListUser);
+						
 						writerOutput.write(error);
 						writerOutput.newLine();
 						writerOutput.flush();
@@ -158,6 +163,10 @@ public class TaskHandler implements Runnable {
 					}else if(error.equals(TypeError.SUCCESS)) {
 						db.removeFollowing(usernameRemoveFollow, usernameToUnfollow);
 						db.removeFollower(usernameToUnfollow, usernameRemoveFollow);
+						
+						ArrayList<String> followingListUser = db.getFollowingListByUsername(usernameRemoveFollow);
+						FollowerDatabase stub = stubCallbackRegistration.getCallback(usernameRemoveFollow);
+						stub.setFollowing(followingListUser);
 						
 						writerOutput.write(error);
 						writerOutput.newLine();

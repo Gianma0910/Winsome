@@ -12,4 +12,7 @@ public interface FollowerDatabase extends Remote{
 
 	void setFollowers(ArrayList<String> followers) throws RemoteException;
 
+	void setFollowing(ArrayList<String> following) throws RemoteException;
+	
+	ArrayList<String> getFollowing() throws RemoteException;
 }

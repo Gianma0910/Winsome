@@ -2,7 +2,7 @@ package client;
 
 import java.util.ArrayList;
 
-public class UserWrapper {
+public class UserWrapper{
 
 	private String username;
 	private ArrayList<String> tagList;

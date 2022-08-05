@@ -36,4 +36,6 @@ public class TypeError {
 	public static final String VOTEPOSTNOTINFEED = "VOTEPOSTNOTINFEED";
 	/** This error occurs only when a user try to vote his post */
 	public static final String VOTEAUTHORPOST = "VOTEAUTHORPOST";
+	/** This error occurs only when a user try to login twice*/
+	public static final String CLIENTALREADYLOGGED = "CLIENTALREADYLOGGED";
 }
