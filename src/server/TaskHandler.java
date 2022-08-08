@@ -7,17 +7,17 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.ArrayList;
 import java.util.Objects;
 
-import RMI.FollowerDatabase;
 import RMI.RMICallback;
-import client.FollowerDatabaseImpl;
 import configuration.ServerConfiguration;
 import server.database.Database;
+import server.follow_unfollow_service.FollowingImpl;
+import server.follow_unfollow_service.UnfollowingImpl;
 import server.login_logout_service.LoginImpl;
 import server.login_logout_service.LogoutImpl;
-import utility.TypeError;
+import server.post_action_services.PostServicesImpl;
+import server.view_list_users_service.ViewListUsersImpl;
 
 /**
  * Thread that connect to client and receive the client request
@@ -86,36 +86,16 @@ public class TaskHandler implements Runnable {
 					//take the password written in the request client
 					String password = requestSplitted[2];
 
-					LoginImpl loginService = new LoginImpl(db);
+					LoginImpl loginService = new LoginImpl(db, writerOutput);
 					
-					String error = loginService.login(username, password, socket);
-					
-					//send the result of login 
-					writerOutput.write(error);
-					writerOutput.newLine();
-					writerOutput.flush();
-					
-					if(error.equals(TypeError.SUCCESS)) {
-						writerOutput.write(serverConf.getMulticastInfo());
-						writerOutput.newLine();
-						writerOutput.flush();
-						
-						db.setFollowingListForUser(username);
-						db.setFollowerListUser(username);
-					}
+					loginService.login(username, password, socket, serverConf);
 					
 					break;
 				}
 				case "logout":{					
-					LogoutImpl logoutService = new LogoutImpl(db);
+					LogoutImpl logoutService = new LogoutImpl(db, writerOutput);
 					
-					String error = logoutService.logout(socket);
-					
-					writerOutput.write(error);
-					writerOutput.newLine();
-					writerOutput.flush();
-					
-					socket.close();
+					logoutService.logout(socket);
 					
 					break;
 				}
@@ -123,27 +103,9 @@ public class TaskHandler implements Runnable {
 					
 					String usernameToFollow = requestSplitted[1];
 					
-					FollowerDatabase stubUsernameAssociated = stubCallbackRegistration.getCallback(usernameToFollow);
+					FollowingImpl followingService = new FollowingImpl(db, writerOutput);
 					
-					String usernameNewFollow = db.getUsernameBySocket(socket);
-					String error = stubUsernameAssociated.addFollower(usernameNewFollow);
-					
-					if(error.equals(TypeError.FOLLOWERERROR)) {
-						writerOutput.write(error);
-						writerOutput.newLine();
-						writerOutput.flush();
-					}else if(error.equals(TypeError.SUCCESS)){
-						db.addFollowing(usernameNewFollow, usernameToFollow);
-						db.addFollower(usernameToFollow, usernameNewFollow);
-						
-						ArrayList<String> followingListUser = db.getFollowingListByUsername(usernameToFollow);
-						FollowerDatabase stub = stubCallbackRegistration.getCallback(usernameToFollow);
-						stub.setFollowing(followingListUser);
-						
-						writerOutput.write(error);
-						writerOutput.newLine();
-						writerOutput.flush();
-					}
+					followingService.addFollower(usernameToFollow, stubCallbackRegistration, socket);
 					
 					break;
 				}
@@ -151,47 +113,25 @@ public class TaskHandler implements Runnable {
 					
 					String usernameToUnfollow = requestSplitted[1];
 					
-					FollowerDatabase stubUsernameAssociated = stubCallbackRegistration.getCallback(usernameToUnfollow);
+					UnfollowingImpl unfollowingService = new UnfollowingImpl(db, writerOutput);
 					
-					String usernameRemoveFollow = db.getUsernameBySocket(socket);
-					String error = stubUsernameAssociated.removeFollower(usernameRemoveFollow);
-					
-					if(error.equals(TypeError.FOLLOWERERROR)) {
-						writerOutput.write(error);
-						writerOutput.newLine();
-						writerOutput.flush();
-					}else if(error.equals(TypeError.SUCCESS)) {
-						db.removeFollowing(usernameRemoveFollow, usernameToUnfollow);
-						db.removeFollower(usernameToUnfollow, usernameRemoveFollow);
-						
-						ArrayList<String> followingListUser = db.getFollowingListByUsername(usernameRemoveFollow);
-						FollowerDatabase stub = stubCallbackRegistration.getCallback(usernameRemoveFollow);
-						stub.setFollowing(followingListUser);
-						
-						writerOutput.write(error);
-						writerOutput.newLine();
-						writerOutput.flush();
-					}
+					unfollowingService.removeFollowing(usernameToUnfollow, stubCallbackRegistration, socket);
 					
 					break;
 				}
 				case "list" : {
-					if(requestSplitted[1].equals("users")) {
-						String usersRegisteredJson = db.getRegisteredUsersJson(db.getUsernameBySocket(socket));
-						
-						writerOutput.write(usersRegisteredJson);
-						writerOutput.newLine();
-						writerOutput.flush();
-						
-						break;
-					}else if(requestSplitted[1].equals("following")) {
-						String usersFollowing = db.toStringFollowingListByUsername(db.getUsernameBySocket(socket));
-						
-						writerOutput.write(usersFollowing);
-						writerOutput.newLine();
-						writerOutput.flush();
-					}
+					ViewListUsersImpl listUsersService = new ViewListUsersImpl(db, writerOutput);
 					
+					listUsersService.viewListUsers(socket);
+					
+					break;
+				}
+				case "post": {
+					PostServicesImpl createPostService = new PostServicesImpl(db, writerOutput);
+					
+					createPostService.createPost(requestSplitted, socket);
+					
+					break;
 				}
 				}
 			}

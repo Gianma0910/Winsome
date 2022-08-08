@@ -29,6 +29,9 @@ public class FollowerDatabaseImpl extends UnicastRemoteObject implements Followe
 		if(followers.contains(username))
 			return TypeError.FOLLOWERERROR;
 		
+		if(username.equals(this.username))
+			return TypeError.FOLLOWHIMSELFERROR;
+		
 		followers.add(username);
 		System.out.println("User " + username + " added to your follower");
 		
@@ -42,6 +45,9 @@ public class FollowerDatabaseImpl extends UnicastRemoteObject implements Followe
 		if(!followers.contains(username))
 			return TypeError.FOLLOWERERROR;
 			
+		if(username.equals(this.username))
+			return TypeError.UNFOLLOWHIMSELFERROR;
+		
 		followers.remove(username);
 		System.out.println("User " + username + " removed from your follower");
 		

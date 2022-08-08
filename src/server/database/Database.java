@@ -5,11 +5,14 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import utility.Post;
 import utility.User;
 
 /**
@@ -31,6 +34,10 @@ public class Database {
 	
 	private ConcurrentHashMap<String, ArrayList<String>> userFollower;
 	
+	private ConcurrentHashMap<String, Post> userPosts;
+	
+	private AtomicInteger idPost;
+	
 	/**
 	 * Basic constructor for Database class
 	 */
@@ -40,6 +47,10 @@ public class Database {
 		this.userLoggedIn = new ConcurrentHashMap<Socket, String>();
 		this.userFollowing = new ConcurrentHashMap<String, ArrayList<String>>();
 		this.userFollower = new ConcurrentHashMap<String, ArrayList<String>>();
+		this.userPosts = new ConcurrentHashMap<String, Post>();
+		
+		this.idPost = new AtomicInteger(0);
+
 	}
 	
 	/**
@@ -259,4 +270,17 @@ public class Database {
 		
 		return serializationUsers.toString();
 	}
+	
+	public synchronized int getAndIncrementIdPost() {
+		return idPost.getAndIncrement();
+	}
+
+	public String addPostInWinsome(int idPost, String authorPost, String titlePost, String contentPost) {
+		Post newPost = new Post(idPost, titlePost, contentPost, authorPost);
+	
+		userPosts.putIfAbsent(authorPost, newPost);
+		
+		return "New post created with id: " + idPost;
+	}
+
 }

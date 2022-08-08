@@ -24,6 +24,16 @@ public class TypeError {
 	public static final String LOGOUTERROR = "LOGOUTERROR";
 	/** This error occurs only when a user try to become a new follower of a user that he already follow */
 	public static final String FOLLOWERERROR = "FOLLOWERERROR";
+	/** This error occurs only when a user try to follow himself*/
+	public static final String FOLLOWHIMSELFERROR = "FOLLOWHIMSELFERROR";
+	/** This error occurs only when a user try to follow a user that isn't registered in Winsome*/
+	public static final String FOLLOWERNOTEXISTS = "FOLLOWERNOTEXISTS";
+	/** This error occurs only when a user try to unfollow a user that he don't follow*/
+	public static final String UNFOLLOWERERROR = "UNFOLLOWERROR";
+	/** This error occurs only when a user try to unfollow himself*/
+	public static final String UNFOLLOWHIMSELFERROR = "UNFOLLOWHIMSELFERROR";
+	/** This error occurs only when a user try to unfollow a user that isn't exists in Winsome*/
+	public static final String UNFOLLOWINGNOTEXISTS = "UNFOLLOWINGNOTEXISTS";
 	/** This error occurs only when a user try to create a post with a title length greater than 20 characters */
 	public static final String TITLELENGTHERROR = "TITLELENGTHERROR";
 	/** This error occurs only when a user try to create a post with a content length greater than 500 characters */
@@ -38,4 +48,5 @@ public class TypeError {
 	public static final String VOTEAUTHORPOST = "VOTEAUTHORPOST";
 	/** This error occurs only when a user try to login twice*/
 	public static final String CLIENTALREADYLOGGED = "CLIENTALREADYLOGGED";
+
 }

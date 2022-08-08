@@ -1,6 +1,11 @@
 package server.login_logout_service;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.net.Socket;
+
+import configuration.ServerConfiguration;
 
 /**
  * Service that allow a user to login in Winsome
@@ -10,12 +15,11 @@ import java.net.Socket;
 public interface Login {
 	
 	/**
-	 * This method allow a user, already registered in Winsome, to login with his username and password
+	 * This method allow a user, already registered in Winsome, to login with his username and password. At the end the server send a certain kind of error to the client.
 	 * @param username User's username. Cannot be null
 	 * @param password User's password. Cannot be null
 	 * @param socketClient Client's socket that want to login. Cannot be null
-	 * @return A String that represents the type of error that occurs during the execution of method. Return TypeError.SUCCESS if the operation is successfully completed
 	 */
-	String login(String username, String password, Socket socketClient);
+	void login(String username, String password, Socket socketClient, ServerConfiguration serverConf) throws IOException;
 	
 }
