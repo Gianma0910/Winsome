@@ -17,6 +17,8 @@ import client.follow_unfollow_request.UnfollowRequest;
 import client.login_logout_request.LoginRequest;
 import client.login_logout_request.LogoutRequest;
 import client.post_action_request.PostRequest;
+import client.post_action_request.ShowFeedRequest;
+import client.post_action_request.ViewBlogRequest;
 import client.register_request.RegisterRequest;
 import client.view_list_request.ViewListFollowersRequest;
 import client.view_list_request.ViewListFollowingRequest;
@@ -95,9 +97,18 @@ public class ClientMain {
 				break;
 			}
 			case "post": {
-				String [] r = request.split("'");
+				String [] r = request.split(" \"");
 				PostRequest.performCreatePost(r, readerInput, writerOutput);
 				break;
+			}
+			case "blog": {
+				ViewBlogRequest.performViewBlogAction(requestSplitted, writerOutput, readerInput);
+				break;
+			}
+			case "show": {
+				if(requestSplitted[1].equals("feed")) {
+					ShowFeedRequest.performShowFeedRequest(requestSplitted, writerOutput, readerInput);
+				}
 			}
 			
 			default: {

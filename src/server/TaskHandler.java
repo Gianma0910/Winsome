@@ -127,11 +127,24 @@ public class TaskHandler implements Runnable {
 					break;
 				}
 				case "post": {
-					PostServicesImpl createPostService = new PostServicesImpl(db, writerOutput);
+					PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
 					
-					createPostService.createPost(requestSplitted, socket);
+					postServices.createPost(requestSplitted, socket);
 					
 					break;
+				}
+				case "blog": {
+					PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
+					
+					postServices.viewUserPost(socket);
+				}
+				case "show": {
+					if(requestSplitted[1].equals("feed")) {
+						PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
+						
+						postServices.viewUserFeed(socket);
+					}
+						
 				}
 				}
 			}

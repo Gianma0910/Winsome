@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.gson.ExclusionStrategy;
@@ -34,7 +35,7 @@ public class Database {
 	
 	private ConcurrentHashMap<String, ArrayList<String>> userFollower;
 	
-	private ConcurrentHashMap<String, Post> userPosts;
+	private ConcurrentLinkedQueue<Post> posts;
 	
 	private AtomicInteger idPost;
 	
@@ -47,7 +48,7 @@ public class Database {
 		this.userLoggedIn = new ConcurrentHashMap<Socket, String>();
 		this.userFollowing = new ConcurrentHashMap<String, ArrayList<String>>();
 		this.userFollower = new ConcurrentHashMap<String, ArrayList<String>>();
-		this.userPosts = new ConcurrentHashMap<String, Post>();
+		this.posts = new ConcurrentLinkedQueue<Post>();
 		
 		this.idPost = new AtomicInteger(0);
 
@@ -265,22 +266,65 @@ public class Database {
 			}
 		}
 		serializationUsers.append("]");
-		
-		System.out.println(serializationUsers.toString());
-		
+			
 		return serializationUsers.toString();
 	}
 	
 	public synchronized int getAndIncrementIdPost() {
 		return idPost.getAndIncrement();
 	}
-
+	
 	public String addPostInWinsome(int idPost, String authorPost, String titlePost, String contentPost) {
+		Objects.requireNonNull(idPost,  "Id post is null");
+		Objects.requireNonNull(authorPost, "Author post is null");
+		Objects.requireNonNull(titlePost, "Title post is null");
+		Objects.requireNonNull(contentPost, "Content post is null");
+		
 		Post newPost = new Post(idPost, titlePost, contentPost, authorPost);
 	
-		userPosts.putIfAbsent(authorPost, newPost);
+		posts.add(newPost);
 		
 		return "New post created with id: " + idPost;
 	}
 
+	public String getUserPostJson(String username) {
+		Gson gson = new GsonBuilder().setExclusionStrategies(new ExclusionStrategy() {
+
+			@Override
+			public boolean shouldSkipClass(Class<?> arg0) {
+				return false;
+			}
+
+			@Override
+			public boolean shouldSkipField(FieldAttributes f) {
+				return (f.getDeclaringClass() == Post.class && f.getName().equals("content") && f.getName().equals("rewin"));
+			}
+			
+		}).create();
+		
+		ArrayList<Post> userPost = new ArrayList<Post>();
+		
+		for(Post p : posts) {
+			if(!(username.equals(p.getAuthor()))) continue;
+			else userPost.add(p);
+		}
+		
+		StringBuilder serializationPosts = new StringBuilder();
+		Iterator<Post> it = userPost.iterator();
+		
+		serializationPosts.append("[");
+		while(it.hasNext()) {
+			serializationPosts.append(gson.toJson(it.next()));
+			if(it.hasNext())
+				serializationPosts.append(", ");
+		}
+		serializationPosts.append("]");
+		
+		return serializationPosts.toString();
+	}
+	
+	public String getUserFeedJson(String username) {
+		return null;
+	}
+	
 }

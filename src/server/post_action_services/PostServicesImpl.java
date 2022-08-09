@@ -39,7 +39,31 @@ public class PostServicesImpl implements PostServices {
 		 
 		sendError(error, writerOutput);	
 	}
-
+	
+	public void viewUserPost(Socket socket) throws IOException {
+		String username = db.getUsernameBySocket(socket);
+		
+		String serializationUserPost = db.getUserPostJson(username);
+		
+		writerOutput.write(serializationUserPost);
+		writerOutput.newLine();
+		writerOutput.flush();
+		
+		return;
+	}
+	
+	public void viewUserFeed(Socket socket) {
+		String username = db.getUsernameBySocket(socket);
+		
+		String serializationUserFeed = db.getUserFeedJson(username);
+		
+		writerOutput.write(serializationUserFeed);
+		writerOutput.newLine();
+		writerOutput.flush();
+		
+		return;
+	}
+	
 	private void sendError(String error, BufferedWriter writerOutput) throws IOException {
 		writerOutput.write(error);
 		writerOutput.newLine();

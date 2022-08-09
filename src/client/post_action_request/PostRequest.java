@@ -9,8 +9,8 @@ import utility.TypeError;
 public class PostRequest {
 
 	public static void performCreatePost(String[] requestSplitted, BufferedReader readerInput, BufferedWriter writerOutput) throws IOException {
-		String titlePost = requestSplitted[1];
-		String contentPost = requestSplitted[2];
+		String titlePost = requestSplitted[1].substring(0, requestSplitted[1].length()-1);
+		String contentPost = requestSplitted[2].substring(0, requestSplitted[2].length()-1);
 		
 		StringBuilder requestClient = new StringBuilder();
 		requestClient.append("post").append(":").append(titlePost).append(":").append(contentPost);
