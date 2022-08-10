@@ -4,7 +4,13 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.net.Socket;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import server.database.Database;
+import utility.Post;
 import utility.TypeError;
 
 public class PostServicesImpl implements PostServices {
@@ -40,6 +46,7 @@ public class PostServicesImpl implements PostServices {
 		sendError(error, writerOutput);	
 	}
 	
+	@Override
 	public void viewUserPost(Socket socket) throws IOException {
 		String username = db.getUsernameBySocket(socket);
 		
@@ -52,7 +59,8 @@ public class PostServicesImpl implements PostServices {
 		return;
 	}
 	
-	public void viewUserFeed(Socket socket) {
+	@Override
+	public void viewUserFeed(Socket socket) throws IOException {
 		String username = db.getUsernameBySocket(socket);
 		
 		String serializationUserFeed = db.getUserFeedJson(username);
@@ -61,6 +69,61 @@ public class PostServicesImpl implements PostServices {
 		writerOutput.newLine();
 		writerOutput.flush();
 		
+		return;
+	}
+	
+	@Override
+	public void viewPost(String idPostToParse, Socket socket) throws IOException {
+		int idPost = Integer.parseInt(idPostToParse);
+		
+		String username = db.getUsernameBySocket(socket);
+		
+		if(db.isPostNull(idPost) == false) {
+			sendError(TypeError.IDPOSTNOTEXISTS, writerOutput);
+			return;
+		}
+		
+		sendError(TypeError.SUCCESS, writerOutput);
+		
+		String serializedPost = db.getPostByIdJson(idPost);
+		
+		writerOutput.write(serializedPost);
+		writerOutput.newLine();
+		writerOutput.flush();
+		
+		if(db.isPostAuthor(idPost, username)) {
+			sendError(TypeError.POSTINYOURBLOG, writerOutput);
+		}else if(db.isPostInFeed(idPost, username)) {
+			sendError(TypeError.POSTINYOURFEED, writerOutput);
+		}
+		
+		return;
+	}
+	
+	@Override
+	public void deletePost(String idPostToParse, Socket socket) throws IOException {
+		int idPost = Integer.parseInt(idPostToParse);
+		
+		String username = db.getUsernameBySocket(socket);
+		
+		if(db.isPostNull(idPost) == false) {
+			sendError(TypeError.IDPOSTNOTEXISTS, writerOutput);
+			return;
+		}
+		
+		if(db.isPostInFeed(idPost, username)) {
+			sendError(TypeError.DELETEPOSTFEEDERROR, writerOutput);
+			return;
+		}
+		
+		if(db.isPostAuthor(idPost, username) == false) {
+			sendError(TypeError.POSTNOTINYOURBLOG, writerOutput);
+			return;
+		}
+		
+		db.removePostFromWinsome(idPost);
+		
+		sendError(TypeError.SUCCESS, writerOutput);
 		return;
 	}
 	

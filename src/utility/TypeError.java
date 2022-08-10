@@ -46,6 +46,16 @@ public class TypeError {
 	public static final String VOTEPOSTNOTINFEED = "VOTEPOSTNOTINFEED";
 	/** This error occurs only when a user try to vote his post */
 	public static final String VOTEAUTHORPOST = "VOTEAUTHORPOST";
+	/** This error occurs only when a user try to view a post that not exists*/
+	public static final String IDPOSTNOTEXISTS = "IDPOSTNOTEXISTS";
+	/** This "error" occurs only when a user try to view a post and this post is in his feed*/
+	public static final String POSTINYOURFEED = "POSTINYOURFEED";
+	/** This "error" occurs only when a user try to view a post and this post is in his blog*/
+	public static final String POSTINYOURBLOG = "POSTINYOURBLOG";
+	/** This error occurs only when a user try to delete a post that isn't in his blog*/
+	public static final String POSTNOTINYOURBLOG = "POSTNOTINYOURBLOG"; 
+	/** This error occurs only when a user try to delete a post that is in his feed*/
+	public static final String DELETEPOSTFEEDERROR = "DELETEPOSTFEEDERROR";
 	/** This error occurs only when a user try to login twice*/
 	public static final String CLIENTALREADYLOGGED = "CLIENTALREADYLOGGED";
 

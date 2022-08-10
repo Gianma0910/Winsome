@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -35,7 +36,9 @@ public class Database {
 	
 	private ConcurrentHashMap<String, ArrayList<String>> userFollower;
 	
-	private ConcurrentLinkedQueue<Post> posts;
+	private ConcurrentHashMap<Integer, Post> posts;
+	
+	private ConcurrentHashMap<String, ArrayList<Post>> userFeed;
 	
 	private AtomicInteger idPost;
 	
@@ -48,7 +51,8 @@ public class Database {
 		this.userLoggedIn = new ConcurrentHashMap<Socket, String>();
 		this.userFollowing = new ConcurrentHashMap<String, ArrayList<String>>();
 		this.userFollower = new ConcurrentHashMap<String, ArrayList<String>>();
-		this.posts = new ConcurrentLinkedQueue<Post>();
+		this.posts = new ConcurrentHashMap<Integer, Post>();
+		this.userFeed = new ConcurrentHashMap<String, ArrayList<Post>>();
 		
 		this.idPost = new AtomicInteger(0);
 
@@ -147,9 +151,11 @@ public class Database {
 			followers.add(usernameNewFollower);
 		}
 		
+		addPostToUserFeedByFollower(usernameNewFollower, usernameUpdateFollower);
+		
 		return;
 	}
-	
+
 	public void removeFollower(String usernameUpdateFollower, String usernameToRemove) {
 		Objects.requireNonNull(usernameUpdateFollower, "Username used to update his followers is null");
 		Objects.requireNonNull(usernameToRemove, "Username to remove from followers is null");
@@ -157,8 +163,10 @@ public class Database {
 		ArrayList<String> followers = userFollower.get(usernameUpdateFollower);
 		
 		followers.remove(usernameToRemove);
+		
+		removePostFromUserFeedByFollower(usernameToRemove, usernameUpdateFollower);
 	}
-	
+
 	public ArrayList<String> getFollowerListByUsername(String username) {
 		Objects.requireNonNull(username, "Username is null");
 		
@@ -282,7 +290,13 @@ public class Database {
 		
 		Post newPost = new Post(idPost, titlePost, contentPost, authorPost);
 	
-		posts.add(newPost);
+		posts.putIfAbsent(idPost, newPost);
+		
+		ArrayList<String> authorFollower = userFollower.get(authorPost);
+		
+		for(String s : authorFollower) {
+			addPostToUserFeedByAddingPost(s, newPost);
+		}
 		
 		return "New post created with id: " + idPost;
 	}
@@ -297,14 +311,14 @@ public class Database {
 
 			@Override
 			public boolean shouldSkipField(FieldAttributes f) {
-				return (f.getDeclaringClass() == Post.class && f.getName().equals("content") && f.getName().equals("rewin"));
+				return (f.getDeclaringClass() == Post.class && f.getName().equals("content") && f.getName().equals("rewin") && f.getName().equals("votes") && f.getName().equals("comments"));
 			}
 			
 		}).create();
 		
 		ArrayList<Post> userPost = new ArrayList<Post>();
 		
-		for(Post p : posts) {
+		for(Post p : posts.values()) {
 			if(!(username.equals(p.getAuthor()))) continue;
 			else userPost.add(p);
 		}
@@ -323,8 +337,181 @@ public class Database {
 		return serializationPosts.toString();
 	}
 	
-	public String getUserFeedJson(String username) {
-		return null;
+	public void setUserFeed(String username) {
+		Objects.requireNonNull(username, "Username is null");
+		
+		userFeed.putIfAbsent(username, new ArrayList<Post>());
+		
+		return;
 	}
 	
+	public String getUserFeedJson(String username) {
+		Objects.requireNonNull(username, "Username is null");
+		
+		ArrayList<Post> feedPost = userFeed.get(username);
+		
+		Gson gson = new GsonBuilder().addSerializationExclusionStrategy(new ExclusionStrategy() {
+			
+			@Override
+			public boolean shouldSkipField(FieldAttributes f) {
+				return (f.getDeclaringClass() == Post.class && f.getName().equals("content") && f.getName().equals("rewin") && f.getName().equals("votes") && f.getName().equals("comments"));
+			}
+			
+			@Override
+			public boolean shouldSkipClass(Class<?> arg0) {
+				return false;
+			}
+		}).create();
+		
+		StringBuilder serializedPost = new StringBuilder();
+		Iterator<Post> it = feedPost.iterator();
+		
+		serializedPost.append("[");
+		while(it.hasNext()) {
+			serializedPost.append(gson.toJson(it.next()));
+			if(it.hasNext())
+				serializedPost.append(", ");
+		}
+		serializedPost.append("]");
+		
+		return serializedPost.toString();
+	}
+	
+	private void addPostToUserFeedByFollower(String usernameUpdateFeed, String usernameTakePost) {
+		Objects.requireNonNull(usernameUpdateFeed, "Username used to update his feed is null");
+		Objects.requireNonNull(usernameTakePost, "Username used to take post to add to a certain user's feed is null");
+		
+		ArrayList<Post> feed = userFeed.get(usernameUpdateFeed);
+		
+		if(feed == null) 
+			feed = new ArrayList<Post>();
+		
+		for(Post p : posts.values()) {
+			if(p.getAuthor().equals(usernameTakePost))
+				feed.add(p);
+			else continue;
+		}
+		
+		return;
+	}
+	
+	private void removePostFromUserFeedByFollower(String usernameUpdateFeed, String usernameTakePost) {
+		Objects.requireNonNull(usernameUpdateFeed, "Username used to update his feed is null");
+		Objects.requireNonNull(usernameTakePost, "Username used to remove post from user's feed is null");
+		
+		ArrayList<Post> feed = userFeed.get(usernameUpdateFeed);
+		Iterator<Post> it = feed.iterator();
+		
+		while(it.hasNext()) {
+			Post p = it.next();
+			if(usernameTakePost.equals(p.getAuthor()))
+				it.remove();
+			else continue;
+		}
+		
+		return;
+	}
+	
+	private void addPostToUserFeedByAddingPost(String usernameUpdateFeed, Post newPost) {
+		Objects.requireNonNull(usernameUpdateFeed, "Username used to update his feed is null");
+		Objects.requireNonNull(newPost, "The post that must be added to user's feed is null");
+		
+		ArrayList<Post> feed = userFeed.get(usernameUpdateFeed);
+		
+		feed.add(newPost);
+		
+		return;
+	}
+	
+	private void removePostFromUserFeedByDeletingPost(int idPost, String authorPost) {
+		Objects.requireNonNull(idPost, "Id used to get the specified post is null");
+		Objects.requireNonNull(authorPost, "Author post is null");
+		
+		ArrayList<String> followerAuthorPost = userFollower.get(authorPost);
+		
+		for(String s : followerAuthorPost) {
+			ArrayList<Post> feedAuthorPostFollower = userFeed.get(s);
+			Iterator<Post> it = feedAuthorPostFollower.iterator();
+			while(it.hasNext()) {
+				Post p = it.next();
+				if(p.getIdPost() == idPost) {
+					it.remove();
+					break;
+				}else continue;
+			}
+		}
+		
+		return;
+	}
+	
+	public String getPostByIdJson(int idPost) {
+		Objects.requireNonNull(idPost, "Id used to get the specified post is null");
+		
+		Gson gson = new GsonBuilder().addSerializationExclusionStrategy(new ExclusionStrategy() {
+			
+			@Override
+			public boolean shouldSkipField(FieldAttributes f) {
+				return (f.getDeclaringClass() == Post.class && f.getName().equals("idPost") && f.getName().equals("rewin") && f.getName().equals("author"));
+			}
+			
+			@Override
+			public boolean shouldSkipClass(Class<?> arg0) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+		}).create();
+		
+		Post p = getPostById(idPost);
+		
+		System.out.println(gson.toJson(p));
+		
+		return gson.toJson(p);
+	}
+	
+	public Post getPostById(int idPost) {
+		Objects.requireNonNull(idPost, "Id used to get the specified post is null");
+		
+		return posts.get(idPost);
+	}
+	
+	public boolean isPostAuthor(int idPost, String username) {
+		Objects.requireNonNull(idPost, "Id used to get the specified post is null");
+		Objects.requireNonNull(username, "Username used to get check if the user is the author is null");
+		
+		Post p = getPostById(idPost);
+		
+		return p.getAuthor().equals(username);
+	}
+	
+	public boolean isPostInFeed(int idPost, String username) {
+		Objects.requireNonNull(idPost, "Id used to get the specified post is null");
+		Objects.requireNonNull(username, "Username used to get user's feed is null");
+		
+		ArrayList<Post> feed = userFeed.get(username);
+		Post p = getPostById(idPost);
+		
+		return feed.contains(p);
+		
+	}
+	
+	public boolean isPostNull(int idPost) {
+		Objects.requireNonNull(idPost, "Id used to get the specified post is null");
+		
+		return getPostById(idPost) != null ? true : false;
+	}
+	
+	public void removePostFromWinsome(int idPost) {
+		Objects.requireNonNull(idPost, "Id used to get the specifies post is null");
+		
+		Post p = getPostById(idPost);
+		
+		String authorPost = p.getAuthor();
+		
+		p.removeAllComment();
+		p.removeAllVotes();
+		
+		posts.remove(idPost, p);
+		
+		removePostFromUserFeedByDeletingPost(idPost, authorPost);
+	}
 }

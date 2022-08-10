@@ -1,5 +1,7 @@
 package utility;
 
+import java.util.LinkedHashSet;
+
 public class Post {
 
 	private int idPost;
@@ -7,6 +9,8 @@ public class Post {
 	private String content;
 	private String author;
 	private String rewin;
+	private LinkedHashSet<Vote> votes;
+	private LinkedHashSet<Comment> comments;
 	
 	public Post(int idPost, String title, String content, String username) {
 		this.idPost = idPost;
@@ -14,9 +18,11 @@ public class Post {
 		this.content = content;
 		this.author = username;
 		this.rewin = null;
+		this.votes = new LinkedHashSet<Vote>();
+		this.comments = new LinkedHashSet<Comment>();
 	}
 	
-	public int idPost() {
+	public int getIdPost() {
 		return idPost;
 	}
 	
@@ -42,5 +48,45 @@ public class Post {
 	
 	public boolean isRewinned() {
 		return rewin != null ? true : false;
+	}
+	
+	public void setVotes(LinkedHashSet<Vote> votes) {
+		this.votes = votes;
+	}
+	
+	public LinkedHashSet<Vote> getVotes(){
+		return votes;
+	}
+	
+	public void addVote(Vote v) {
+		votes.add(v);
+	}
+	
+	public void removeVote(Vote v) {
+		votes.remove(v);
+	}
+	
+	public void setComments(LinkedHashSet<Comment> comments) {
+		this.comments = comments;
+	}
+	
+	public LinkedHashSet<Comment> getComments(){
+		return comments;
+	}
+	
+	public void addComment(Comment c) {
+		comments.add(c);
+	}
+	
+	public void removeComment(Comment c) {
+		comments.remove(c);
+	}
+	
+	public void removeAllComment() {
+		comments.removeAll(comments);
+	}
+	
+	public void removeAllVotes() {
+		votes.removeAll(votes);
 	}
 }

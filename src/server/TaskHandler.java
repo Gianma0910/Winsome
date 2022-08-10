@@ -16,6 +16,7 @@ import server.follow_unfollow_service.FollowingImpl;
 import server.follow_unfollow_service.UnfollowingImpl;
 import server.login_logout_service.LoginImpl;
 import server.login_logout_service.LogoutImpl;
+import server.post_action_services.PostServices;
 import server.post_action_services.PostServicesImpl;
 import server.view_list_users_service.ViewListUsersImpl;
 
@@ -137,14 +138,28 @@ public class TaskHandler implements Runnable {
 					PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
 					
 					postServices.viewUserPost(socket);
+					
+					break;
 				}
 				case "show": {
 					if(requestSplitted[1].equals("feed")) {
 						PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
 						
 						postServices.viewUserFeed(socket);
+					}else if(requestSplitted[1].equals("post")) {
+						PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
+						
+						postServices.viewPost(requestSplitted[2], socket);
 					}
 						
+					break;
+				}
+				case "delete": {
+					PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
+					
+					postServices.deletePost(requestSplitted[1], socket);
+					
+					break;
 				}
 				}
 			}

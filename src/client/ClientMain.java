@@ -16,8 +16,10 @@ import client.follow_unfollow_request.FollowRequest;
 import client.follow_unfollow_request.UnfollowRequest;
 import client.login_logout_request.LoginRequest;
 import client.login_logout_request.LogoutRequest;
+import client.post_action_request.DeletePostRequest;
 import client.post_action_request.PostRequest;
 import client.post_action_request.ShowFeedRequest;
+import client.post_action_request.ShowPostRequest;
 import client.post_action_request.ViewBlogRequest;
 import client.register_request.RegisterRequest;
 import client.view_list_request.ViewListFollowersRequest;
@@ -108,9 +110,15 @@ public class ClientMain {
 			case "show": {
 				if(requestSplitted[1].equals("feed")) {
 					ShowFeedRequest.performShowFeedRequest(requestSplitted, writerOutput, readerInput);
+				}else if(requestSplitted[1].equals("post")) {
+					ShowPostRequest.performShowPostAction(requestSplitted, writerOutput, readerInput);
 				}
+				break;
 			}
-			
+			case "delete": {
+				DeletePostRequest.performDeletePostAction(requestSplitted, writerOutput, readerInput);
+				break;
+			}
 			default: {
 				System.err.println("This command doesn't exists, please check the documentation");
 				break;

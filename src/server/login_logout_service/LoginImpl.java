@@ -60,6 +60,7 @@ public class LoginImpl implements Login{
 			
 		db.setFollowingListForUser(username);
 		db.setFollowerListUser(username);
+		db.setUserFeed(username);
 		
 		//add the socketClient that identified the client into the Database.
 		//That operation indicates that the client is logged with a certain username
