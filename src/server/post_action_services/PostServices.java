@@ -14,4 +14,8 @@ public interface PostServices {
 	void viewPost(String idPostToParse, Socket socket) throws IOException;
 	
 	void deletePost(String idPostToParse, Socket socket) throws IOException;
+	
+	void ratePost(String idPostToParse, String voteToParse, Socket socket) throws IOException;
+	
+	void commentPost(String idPostToParse, String contentComment, Socket socket) throws IOException;
 }

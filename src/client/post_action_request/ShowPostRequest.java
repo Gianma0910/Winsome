@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.LinkedHashSet;
 import java.util.Scanner;
 
 import com.google.gson.Gson;
@@ -11,6 +12,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import client.PostWrapperShow;
+import utility.Comment;
 import utility.TypeError;
 
 public class ShowPostRequest {
@@ -49,7 +51,12 @@ public class ShowPostRequest {
 				System.out.println("Content: " + pws.getContent());
 				System.out.println("Number positive votes: " + pws.getNumberPositiveVotes());
 				System.out.println("Number negative votes: " + pws.getNumberNegativeVotes());
-				System.out.println("Number comments: " + pws.getNumberComments());
+				System.out.print("Comments: ");
+				
+				LinkedHashSet<Comment> comments = pws.getComments();
+				for(Comment c : comments)
+					System.out.println(          c.getAuthor() + ": " + c.getContent());
+				System.out.println();
 				System.out.println("-------------------------------------");
 
 				String error2 = readerInput.readLine();
@@ -57,7 +64,7 @@ public class ShowPostRequest {
 				if(error2.equals(TypeError.POSTINYOURBLOG)) {
 					System.out.println("Do you want to delete this post? If yes, use the delete command");
 					return;
-				}else if(error.equals(TypeError.POSTINYOURFEED)) {
+				}else if(error2.equals(TypeError.POSTINYOURFEED)) {
 					System.out.println("This post is in your feed, you can add vote or comment. Use the right command");
 					return;
 				}

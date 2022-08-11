@@ -3,6 +3,7 @@ package server.database;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -14,8 +15,10 @@ import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import utility.Comment;
 import utility.Post;
 import utility.User;
+import utility.Vote;
 
 /**
  * Class that contains all the data of Winsome (Users, Posts, Comments, Votes, Transactions Wallet, follower and following)
@@ -462,9 +465,7 @@ public class Database {
 		}).create();
 		
 		Post p = getPostById(idPost);
-		
-		System.out.println(gson.toJson(p));
-		
+			
 		return gson.toJson(p);
 	}
 	
@@ -494,7 +495,7 @@ public class Database {
 		
 	}
 	
-	public boolean isPostNull(int idPost) {
+	public boolean isPostNotNull(int idPost) {
 		Objects.requireNonNull(idPost, "Id used to get the specified post is null");
 		
 		return getPostById(idPost) != null ? true : false;
@@ -514,4 +515,47 @@ public class Database {
 		
 		removePostFromUserFeedByDeletingPost(idPost, authorPost);
 	}
+	
+	public void addVoteToPost(int idPost, int vote, String authorVote) {
+		Objects.requireNonNull(idPost, "Id post is null");
+		Objects.requireNonNull(vote, "New vote for post is null");
+		Objects.requireNonNull(authorVote, "Author vote is null");
+		
+		Vote v = new Vote(idPost, authorVote, vote);
+		
+		Post p = posts.get(idPost);
+		p.addVote(v);
+		
+		return;
+	}
+	
+	public boolean isPostAlreadyVotedByUser(int idPost, String authorVote) {
+		Objects.requireNonNull(idPost, "Id post is null");
+		Objects.requireNonNull(authorVote, "Author vote is null");
+		
+		Post p = posts.get(idPost);
+		LinkedHashSet<Vote> votes = p.getVotes();
+		
+		for(Vote v : votes) {
+			if(v.getAuthorVote().equals(authorVote))
+				return true;
+			else continue;
+		}
+		
+		return false;
+	}
+	
+	public void addCommentToPost(int idPost, String comment, String authorComment) {
+		Objects.requireNonNull(idPost, "Id post is null");
+		Objects.requireNonNull(comment, "New comment for post is null");
+		Objects.requireNonNull(authorComment, "Author comment is null");
+		
+		Comment c = new Comment(idPost, authorComment, comment);
+		
+		Post p = posts.get(idPost);
+		p.addComment(c);
+		
+		return;
+	}
+	
 }

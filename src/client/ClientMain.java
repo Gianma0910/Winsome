@@ -16,8 +16,10 @@ import client.follow_unfollow_request.FollowRequest;
 import client.follow_unfollow_request.UnfollowRequest;
 import client.login_logout_request.LoginRequest;
 import client.login_logout_request.LogoutRequest;
+import client.post_action_request.CommentPostRequest;
 import client.post_action_request.DeletePostRequest;
 import client.post_action_request.PostRequest;
+import client.post_action_request.RatePostRequest;
 import client.post_action_request.ShowFeedRequest;
 import client.post_action_request.ShowPostRequest;
 import client.post_action_request.ViewBlogRequest;
@@ -117,6 +119,15 @@ public class ClientMain {
 			}
 			case "delete": {
 				DeletePostRequest.performDeletePostAction(requestSplitted, writerOutput, readerInput);
+				break;
+			}
+			case "rate": {
+				RatePostRequest.performRatePostAction(requestSplitted, writerOutput, readerInput);
+				break;
+			}
+			case "comment": {
+				String [] takeComment = request.split("\"");
+				CommentPostRequest.performCommentPostAction(requestSplitted, takeComment, writerOutput, readerInput);
 				break;
 			}
 			default: {

@@ -51,8 +51,8 @@ public class PostWrapperShow {
 		return numberNegativeVotes;
 	}
 	
-	public int getNumberComments() {
-		return comments.size();
+	public LinkedHashSet<Comment> getComments() {
+		return comments;
 	}
 	
 }

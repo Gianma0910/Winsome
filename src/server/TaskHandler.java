@@ -161,6 +161,20 @@ public class TaskHandler implements Runnable {
 					
 					break;
 				}
+				case "rate": {
+					PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
+					
+					postServices.ratePost(requestSplitted[1], requestSplitted[2], socket);
+					
+					break;
+				}
+				case "comment": {
+					PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
+				
+					postServices.commentPost(requestSplitted[1], requestSplitted[2], socket);
+				
+					break;
+				}
 				}
 			}
 		}catch(SocketTimeoutException ex) {

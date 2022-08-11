@@ -78,7 +78,7 @@ public class PostServicesImpl implements PostServices {
 		
 		String username = db.getUsernameBySocket(socket);
 		
-		if(db.isPostNull(idPost) == false) {
+		if(db.isPostNotNull(idPost) == false) {
 			sendError(TypeError.IDPOSTNOTEXISTS, writerOutput);
 			return;
 		}
@@ -93,7 +93,9 @@ public class PostServicesImpl implements PostServices {
 		
 		if(db.isPostAuthor(idPost, username)) {
 			sendError(TypeError.POSTINYOURBLOG, writerOutput);
-		}else if(db.isPostInFeed(idPost, username)) {
+		}
+		
+		if(db.isPostInFeed(idPost, username)) {
 			sendError(TypeError.POSTINYOURFEED, writerOutput);
 		}
 		
@@ -106,7 +108,7 @@ public class PostServicesImpl implements PostServices {
 		
 		String username = db.getUsernameBySocket(socket);
 		
-		if(db.isPostNull(idPost) == false) {
+		if(db.isPostNotNull(idPost) == false) {
 			sendError(TypeError.IDPOSTNOTEXISTS, writerOutput);
 			return;
 		}
@@ -127,10 +129,79 @@ public class PostServicesImpl implements PostServices {
 		return;
 	}
 	
+	@Override
+	public void ratePost(String idPostToParse, String voteToParse, Socket socket) throws IOException {
+		int idPost = Integer.parseInt(idPostToParse);
+		int vote = Integer.parseInt(voteToParse);
+		
+		String authorVote = db.getUsernameBySocket(socket);
+		
+		if(db.isPostNotNull(idPost) == false) {
+			System.out.println(TypeError.VOTEPOSTNOTEXISTS);
+			sendError(TypeError.VOTEPOSTNOTEXISTS, writerOutput);
+			return;
+		}
+		
+		if(db.isPostAuthor(idPost, authorVote)) {
+			System.out.println(TypeError.VOTEAUTHORPOST);
+			sendError(TypeError.VOTEAUTHORPOST, writerOutput);
+			return;
+		}
+		
+		if(db.isPostInFeed(idPost, authorVote) == false) {
+			System.out.println(TypeError.VOTEPOSTNOTINFEED);
+			sendError(TypeError.VOTEPOSTNOTINFEED, writerOutput);
+			return;
+		}
+		
+		if(db.isPostAlreadyVotedByUser(idPost, authorVote)) {
+			System.out.println(TypeError.VOTEALREADYEXISTS);
+			sendError(TypeError.VOTEALREADYEXISTS, writerOutput);
+			return;
+		}
+		
+		if(vote != 1 && vote != -1) {
+			System.out.println(TypeError.VOTENUMBERNOTVALID);
+			sendError(TypeError.VOTENUMBERNOTVALID, writerOutput);
+			return;
+		}
+		
+		db.addVoteToPost(idPost, vote, authorVote);
+		sendError(TypeError.SUCCESS, writerOutput);
+	
+		return;
+	}
+	
+	@Override
+	public void commentPost(String idPostToParse, String contentComment, Socket socket) throws IOException {
+		int idPost = Integer.parseInt(idPostToParse);
+		
+		String authorComment = db.getUsernameBySocket(socket);
+		
+		if(db.isPostNotNull(idPost) == false) {
+			sendError(TypeError.IDPOSTNOTEXISTS, writerOutput);
+			return;
+		}
+		
+		if(db.isPostAuthor(idPost, authorComment)) {
+			sendError(TypeError.POSTINYOURBLOG, writerOutput);
+			return;
+		}
+		
+		if(db.isPostInFeed(idPost, authorComment) == false) {
+			sendError(TypeError.POSTNOTINYOURFEED, writerOutput);
+			return;
+		}
+		
+		db.addCommentToPost(idPost, contentComment, authorComment);
+		sendError(TypeError.SUCCESS, writerOutput);
+		
+		return;
+	}
+	
 	private void sendError(String error, BufferedWriter writerOutput) throws IOException {
 		writerOutput.write(error);
 		writerOutput.newLine();
 		writerOutput.flush();
 	}
-	
 }
