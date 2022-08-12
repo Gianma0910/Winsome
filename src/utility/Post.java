@@ -8,7 +8,7 @@ public class Post {
 	private String title;
 	private String content;
 	private String author;
-	private String rewin;
+	private LinkedHashSet<String> rewin;
 	private LinkedHashSet<Vote> votes;
 	private LinkedHashSet<Comment> comments;
 	
@@ -17,7 +17,7 @@ public class Post {
 		this.title = title;
 		this.content = content;
 		this.author = username;
-		this.rewin = null;
+		this.rewin = new LinkedHashSet<String>();
 		this.votes = new LinkedHashSet<Vote>();
 		this.comments = new LinkedHashSet<Comment>();
 	}
@@ -38,16 +38,20 @@ public class Post {
 		return author;
 	}
 	
-	public String getRewin() {
+	public LinkedHashSet<String> getRewin() {
 		return rewin;
 	}
 	
-	public void setRewin(String rewinUser) {
-		this.rewin = rewinUser;
+	public void addRewin(String rewinUser) {
+		this.rewin.add(rewinUser);
 	}
 	
 	public boolean isRewinned() {
-		return rewin != null ? true : false;
+		return rewin.size() != 0 ? true : false;
+	}
+	
+	public void setRewin(LinkedHashSet<String> rewin) {
+		this.rewin = rewin;
 	}
 	
 	public void setVotes(LinkedHashSet<Vote> votes) {

@@ -18,4 +18,6 @@ public interface PostServices {
 	void ratePost(String idPostToParse, String voteToParse, Socket socket) throws IOException;
 	
 	void commentPost(String idPostToParse, String contentComment, Socket socket) throws IOException;
+	
+	void rewinPost(String idPostToParse, Socket socket) throws IOException;
 }

@@ -23,7 +23,7 @@ import server.database.Database;
 
 public class ServerMain {
 
-	public static void main(String[] args) throws InvalidConfigurationException, AlreadyBoundException, IOException {
+	public static void main(String[] args) throws InvalidConfigurationException, AlreadyBoundException, IOException, InterruptedException {
 		if(args.length != 1) {
 			System.err.println("Usage: java ServerMain <path configuration file>");
 			System.err.println("Check the documentation\n");
@@ -58,9 +58,15 @@ public class ServerMain {
 		
 		System.out.println("File properties read successfully, server is running...\n");
 		
+		BackupThread backupThread = new BackupThread(db, serverConf);
+		
 		while(true) {
 			Socket socket = serverSocketTCP.accept();
 			threadPool.execute(new TaskHandler(socket, db, serverConf, stubCallbackRegistration));
+			
+			BackupThread.sleep(serverConf.DELAYBACKUP);
+			backupThread.start();
+			
 		}
 	}
 

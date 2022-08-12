@@ -39,9 +39,13 @@ public class Database {
 	
 	private ConcurrentHashMap<String, ArrayList<String>> userFollower;
 	
-	private ConcurrentHashMap<Integer, Post> posts;
+	private ConcurrentHashMap<String, ArrayList<Post>> blogUser;
+	
+	private ConcurrentHashMap<Integer, Post> allPosts;
 	
 	private ConcurrentHashMap<String, ArrayList<Post>> userFeed;
+	
+	private ConcurrentHashMap<String, ConcurrentLinkedQueue<Post>> postRewinnedByUser;
 	
 	private AtomicInteger idPost;
 	
@@ -54,8 +58,10 @@ public class Database {
 		this.userLoggedIn = new ConcurrentHashMap<Socket, String>();
 		this.userFollowing = new ConcurrentHashMap<String, ArrayList<String>>();
 		this.userFollower = new ConcurrentHashMap<String, ArrayList<String>>();
-		this.posts = new ConcurrentHashMap<Integer, Post>();
+		this.blogUser = new ConcurrentHashMap<String, ArrayList<Post>>();
+		this.allPosts = new ConcurrentHashMap<Integer, Post>();
 		this.userFeed = new ConcurrentHashMap<String, ArrayList<Post>>();
+		this.postRewinnedByUser = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Post>>();
 		
 		this.idPost = new AtomicInteger(0);
 
@@ -285,6 +291,14 @@ public class Database {
 		return idPost.getAndIncrement();
 	}
 	
+	public void setPostListForUser(String username) {
+		Objects.requireNonNull(username, "Username is null");
+		
+		blogUser.putIfAbsent(username, new ArrayList<Post>());
+		
+		return;
+	}
+	
 	public String addPostInWinsome(int idPost, String authorPost, String titlePost, String contentPost) {
 		Objects.requireNonNull(idPost,  "Id post is null");
 		Objects.requireNonNull(authorPost, "Author post is null");
@@ -293,7 +307,8 @@ public class Database {
 		
 		Post newPost = new Post(idPost, titlePost, contentPost, authorPost);
 	
-		posts.putIfAbsent(idPost, newPost);
+		blogUser.get(authorPost).add(newPost);
+		allPosts.putIfAbsent(idPost, newPost);
 		
 		ArrayList<String> authorFollower = userFollower.get(authorPost);
 		
@@ -319,15 +334,10 @@ public class Database {
 			
 		}).create();
 		
-		ArrayList<Post> userPost = new ArrayList<Post>();
-		
-		for(Post p : posts.values()) {
-			if(!(username.equals(p.getAuthor()))) continue;
-			else userPost.add(p);
-		}
+		ArrayList<Post> posts = blogUser.get(username);
 		
 		StringBuilder serializationPosts = new StringBuilder();
-		Iterator<Post> it = userPost.iterator();
+		Iterator<Post> it = posts.iterator();
 		
 		serializationPosts.append("[");
 		while(it.hasNext()) {
@@ -389,11 +399,9 @@ public class Database {
 		if(feed == null) 
 			feed = new ArrayList<Post>();
 		
-		for(Post p : posts.values()) {
-			if(p.getAuthor().equals(usernameTakePost))
-				feed.add(p);
-			else continue;
-		}
+		ArrayList<Post> posts = blogUser.get(usernameTakePost);
+		
+		feed.addAll(posts);
 		
 		return;
 	}
@@ -459,7 +467,6 @@ public class Database {
 			
 			@Override
 			public boolean shouldSkipClass(Class<?> arg0) {
-				// TODO Auto-generated method stub
 				return false;
 			}
 		}).create();
@@ -472,7 +479,7 @@ public class Database {
 	public Post getPostById(int idPost) {
 		Objects.requireNonNull(idPost, "Id used to get the specified post is null");
 		
-		return posts.get(idPost);
+		return allPosts.get(idPost);
 	}
 	
 	public boolean isPostAuthor(int idPost, String username) {
@@ -482,6 +489,7 @@ public class Database {
 		Post p = getPostById(idPost);
 		
 		return p.getAuthor().equals(username);
+		
 	}
 	
 	public boolean isPostInFeed(int idPost, String username) {
@@ -511,7 +519,8 @@ public class Database {
 		p.removeAllComment();
 		p.removeAllVotes();
 		
-		posts.remove(idPost, p);
+		allPosts.remove(idPost, p);
+		blogUser.remove(authorPost, p);
 		
 		removePostFromUserFeedByDeletingPost(idPost, authorPost);
 	}
@@ -523,8 +532,17 @@ public class Database {
 		
 		Vote v = new Vote(idPost, authorVote, vote);
 		
-		Post p = posts.get(idPost);
+		Post p = allPosts.get(idPost);
 		p.addVote(v);
+		
+		ArrayList<Post> posts = blogUser.get(p.getAuthor());
+		
+		for(Post post : posts) {
+			if(post.getIdPost() == idPost) {
+				post.addVote(v);
+				continue;
+			}else continue;
+		}
 		
 		return;
 	}
@@ -533,7 +551,7 @@ public class Database {
 		Objects.requireNonNull(idPost, "Id post is null");
 		Objects.requireNonNull(authorVote, "Author vote is null");
 		
-		Post p = posts.get(idPost);
+		Post p = allPosts.get(idPost);
 		LinkedHashSet<Vote> votes = p.getVotes();
 		
 		for(Vote v : votes) {
@@ -552,8 +570,63 @@ public class Database {
 		
 		Comment c = new Comment(idPost, authorComment, comment);
 		
-		Post p = posts.get(idPost);
+		Post p = allPosts.get(idPost);
 		p.addComment(c);
+		
+		ArrayList<Post> posts = blogUser.get(p.getAuthor());
+		
+		for(Post post : posts) {
+			if(post.getIdPost() == idPost) {
+				post.addComment(c);
+				break;
+			}else continue;
+		}
+		
+		return;
+	}
+	
+	public void addRewinToPost(int idPost, String authorRewin) {
+		Objects.requireNonNull(idPost, "Id to get the specified post is null");
+		Objects.requireNonNull(authorRewin, "Author rewin is null");
+		
+		Post p = getPostById(idPost);
+		
+		p.getRewin().add(authorRewin);
+		
+		ArrayList<Post> posts = blogUser.get(p.getAuthor());
+		
+		for(Post post : posts) {
+			if(post.getIdPost() == idPost) {
+				post.addRewin(authorRewin);
+				break;
+			}else continue;
+		}
+		
+		if(postRewinnedByUser.get(authorRewin) == null) {
+			postRewinnedByUser.putIfAbsent(authorRewin, new ConcurrentLinkedQueue<Post>());
+			ConcurrentLinkedQueue<Post> postRewinned = postRewinnedByUser.get(authorRewin);
+			postRewinned.add(p);
+		}else {
+			ConcurrentLinkedQueue<Post> postRewinned = postRewinnedByUser.get(authorRewin);
+			postRewinned.add(p);
+		}
+		
+		blogUser.get(authorRewin).add(p);
+		
+		ArrayList<String> followerAuthorRewin = userFollower.get(authorRewin);
+	
+		for(String s : followerAuthorRewin) {
+			addPostToFeedByRewin(s, p);
+		}
+	
+	}
+	
+	private void addPostToFeedByRewin(String usernameUpdateFeed, Post p) {
+		Objects.requireNonNull(usernameUpdateFeed, "Author rewin is null");
+		Objects.requireNonNull(p, "Post to add into feed is null");
+		
+		ArrayList<Post> feed = userFeed.get(usernameUpdateFeed);
+		feed.add(p);
 		
 		return;
 	}

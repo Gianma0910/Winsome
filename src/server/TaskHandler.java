@@ -175,6 +175,14 @@ public class TaskHandler implements Runnable {
 				
 					break;
 				}
+				case "rewin": {
+					PostServicesImpl postServicesImpl = new PostServicesImpl(db, writerOutput);
+					
+					postServicesImpl.rewinPost(requestSplitted[1], socket);
+					
+					break;
+				}
+				
 				}
 			}
 		}catch(SocketTimeoutException ex) {

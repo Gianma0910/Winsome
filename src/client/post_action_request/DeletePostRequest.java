@@ -34,7 +34,7 @@ public class DeletePostRequest {
 				System.err.println("You can't delete this post because it isn't in your blog");
 				return;
 			}else if(error.equals(TypeError.SUCCESS)) {
-				System.out.println("Post identified by id " + idPost + "is removed from Winsome");
+				System.out.println("Post identified by id " + idPost + " is removed from Winsome");
 				return;
 			}
 		}catch(NumberFormatException e) {

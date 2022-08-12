@@ -142,6 +142,13 @@ public class PostServicesImpl implements PostServices {
 			return;
 		}
 		
+		if(db.isPostInFeed(idPost, authorVote) && db.isPostAuthor(idPost, authorVote)) {
+			db.addVoteToPost(idPost, vote, authorVote);
+			sendError(TypeError.SUCCESS, writerOutput);
+		
+			return;
+		}
+		
 		if(db.isPostAuthor(idPost, authorVote)) {
 			System.out.println(TypeError.VOTEAUTHORPOST);
 			sendError(TypeError.VOTEAUTHORPOST, writerOutput);
@@ -183,6 +190,13 @@ public class PostServicesImpl implements PostServices {
 			return;
 		}
 		
+		if(db.isPostInFeed(idPost, authorComment) && db.isPostAuthor(idPost, authorComment)) {
+			db.addCommentToPost(idPost, contentComment, authorComment);
+			sendError(TypeError.SUCCESS, writerOutput);
+			
+			return;
+		}
+		
 		if(db.isPostAuthor(idPost, authorComment)) {
 			sendError(TypeError.POSTINYOURBLOG, writerOutput);
 			return;
@@ -199,6 +213,32 @@ public class PostServicesImpl implements PostServices {
 		return;
 	}
 	
+	@Override
+	public void rewinPost(String idPostToParse, Socket socket) throws IOException {
+		int idPost = Integer.parseInt(idPostToParse);
+		String authorRewin = db.getUsernameBySocket(socket);
+		
+		if(db.isPostNotNull(idPost) == false) {
+			sendError(TypeError.IDPOSTNOTEXISTS, writerOutput);
+			return;
+		}
+		
+		if(db.isPostAuthor(idPost, authorRewin)) {
+			sendError(TypeError.POSTINYOURBLOG, writerOutput);
+			return;
+		}
+	
+		if(db.isPostInFeed(idPost, authorRewin) == false) {
+			sendError(TypeError.POSTNOTINYOURFEED, writerOutput);
+			return;
+		}
+		
+		db.addRewinToPost(idPost, authorRewin);
+		sendError(TypeError.SUCCESS, writerOutput);
+	
+		return;
+	}
+
 	private void sendError(String error, BufferedWriter writerOutput) throws IOException {
 		writerOutput.write(error);
 		writerOutput.newLine();
