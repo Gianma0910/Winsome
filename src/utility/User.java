@@ -1,6 +1,7 @@
 package utility;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 /**
  * Class that represents a single user in Winsome
@@ -15,6 +16,8 @@ public class User{
 	/** User's tag list*/
 	private ArrayList<String> tagList;
 	
+	private ArrayList<Transaction> transactions;
+	
 	/**
 	 * Basic constructor for a User
 	 * @param username Cannot be null
@@ -25,6 +28,8 @@ public class User{
 		this.username = username;
 		this.password = password;
 		this.tagList = tags;
+		
+		this.transactions = new ArrayList<>();
 	}
 
 	/** Return user's username*/
@@ -42,5 +47,15 @@ public class User{
 		return tagList;
 	}
 	
+	public void addTransaction(Transaction t) {
+		Objects.requireNonNull(t, "Transaction to add is null");
+		
+		transactions.add(t);
+		return;
+	}
+	
+	public ArrayList<Transaction> getTransactions(){
+		return transactions;
+	}
 }
 

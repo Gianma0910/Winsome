@@ -1,12 +1,19 @@
 package server.database;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.Socket;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -15,8 +22,12 @@ import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import exceptions.ClientNotRegisteredException;
+import exceptions.InvalidAmountException;
 import utility.Comment;
+import utility.GainAndCurators;
 import utility.Post;
+import utility.Transaction;
 import utility.User;
 import utility.Vote;
 
@@ -32,7 +43,7 @@ public class Database {
 	private ConcurrentHashMap<String, User> userToBeBackuped;
 	//private ConcurrentHashMap<String, User> userBackuped;
 	/** Concurrent colleciton that contains user logged in Winsome
-	 * <K, V>: K is the client socket; V is a String that reppresents the logged user's username */
+	 * <K, V>: K is the client socket; V is a String that represents the logged user's username */
 	private ConcurrentHashMap<Socket, String> userLoggedIn;
 	
 	private ConcurrentHashMap<String, ArrayList<String>> userFollowing;
@@ -535,12 +546,34 @@ public class Database {
 		Post p = allPosts.get(idPost);
 		p.addVote(v);
 		
+		if(v.getVote() == 1) {
+			p.getCurators().add(authorVote);
+			int numVotes = p.getNewVotes();
+			numVotes++;
+			p.setNewVotes(numVotes);
+		}else {
+			int numVotes = p.getNewVotes();
+			numVotes--;
+			p.setNewVotes(numVotes);
+		}
+		
 		ArrayList<Post> posts = blogUser.get(p.getAuthor());
 		
 		for(Post post : posts) {
 			if(post.getIdPost() == idPost) {
 				post.addVote(v);
-				continue;
+				
+				if(v.getVote() == 1) {
+					post.getCurators().add(authorVote);
+					int numVotes = post.getNewVotes();
+					numVotes++;
+					post.setNewVotes(numVotes);
+				}else {
+					int numVotes = post.getNewVotes();
+					numVotes--;
+					post.setNewVotes(numVotes);
+				}
+				break;
 			}else continue;
 		}
 		
@@ -572,12 +605,16 @@ public class Database {
 		
 		Post p = allPosts.get(idPost);
 		p.addComment(c);
+		p.getCurators().add(authorComment);
+		p.incrementNumUserComments(authorComment);
 		
 		ArrayList<Post> posts = blogUser.get(p.getAuthor());
 		
 		for(Post post : posts) {
 			if(post.getIdPost() == idPost) {
 				post.addComment(c);
+				post.getCurators().add(authorComment);
+				post.incrementNumUserComments(authorComment);
 				break;
 			}else continue;
 		}
@@ -631,4 +668,83 @@ public class Database {
 		return;
 	}
 	
+	public ConcurrentHashMap<String, GainAndCurators> calculateGains(){
+		ConcurrentHashMap<String, GainAndCurators> map = new ConcurrentHashMap<String, GainAndCurators>();
+		
+		for(Post p : allPosts.values()) 
+			map.putIfAbsent(p.getAuthor(), p.getGainAndCurators());
+		
+		return map;
+	}
+	
+	public void updateRewards(ConcurrentHashMap<String, GainAndCurators> gains, double authorPercentage) throws IllegalArgumentException, ClientNotRegisteredException, InvalidAmountException{
+		Objects.requireNonNull(gains, "Map of gains is null");
+		
+		if(authorPercentage <= 0 || authorPercentage >= 100) throw new IllegalArgumentException("Author percentage is not valid");
+		
+		User u = null;
+		Transaction t = null;
+		
+		for(Entry<String, GainAndCurators> entry : gains.entrySet()) {
+			String username = entry.getKey();
+			double gain = entry.getValue().gain;
+			Set<String> curators = entry.getValue().getCurators();
+			
+			if(gain == 0) continue;
+			if((u = getUserByUsername(username)) == null) throw new ClientNotRegisteredException("Client with username " + username + " doesn't exists");
+			
+			t = new Transaction((gain * authorPercentage) / 100);
+			u.addTransaction(t);
+			
+			for(String s : curators) {
+				if((u = getUserByUsername(s)) == null) throw new ClientNotRegisteredException("Client with username " + username + " doesn't exists"); 
+				t = new Transaction((gain * (100 - authorPercentage)) / (100 * curators.size())); 
+				u.addTransaction(t);
+			}
+		}
+	}
+	
+	public String getWalletUserJson(String username) {
+		Objects.requireNonNull(username, "Username to get the user is null");
+		
+		Gson gson = new GsonBuilder().create();
+		
+		User u = getUserByUsername(username);
+		ArrayList<Transaction> transactions = u.getTransactions();
+		Iterator<Transaction> it = transactions.iterator();
+		
+		StringBuilder serializedTransactions = new StringBuilder();
+		double totalAmount = 0;
+		
+		serializedTransactions.append("[");
+		while(it.hasNext()) {
+			Transaction t = it.next();
+			serializedTransactions.append(gson.toJson(t));
+			totalAmount += t.getAmount();
+			if(it.hasNext())
+				serializedTransactions.append(", ");
+		}
+		serializedTransactions.append("]");
+		
+		serializedTransactions.append("@").append(totalAmount);
+		
+		return serializedTransactions.toString();
+		
+	}
+	
+	public String getWalletUserInBitcoin(String username) throws MalformedURLException, IOException {
+		 Objects.requireNonNull(username, "Username to get the user is null");
+	
+		 String randomGenUrl = "https://www.random.org/decimal-fractions/?num=1&dec=10&col=1&format=plain&rnd=new";
+		 double exchangeRate = -1;
+		 User u = getUserByUsername(username); 
+		 
+		 try(InputStream inputStream = new URL(randomGenUrl).openStream();
+		     InputStreamReader isr = new InputStreamReader(inputStream);
+			 BufferedReader readerInput = new BufferedReader(isr)){
+		
+			 exchangeRate = Double.parseDouble(readerInput.readLine());
+		 }
+		 return Double.toString(u.getTransactions().stream().mapToDouble(t -> t.getAmount()).sum() * exchangeRate);
+	}	
 }

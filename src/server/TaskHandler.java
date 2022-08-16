@@ -16,9 +16,9 @@ import server.follow_unfollow_service.FollowingImpl;
 import server.follow_unfollow_service.UnfollowingImpl;
 import server.login_logout_service.LoginImpl;
 import server.login_logout_service.LogoutImpl;
-import server.post_action_services.PostServices;
 import server.post_action_services.PostServicesImpl;
 import server.view_list_users_service.ViewListUsersImpl;
+import server.wallet_service.GetWalletImpl;
 
 /**
  * Thread that connect to client and receive the client request
@@ -182,7 +182,16 @@ public class TaskHandler implements Runnable {
 					
 					break;
 				}
-				
+				case "wallet": {
+					GetWalletImpl walletServicesImpl = new GetWalletImpl(db, writerOutput);
+					
+					if(requestSplitted.length == 1)
+						walletServicesImpl.getWallet(socket);
+					else if(requestSplitted.length == 2)
+						walletServicesImpl.getWalletInBitcoin(socket);
+					
+					break;
+				}
 				}
 			}
 		}catch(SocketTimeoutException ex) {

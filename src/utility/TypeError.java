@@ -62,5 +62,4 @@ public class TypeError {
 	public static final String POSTNOTINYOURFEED = "POSTNOTINYOURFEED";
 	/** This error occurs only when a user try to login twice*/
 	public static final String CLIENTALREADYLOGGED = "CLIENTALREADYLOGGED";
-
 }

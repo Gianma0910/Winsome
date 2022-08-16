@@ -58,14 +58,17 @@ public class ServerMain {
 		
 		System.out.println("File properties read successfully, server is running...\n");
 		
-		BackupThread backupThread = new BackupThread(db, serverConf);
+//		BackupThread backupThread = new BackupThread(db, serverConf);
+		
+		Thread rewards = new Thread(new TaskReward(db, serverConf));
+		rewards.start();
 		
 		while(true) {
 			Socket socket = serverSocketTCP.accept();
 			threadPool.execute(new TaskHandler(socket, db, serverConf, stubCallbackRegistration));
 			
-			BackupThread.sleep(serverConf.DELAYBACKUP);
-			backupThread.start();
+//			BackupThread.sleep(serverConf.DELAYBACKUP);
+//			backupThread.start();
 			
 		}
 	}

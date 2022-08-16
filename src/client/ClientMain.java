@@ -28,6 +28,8 @@ import client.register_request.RegisterRequest;
 import client.view_list_request.ViewListFollowersRequest;
 import client.view_list_request.ViewListFollowingRequest;
 import client.view_list_request.ViewListUsersRequest;
+import client.wallet_action_request.GetWalletInBitcoinRequest;
+import client.wallet_action_request.GetWalletRequest;
 import configuration.ClientConfiguration;
 import exceptions.ClientNotLoggedException;
 import exceptions.ClientNotRegisteredException;
@@ -169,7 +171,18 @@ public class ClientMain {
 				RewinPostRequest.performRewinPostAction(requestSplitted, writerOutput, readerInput);
 				break;
 			}
-			
+			case "wallet": {
+				if(isUserLogged == false)
+					throw new ClientNotLoggedException("You can't do this operation because yuo ar enot logged in. Please use register operation or login operation");
+				
+				if(requestSplitted.length == 1)
+					GetWalletRequest.performGetWalletAction(requestSplitted, writerOutput, readerInput);
+				else if(requestSplitted.length == 2)
+					GetWalletInBitcoinRequest.performGetWalletInBitcoinAction(requestSplitted, writerOutput, readerInput);
+				else throw new IllegalArgumentException("Number of arguments insert for get wallet operation is not valid, you must type only: wallet or wallet btc");
+				
+				break;
+			}
 			default: {
 				System.err.println("This command doesn't exists, please check the documentation");
 				break;
