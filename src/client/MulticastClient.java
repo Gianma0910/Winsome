@@ -37,7 +37,6 @@ public class MulticastClient extends Thread {
 				System.exit(1);
 			}
 			String s = new String(packet.getData(), StandardCharsets.US_ASCII);
-//			System.out.println(s);
 		}
 	}
 	

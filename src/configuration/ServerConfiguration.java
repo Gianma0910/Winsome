@@ -54,6 +54,8 @@ public class ServerConfiguration {
 	public String USERSFILENAMEPATH;
 	/** Name of the file where there are stored all the posts created in winsome*/
 	public String POSTSFILENAMEPATH;
+	/** Name of the file where there are stored all the posts' mutable data */
+	public String MUTABLEDATAPOSTSFILENAMEPATH;
 	/** Name of the file where there are stored all the posts' comments*/
 	public String COMMENTSFILENAMEPATH;
 	/** Name of the file where there are stored all the posts' votes*/
@@ -84,7 +86,7 @@ public class ServerConfiguration {
 			   && prop.containsKey("CALLBACKSERVICENAME") && prop.containsKey("SOCKETTIMEOUT") && prop.containsKey("COREPOOLSIZE") && prop.containsKey("MAXIMUMCOREPOOLSIZE")
 			   && prop.containsKey("KEEPALIVETIME") && prop.containsKey("THREADBLOCKINGQUEUE") && prop.containsKey("DELAYBACKUP") && prop.containsKey("DELAYEARNINGSCALCULATION")
 			   && prop.containsKey("AUTHORPERCENTAGEEARN") && prop.containsKey("USERSFILENAMEPATH") && prop.containsKey("POSTSFILENAMEPATH") && prop.containsKey("COMMENTSFILENAMEPATH")
-			   && prop.containsKey("VOTESFILENAMEPATH") && prop.containsKey("TRANSACTIONSFILENAMEPATH") && prop.containsKey("FOLLOWERFILENAMEPATH") && prop.containsKey("FOLLOWINGFILENAMEPATH")) {
+			   && prop.containsKey("VOTESFILENAMEPATH") && prop.containsKey("TRANSACTIONSFILENAMEPATH") && prop.containsKey("FOLLOWERFILENAMEPATH") && prop.containsKey("FOLLOWINGFILENAMEPATH") && prop.containsKey("MUTABLEDATAPOSTSFILENAMEPATH")) {
 				
 				//check the port
 				try {
@@ -181,6 +183,7 @@ public class ServerConfiguration {
 				CALLBACKSERVICENAME = prop.getProperty("CALLBACKSERVICENAME");
 				USERSFILENAMEPATH = prop.getProperty("USERSFILENAMEPATH");
 				POSTSFILENAMEPATH = prop.getProperty("POSTSFILENAMEPATH");
+				MUTABLEDATAPOSTSFILENAMEPATH = prop.getProperty("MUTABLEDATAPOSTSFILENAMEPATH");
 				COMMENTSFILENAMEPATH = prop.getProperty("COMMENTSFILENAMEPATH");
 				VOTESFILENAMEPATH = prop.getProperty("VOTESFILENAMEPATH");
 				TRANSACTIONSFILENAMEPATH = prop.getProperty("TRANSACTIONSFILENAMEPATH");

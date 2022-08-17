@@ -1,6 +1,8 @@
 package server.database;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -8,8 +10,10 @@ import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
@@ -21,6 +25,9 @@ import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonReader;
 
 import exceptions.ClientNotRegisteredException;
 import exceptions.InvalidAmountException;
@@ -36,11 +43,13 @@ import utility.Vote;
  * @author Gianmarco Petrocchi
  *
  */
-public class Database {
+public class Database extends Storage{
+
+	private ConcurrentHashMap<String, User> userRegistered;
 
 	/**Concurrent collection that contains user to be backuped in user's file
 	 * <K, V>: K is a String that represents the username; V is an User object with the username specified in K */
-	private ConcurrentHashMap<String, User> userToBeBackuped;
+	private ConcurrentHashMap<String, User> userToBeBackedup;
 	//private ConcurrentHashMap<String, User> userBackuped;
 	/** Concurrent colleciton that contains user logged in Winsome
 	 * <K, V>: K is the client socket; V is a String that represents the logged user's username */
@@ -54,28 +63,39 @@ public class Database {
 	
 	private ConcurrentHashMap<Integer, Post> allPosts;
 	
+	private ConcurrentHashMap<Integer, Post> postToBeBackedup;
+	
+	//private ConcurrentHashMap<Integer, Post> postBackedup;
+	
 	private ConcurrentHashMap<String, ArrayList<Post>> userFeed;
 	
 	private ConcurrentHashMap<String, ConcurrentLinkedQueue<Post>> postRewinnedByUser;
 	
 	private AtomicInteger idPost;
 	
+	private boolean postRecoveredFromBackup = false;
+	
+	private boolean firstBackupForUsers = false;
+	
 	/**
 	 * Basic constructor for Database class
 	 */
 	public Database() {
-		this.userToBeBackuped = new ConcurrentHashMap<String, User>();
+		this.userRegistered = new ConcurrentHashMap<String, User>();
+		this.userToBeBackedup = new ConcurrentHashMap<String, User>();
 		//this.userBackuped = new ConcurrentHashMap<String, User>();
 		this.userLoggedIn = new ConcurrentHashMap<Socket, String>();
 		this.userFollowing = new ConcurrentHashMap<String, ArrayList<String>>();
 		this.userFollower = new ConcurrentHashMap<String, ArrayList<String>>();
 		this.blogUser = new ConcurrentHashMap<String, ArrayList<Post>>();
 		this.allPosts = new ConcurrentHashMap<Integer, Post>();
+		this.postToBeBackedup = new ConcurrentHashMap<Integer, Post>();
 		this.userFeed = new ConcurrentHashMap<String, ArrayList<Post>>();
 		this.postRewinnedByUser = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Post>>();
 		
 		this.idPost = new AtomicInteger(0);
-
+		this.firstBackupForUsers = false;
+		this.postRecoveredFromBackup = false;
 	}
 	
 	/**
@@ -87,7 +107,8 @@ public class Database {
 		Objects.requireNonNull(username, "Username is null");
 		Objects.requireNonNull(u, "User is null");
 		
-		userToBeBackuped.putIfAbsent(username, u);
+		userRegistered.putIfAbsent(username, u);
+		userToBeBackedup.putIfAbsent(username, u);
 	}
 	
 	/** 
@@ -96,7 +117,7 @@ public class Database {
 	 * @return true if the user is registerd, false otherwise
 	 */
 	public boolean isUserRegistered(String username) {		
-		return userToBeBackuped.containsKey(username);
+		return userRegistered.containsKey(username);
 	}
 	
 	/**
@@ -107,7 +128,7 @@ public class Database {
 	public User getUserByUsername(String username) {
 		Objects.requireNonNull(username, "Username is null");
 		
-		User u = userToBeBackuped.get(username);
+		User u = userRegistered.get(username);
 		
 		return u;
 	}
@@ -252,7 +273,7 @@ public class Database {
 	}
 	
 	public String getRegisteredUsersJson(String username) {
-		User user = userToBeBackuped.get(username);
+		User user = userRegistered.get(username);
 		ArrayList<String> tagList = user.getTagList();
 		
 		Gson gson = new GsonBuilder().setExclusionStrategies(new ExclusionStrategy() {
@@ -272,9 +293,9 @@ public class Database {
 		StringBuilder serializationUsers = new StringBuilder();
 		ArrayList<User> registeredUsers = new ArrayList<>();
 		
-		for(String s : userToBeBackuped.keySet()) {
-			if(userToBeBackuped.get(s).getUsername().equals(username)) continue;
-			else registeredUsers.add(userToBeBackuped.get(s));
+		for(String s : userRegistered.keySet()) {
+			if(userRegistered.get(s).getUsername().equals(username)) continue;
+			else registeredUsers.add(userRegistered.get(s));
 		}
 		
 		Iterator<User> it = registeredUsers.iterator();
@@ -320,6 +341,7 @@ public class Database {
 	
 		blogUser.get(authorPost).add(newPost);
 		allPosts.putIfAbsent(idPost, newPost);
+		postToBeBackedup.putIfAbsent(idPost, newPost);
 		
 		ArrayList<String> authorFollower = userFollower.get(authorPost);
 		
@@ -340,7 +362,8 @@ public class Database {
 
 			@Override
 			public boolean shouldSkipField(FieldAttributes f) {
-				return (f.getDeclaringClass() == Post.class && f.getName().equals("content") && f.getName().equals("rewin") && f.getName().equals("votes") && f.getName().equals("comments"));
+				return (f.getDeclaringClass() == Post.class && f.getName().equals("content") && f.getName().equals("rewin") && f.getName().equals("votes") && f.getName().equals("comments")
+						&& f.getName().equals("iterations") && f.getName().equals("newCommentsBy") && f.getName().equals("newVotes") && f.getName().equals("curators"));
 			}
 			
 		}).create();
@@ -378,7 +401,8 @@ public class Database {
 			
 			@Override
 			public boolean shouldSkipField(FieldAttributes f) {
-				return (f.getDeclaringClass() == Post.class && f.getName().equals("content") && f.getName().equals("rewin") && f.getName().equals("votes") && f.getName().equals("comments"));
+				return (f.getDeclaringClass() == Post.class && f.getName().equals("content") && f.getName().equals("rewin") && f.getName().equals("votes") && f.getName().equals("comments")
+						&& f.getName().equals("iterations") && f.getName().equals("newCommentsBy") && f.getName().equals("newVotes") && f.getName().equals("curators"));
 			}
 			
 			@Override
@@ -473,7 +497,8 @@ public class Database {
 			
 			@Override
 			public boolean shouldSkipField(FieldAttributes f) {
-				return (f.getDeclaringClass() == Post.class && f.getName().equals("idPost") && f.getName().equals("rewin") && f.getName().equals("author"));
+				return (f.getDeclaringClass() == Post.class && f.getName().equals("idPost") && f.getName().equals("rewin") && f.getName().equals("author") && f.getName().equals("curators")
+						&& f.getName().equals("newCommentsBy") && f.getName().equals("newVotes") && f.getName().equals("iterations"));
 			}
 			
 			@Override
@@ -747,4 +772,402 @@ public class Database {
 		 }
 		 return Double.toString(u.getTransactions().stream().mapToDouble(t -> t.getAmount()).sum() * exchangeRate);
 	}	
+	
+	public void loadUsersFromJsonFile(File usersFile, File followingFile, File followerFile, File transactionsFile) throws IOException {
+		Objects.requireNonNull(usersFile, "Users file is null");
+		Objects.requireNonNull(followingFile, "Following file is null");
+		Objects.requireNonNull(followerFile, "Followers file is null");
+		Objects.requireNonNull(transactionsFile, "Transactions file is null");
+		
+		Gson gson = new Gson();
+		this.firstBackupForUsers = true;
+		
+		try(InputStream is = new FileInputStream(usersFile); JsonReader reader = new JsonReader(new InputStreamReader(is))){
+			reader.setLenient(true);
+			reader.beginArray();
+			
+			while(reader.hasNext()) {
+				reader.beginObject();
+				
+				String nameAttribute = null;
+				String username = null;
+				String password = null;
+				ArrayList<String> tags = null;
+			
+				while(reader.hasNext()) {
+					nameAttribute = reader.nextName();
+					
+					switch(nameAttribute) {
+						case "username": {
+							username = reader.nextString();
+							break;
+						}
+						case "password": {
+							password = reader.nextString();
+							break;
+						}
+						case "tagList": {
+							reader.beginArray();
+							tags = new ArrayList<String>();
+							
+							while(reader.hasNext()) {
+								reader.beginObject();
+								String temp = reader.nextName();
+								if(!temp.equals("nameAttribute")) break;
+								tags.add(reader.nextString());
+								reader.endObject();
+							}
+							reader.endArray();
+							break;
+						}
+						default: {
+							reader.skipValue();
+							break;
+						}
+					}
+				}
+				reader.endObject();
+				User u = new User(username, password, tags);
+				
+				this.userRegistered.putIfAbsent(username, u);
+				this.userFollower.putIfAbsent(username, new ArrayList<String>());
+				this.userFollowing.putIfAbsent(username, new ArrayList<String>());
+				this.userFeed.putIfAbsent(username, new ArrayList<Post>());
+				this.blogUser.putIfAbsent(username, new ArrayList<Post>());
+				this.postRewinnedByUser.putIfAbsent(username, new ConcurrentLinkedQueue<>());
+			}
+			reader.endArray();
+		}
+		try(InputStream is = new FileInputStream(followingFile); JsonReader reader = new JsonReader(new InputStreamReader(is))){
+			reader.setLenient(true);
+			reader.beginArray();
+			
+			while(reader.hasNext()) {
+				reader.beginObject();
+				
+				String nameAttribute = null;
+				String username = null;
+				ArrayList<String> following = new ArrayList<String>();
+				
+				while(reader.hasNext()) {
+					nameAttribute = reader.nextName();
+					
+					switch(nameAttribute) {
+						case "username": {
+							username = reader.nextString();
+							break;
+						}
+						case "following": {
+							reader.beginArray();
+							
+							while(reader.hasNext())
+								following.add(reader.nextString());
+							reader.endArray();
+							
+							break;
+						}
+					}
+					
+					for(String s : following) {
+						this.addFollowing(username, s);
+					}
+				}
+				reader.endObject();
+			}
+			reader.endArray();
+		}
+		try(InputStream is = new FileInputStream(followerFile); JsonReader reader = new JsonReader(new InputStreamReader(is))){
+			reader.setLenient(true);
+			reader.beginArray();
+			
+			while(reader.hasNext()) {
+				reader.beginObject();
+				
+				String nameAttribute = null;
+				String username = null;
+				ArrayList<String> followers = new ArrayList<String>();
+				
+				while(reader.hasNext()) {
+					nameAttribute = reader.nextName();
+					
+					switch(nameAttribute){
+						case "username" : {
+							username = reader.nextString();
+							break;
+						}
+						case "followers" : {
+							reader.beginArray();
+							
+							while(reader.hasNext())
+								followers.add(reader.nextString());
+							reader.endArray();
+							
+							break;
+						}
+					}
+					
+					for(String s : followers)
+						this.addFollower(username, s);
+				}
+				reader.endObject();
+			}
+			reader.endArray();
+		}
+		try(InputStream is = new FileInputStream(transactionsFile); JsonReader reader = new JsonReader(new InputStreamReader(is))){
+			reader.setLenient(true);
+			reader.beginArray(); 
+			
+			while(reader.hasNext()) {
+				reader.beginObject();
+				
+				String nameAttribute = null;
+				String username = null;
+				JsonObject obj = new JsonObject();
+				
+				while(reader.hasNext()) {
+					nameAttribute = reader.nextName();
+					boolean flag = false;
+					
+					switch(nameAttribute) {
+						case "username": {
+							username = reader.nextString();
+							break;
+						}
+						case "transactions": {
+							reader.beginArray();
+							
+							while(reader.hasNext()) {
+								flag = true;
+								reader.beginObject();
+								while(reader.hasNext()) {
+									nameAttribute = reader.nextName();
+									
+									if(nameAttribute.equals("amount")) obj.addProperty(nameAttribute, reader.nextDouble());
+									else if(nameAttribute.equals("timestamp")) obj.addProperty(nameAttribute, reader.nextString());
+								}
+								reader.endObject();
+								if(flag) { this.getUserByUsername(username).addTransaction(gson.fromJson(obj, Transaction.class)); }
+							}
+							reader.endArray();
+						}
+					}
+				}
+				reader.endObject();
+			}
+			reader.endArray();
+		}
+	}
+	
+	public void loadPostsFromJsonFile(File postsFile, File votesFile, File commentsFile, File mutableDataPostsFile) throws IOException {
+		Objects.requireNonNull(postsFile, "Posts file is null");
+		Objects.requireNonNull(votesFile, "Votes file is null");
+		Objects.requireNonNull(commentsFile, "Comments file is null");
+		Objects.requireNonNull(mutableDataPostsFile, "Mutable data posts file is null");
+		
+		Gson gson = new Gson();
+		
+		Map<Integer, JsonObject> parsedPosts = new HashMap<>();
+		
+		try(InputStream is = new FileInputStream(postsFile); JsonReader reader = new JsonReader(new InputStreamReader(is))){
+			reader.setLenient(true);
+			reader.beginArray();
+			
+			while(reader.hasNext()) {
+				reader.beginObject();
+				
+				String nameAttribute = null;
+				int id = -1;
+				
+				while(reader.hasNext()) {
+					nameAttribute = reader.nextName();
+					
+					switch(nameAttribute) {
+						case "id": {
+							id = reader.nextInt();
+							parsedPosts.putIfAbsent(id, new JsonObject());
+							parsedPosts.get(id).addProperty(nameAttribute, id);
+							
+							break;
+						}
+						case "author": {
+							parsedPosts.get(id).addProperty(nameAttribute, reader.nextString());
+							break;
+						}
+						case "content": {
+							parsedPosts.get(id).addProperty(nameAttribute, reader.nextString());
+							break;
+						}
+						case "title": {
+							parsedPosts.get(id).addProperty(nameAttribute, reader.nextString());
+							break;
+						}
+					}
+				}
+				reader.endObject();
+			}
+			reader.endArray();
+		}
+		
+		try(InputStream is = new FileInputStream(mutableDataPostsFile); JsonReader reader = new JsonReader(new InputStreamReader(is))){
+			reader.setLenient(true);
+			reader.beginArray();
+			
+			while(reader.hasNext()) {
+				reader.beginObject();
+				
+				String nameAttribute = null;
+				int id = -1;
+				int newVotes = -1;
+				int iterations = -1;
+				JsonArray rewinners = new JsonArray();
+				JsonObject newCommentsBy = new JsonObject();
+				JsonArray curators = new JsonArray();
+				JsonArray comments = new JsonArray();
+				JsonArray votes = new JsonArray();
+				
+				while(reader.hasNext()) {
+					nameAttribute = reader.nextName();
+					
+					switch(nameAttribute) {
+						case "id": {
+							id = reader.nextInt();
+							break;
+						}
+						case "rewin":{
+							reader.beginArray();
+							
+							while(reader.hasNext())
+								rewinners.add(reader.nextString());
+							
+							reader.endArray();
+							break;
+						}
+						case "newVotes": {
+							newVotes = reader.nextInt();
+							break;
+						}
+						case "iterations": {
+							iterations = reader.nextInt();
+							break;
+						}
+						case "curators": {
+							reader.beginArray();
+							
+							while(reader.hasNext())
+								curators.add(reader.nextString());
+						
+							reader.endArray();
+							
+							break;
+						}
+						case "newCommentsBy": {
+							reader.beginObject();
+							
+							while(reader.hasNext())
+								newCommentsBy.addProperty(reader.nextName(), reader.nextInt());
+							
+							reader.endObject();
+							
+							break;
+						}
+						case "comments": {
+							comments = loadCommentsFromJsonFile(commentsFile);
+							
+							break;
+						}
+						case "votes": {
+							votes = loadVotesFromJsonFile(votesFile);
+							
+							break;
+						}
+					}
+				}
+				reader.endObject();
+				parsedPosts.get(id).add("rewin", rewinners);
+				parsedPosts.get(id).add("newCommentsBy", newCommentsBy);
+				parsedPosts.get(id).add("curators", curators);
+				parsedPosts.get(id).add("comments", comments);
+				parsedPosts.get(id).add("votes", votes);
+				parsedPosts.get(id).addProperty("newVotes", newVotes);
+				parsedPosts.get(id).addProperty("iterations", iterations);
+			}
+			reader.endArray();
+			
+			this.postRecoveredFromBackup = true;
+			
+			for(Entry<Integer, JsonObject> entry : parsedPosts.entrySet()) {
+				Post p = gson.fromJson(entry.getValue(), Post.class);
+				this.allPosts.putIfAbsent(entry.getKey(), p);
+				this.blogUser.get(p.getAuthor()).add(p);
+				
+				LinkedHashSet<String> rewinners = p.getRewin();
+				
+				for(String s : rewinners) 
+					this.postRewinnedByUser.get(s).add(p);
+				
+				ArrayList<String> followers = this.userFollower.get(p.getAuthor());
+				
+				for(String s : followers)
+					this.userFeed.get(s).add(p);
+			}
+		}
+	}
+	
+	private JsonArray loadCommentsFromJsonFile(File commentsFile) throws IOException {
+		JsonArray comments = new JsonArray();
+		
+		try(InputStream is = new FileInputStream(commentsFile); JsonReader reader = new JsonReader(new InputStreamReader(is))){
+			reader.setLenient(true);
+			reader.beginArray();
+			
+			while(reader.hasNext()) {
+				reader.beginObject();
+				
+				String nameAttribute = null;
+				JsonObject obj = new JsonObject();
+				
+				while(reader.hasNext()) {
+					nameAttribute = reader.nextName();
+					
+					if(nameAttribute.equals("id")) obj.addProperty(nameAttribute, reader.nextString());
+					else if(nameAttribute.equals("author")) obj.addProperty(nameAttribute, reader.nextString());
+					else if(nameAttribute.equals("content")) obj.addProperty(nameAttribute, reader.nextString());
+				}
+				reader.endObject();
+				comments.add(obj);
+			}
+			reader.endArray();
+		}
+		
+		return comments;
+	}
+	
+	private JsonArray loadVotesFromJsonFile(File votesFile) throws IOException {
+		JsonArray votes = new JsonArray();
+		
+		try(InputStream is = new FileInputStream(votesFile); JsonReader reader = new JsonReader(new InputStreamReader(is))){
+			reader.setLenient(true);
+			reader.beginArray();
+			
+			while(reader.hasNext()) {
+				reader.beginObject();
+				
+				String nameAttribute = null;
+				JsonObject obj = new JsonObject();
+				
+				while(reader.hasNext()) {
+					nameAttribute = reader.nextName();
+					
+					if(nameAttribute.equals("id")) obj.addProperty(nameAttribute, reader.nextInt());
+					else if(nameAttribute.equals("authorVote")) obj.addProperty(nameAttribute, reader.nextString());
+					else if(nameAttribute.equals("vote")) obj.addProperty(nameAttribute, reader.nextInt());
+				}
+				reader.endObject();
+				votes.add(obj);
+			}
+			reader.endArray();
+		}
+		
+		return votes;
+	}
 }
