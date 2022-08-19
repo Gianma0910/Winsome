@@ -14,7 +14,7 @@ public class RegisterRequest {
 
 	public static void performRegisterAction(String [] requestSplitted, ClientConfiguration clientConf) {
 		if(requestSplitted.length != 8)
-			throw new IllegalArgumentException("Number of arguments insert for the registration operation is invalid, you must type: register <username> <password> <tags> (tags is a list of 5 string)");
+			System.err.println("Number of arguments insert for the registration operation is invalid, you must type: register <username> <password> <tags> (tags is a list of 5 string)");
 		
 		String username  = requestSplitted[1];
 		String password  = requestSplitted[2];

@@ -4,7 +4,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.net.Socket;
 
-public interface ViewListUsers {
+public interface ViewListUsersService {
 
 	void viewListUsers(Socket socket) throws IOException;
 	

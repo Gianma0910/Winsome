@@ -12,7 +12,7 @@ import configuration.ServerConfiguration;
  * @author Gianmarco Petrocchi
  *
  */
-public interface Login {
+public interface LoginService {
 	
 	/**
 	 * This method allow a user, already registered in Winsome, to login with his username and password. At the end the server send a certain kind of error to the client.

@@ -20,7 +20,6 @@ public class TaskReward implements Runnable {
 	private InetAddress multicastAddress;
 	private int port;
 	private double authorPercentage;
-	private boolean opened;
 	
 	public TaskReward(Database db, ServerConfiguration serverConf) throws IOException {
 		Objects.requireNonNull(db, "Database is null");
@@ -33,7 +32,6 @@ public class TaskReward implements Runnable {
 		this.authorPercentage = serverConf.AUTHORPERCENTAGEEARN;
 		
 		this.multicastSocket = new MulticastSocket(port);
-		this.opened = true;
 	}
 
 	@Override

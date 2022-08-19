@@ -5,7 +5,7 @@ import java.net.Socket;
 
 import RMI.RMICallback;
 
-public interface Unfollowing {
+public interface UnfollowingService {
 
 	void removeFollowing(String usernameToUnfollow, RMICallback stubCallbackRegistration, Socket socket) throws IOException;
 	

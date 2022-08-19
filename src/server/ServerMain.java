@@ -56,20 +56,26 @@ public class ServerMain {
 		registry = LocateRegistry.getRegistry(serverConf.RMIREGISTRYPORT);
 		registry.bind(serverConf.CALLBACKSERVICENAME, stubCallbackRegistration);
 		
-		System.out.println("File properties read successfully, server is running...\n");
+		System.out.println("File properties read successfully\n");
 		
-//		BackupThread backupThread = new BackupThread(db, serverConf);
+		db.loadUsersFromJsonFile(new File(serverConf.USERSFILENAMEPATH), new File(serverConf.FOLLOWINGFILENAMEPATH), new File(serverConf.TRANSACTIONSFILENAMEPATH));
+
+		System.out.println("Upload of users to database completed succesfully");
+		
+		db.loadPostsFromJsonFile(new File(serverConf.POSTSFILENAMEPATH), new File(serverConf.VOTESFILENAMEPATH), new File(serverConf.COMMENTSFILENAMEPATH), new File(serverConf.MUTABLEDATAPOSTSFILENAMEPATH));
+
+		System.out.println("Upload of posts to database completed successfully");
+		System.out.println("Server is now running...\n");
 		
 		Thread rewards = new Thread(new TaskReward(db, serverConf));
 		rewards.start();
 		
+		Thread backup = new Thread(new TaskBackup(db, serverConf));
+		backup.start();
+		
 		while(true) {
 			Socket socket = serverSocketTCP.accept();
 			threadPool.execute(new TaskHandler(socket, db, serverConf, stubCallbackRegistration));
-			
-//			BackupThread.sleep(serverConf.DELAYBACKUP);
-//			backupThread.start();
-			
 		}
 	}
 

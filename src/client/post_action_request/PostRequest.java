@@ -21,6 +21,8 @@ public class PostRequest {
 		
 		String response = readerInput.readLine();
 		
+		if(response.equals(TypeError.CLIENTNOTLOGGED))
+			System.err.println("You can't do this operation because you are not logged in Winsome");
 		if(response.equals(TypeError.TITLELENGTHERROR))
 			System.err.println("Title length greater than 20 characters, modify the title if you want publish the post");
 		else if(response.equals(TypeError.CONTENTLENGTHERROR))

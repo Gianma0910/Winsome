@@ -17,34 +17,42 @@ import utility.TypeError;
 public class LoginRequest{
 
 	public static void performLoginAction(String [] requestSplitted, ClientConfiguration clientConf, BufferedWriter writerOutput, BufferedReader readerInput, MulticastClient multicastClient, FollowerDatabaseImpl stubClientDatabase) throws IOException {
-		if(requestSplitted.length != 3)
-			throw new IllegalArgumentException("Number of arguments insert for the login operation is invalid, you must type: login <username> <password>");
 
-		String username = requestSplitted[1];
-		String password = requestSplitted[2];
+		String username = null;
 		
 		StringBuilder requestClient = new StringBuilder();
-		requestClient.append("login").append(":").append(username).append(":").append(password);
 		
+		for(int i = 0; i < requestSplitted.length; i++) {
+			requestClient.append(requestSplitted[i]);
+			
+			if(i < requestSplitted.length - 1)
+				requestClient.append(":");
+		}
+			
 		writerOutput.write(requestClient.toString());
 		writerOutput.newLine();
 		writerOutput.flush();
 		
 		String response = readerInput.readLine();
 		
-		if(response.equals(TypeError.PWDWRONG)) {
+		if(response.equals(TypeError.INVALIDREQUESTERROR)) {
+			System.err.println("Number of arguments insert for the login operation is invalid, you must type: login <username> <password>");
+			return;
+		}if(response.equals(TypeError.PWDWRONG)) {
 			System.err.println("Password insert to login is wrong, insert the correct password");
 			return;
 		}else if(response.equals(TypeError.USERNAMEWRONG)) {
 			System.err.println("Username insert to login is wrong, insert the correct username");
 			return;
 		}else if(response.equals(TypeError.USRALREADYLOGGED)) {
+			username = requestSplitted[1];
 			System.err.println("A user with the username " + username + " is already logged in Winsome");
 			return;
 		}else if(response.equals(TypeError.CLIENTALREADYLOGGED)) {
 			System.err.println("This client is already logged in Winsome");
 			return;
 		}else if(response.equals(TypeError.SUCCESS)) {
+			username = requestSplitted[1];
 			System.out.println(username + " is logged in Winsome");
 			
 			System.out.println("Receiving multicast address and multicast port...");

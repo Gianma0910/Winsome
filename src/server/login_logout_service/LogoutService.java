@@ -9,7 +9,7 @@ import java.net.Socket;
  * @author Gianmarco Petrocchi
  *
  */
-public interface Logout {
+public interface LogoutService {
 
 	/**
 	 * This method allows a user to logout from Winsome by using the specified username. At the end the server send a certain kind of error to the client

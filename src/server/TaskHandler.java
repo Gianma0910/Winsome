@@ -12,13 +12,14 @@ import java.util.Objects;
 import RMI.RMICallback;
 import configuration.ServerConfiguration;
 import server.database.Database;
-import server.follow_unfollow_service.FollowingImpl;
-import server.follow_unfollow_service.UnfollowingImpl;
-import server.login_logout_service.LoginImpl;
-import server.login_logout_service.LogoutImpl;
+import server.follow_unfollow_service.FollowingServiceImpl;
+import server.follow_unfollow_service.UnfollowingServiceImpl;
+import server.login_logout_service.LoginServiceImpl;
+import server.login_logout_service.LogoutServiceImpl;
 import server.post_action_services.PostServicesImpl;
-import server.view_list_users_service.ViewListUsersImpl;
-import server.wallet_service.GetWalletImpl;
+import server.view_list_users_service.ViewListUsersServiceImpl;
+import server.wallet_service.GetWalletServicesImpl;
+import utility.TypeError;
 
 /**
  * Thread that connect to client and receive the client request
@@ -81,90 +82,128 @@ public class TaskHandler implements Runnable {
 				//check the string command and then execute the right method
 				switch(command) {
 				case "login" :{
-					
-					//take the username written in the request client
-					String username = requestSplitted[1];
-					//take the password written in the request client
-					String password = requestSplitted[2];
+					if(requestSplitted.length != 3) {
+						sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
+					}else {
+						//take the username written in the request client
+						String username = requestSplitted[1];
+						//take the password written in the request client
+						String password = requestSplitted[2];
 
-					LoginImpl loginService = new LoginImpl(db, writerOutput);
-					
-					loginService.login(username, password, socket, serverConf);
+						LoginServiceImpl loginService = new LoginServiceImpl(db, writerOutput);
+						
+						loginService.login(username, password, socket, serverConf);
+					}
 					
 					break;
 				}
-				case "logout":{					
-					LogoutImpl logoutService = new LogoutImpl(db, writerOutput);
-					
-					logoutService.logout(socket);
+				case "logout":{	
+					if(requestSplitted.length != 1) {
+						sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
+					}else {
+						LogoutServiceImpl logoutService = new LogoutServiceImpl(db, writerOutput);
+						
+						logoutService.logout(socket);
+					}
 					
 					break;
 				}
 				case "follow":{
-					
-					String usernameToFollow = requestSplitted[1];
-					
-					FollowingImpl followingService = new FollowingImpl(db, writerOutput);
-					
-					followingService.addFollower(usernameToFollow, stubCallbackRegistration, socket);
+					if(requestSplitted.length != 2) {
+						sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
+					}else {
+						String usernameToFollow = requestSplitted[1];
+
+						FollowingServiceImpl followingService = new FollowingServiceImpl(db, writerOutput);
+
+						followingService.addFollower(usernameToFollow, stubCallbackRegistration, socket);
+					}
 					
 					break;
 				}
 				case "unfollow": { 
-					
-					String usernameToUnfollow = requestSplitted[1];
-					
-					UnfollowingImpl unfollowingService = new UnfollowingImpl(db, writerOutput);
-					
-					unfollowingService.removeFollowing(usernameToUnfollow, stubCallbackRegistration, socket);
+					if(requestSplitted.length != 2) {
+						sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
+					}else {
+						String usernameToUnfollow = requestSplitted[1];
+						
+						UnfollowingServiceImpl unfollowingService = new UnfollowingServiceImpl(db, writerOutput);
+						
+						unfollowingService.removeFollowing(usernameToUnfollow, stubCallbackRegistration, socket);
+					}
 					
 					break;
 				}
 				case "list" : {
-					ViewListUsersImpl listUsersService = new ViewListUsersImpl(db, writerOutput);
-					
-					listUsersService.viewListUsers(socket);
+					if(requestSplitted.length != 2) {
+						sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
+					}else {
+						ViewListUsersServiceImpl listUsersService = new ViewListUsersServiceImpl(db, writerOutput);
+						
+						listUsersService.viewListUsers(socket);
+					}
 					
 					break;
 				}
 				case "post": {
 					PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
-					
+
 					postServices.createPost(requestSplitted, socket);
-					
+
+
 					break;
 				}
 				case "blog": {
-					PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
-					
-					postServices.viewUserPost(socket);
+					if(requestSplitted.length != 1) {
+						sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
+					}else {
+						PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
+						
+						postServices.viewUserPost(socket);
+					}
 					
 					break;
 				}
 				case "show": {
 					if(requestSplitted[1].equals("feed")) {
-						PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
-						
-						postServices.viewUserFeed(socket);
+						if(requestSplitted.length != 2) {
+							sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
+						}else {
+							PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
+							
+							postServices.viewUserFeed(socket);
+						}
 					}else if(requestSplitted[1].equals("post")) {
-						PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
-						
-						postServices.viewPost(requestSplitted[2], socket);
+						if(requestSplitted.length != 3) {
+							sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
+						}else {
+							PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
+							
+							postServices.viewPost(requestSplitted[2], socket);
+						}
 					}
 						
 					break;
 				}
 				case "delete": {
-					PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
-					
-					postServices.deletePost(requestSplitted[1], socket);
+					if(requestSplitted.length != 2) {
+						sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
+					}else {
+						PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
+						
+						postServices.deletePost(requestSplitted[1], socket);
+					}
 					
 					break;
 				}
 				case "rate": {
-					PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
-					
-					postServices.ratePost(requestSplitted[1], requestSplitted[2], socket);
+					if(requestSplitted.length != 3) {
+						sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
+					}else {
+						PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
+						
+						postServices.ratePost(requestSplitted[1], requestSplitted[2], socket);
+					}
 					
 					break;
 				}
@@ -176,19 +215,25 @@ public class TaskHandler implements Runnable {
 					break;
 				}
 				case "rewin": {
-					PostServicesImpl postServicesImpl = new PostServicesImpl(db, writerOutput);
-					
-					postServicesImpl.rewinPost(requestSplitted[1], socket);
+					if(requestSplitted.length != 2) {
+						sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
+					}else {
+						PostServicesImpl postServicesImpl = new PostServicesImpl(db, writerOutput);
+						
+						postServicesImpl.rewinPost(requestSplitted[1], socket);
+					}
 					
 					break;
 				}
 				case "wallet": {
-					GetWalletImpl walletServicesImpl = new GetWalletImpl(db, writerOutput);
+					GetWalletServicesImpl walletServicesImpl = new GetWalletServicesImpl(db, writerOutput);
 					
 					if(requestSplitted.length == 1)
 						walletServicesImpl.getWallet(socket);
 					else if(requestSplitted.length == 2)
 						walletServicesImpl.getWalletInBitcoin(socket);
+					else 
+						sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
 					
 					break;
 				}
@@ -199,9 +244,12 @@ public class TaskHandler implements Runnable {
 		} catch (IOException ex) {
 			System.err.println(ex.getMessage());
 		}
-
-		
-		
 	}
 
+	private void sendError(String error, BufferedWriter writerOutput) throws IOException {
+		writerOutput.write(error);
+		writerOutput.newLine();
+		writerOutput.flush();
+	}
+	
 }

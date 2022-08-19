@@ -16,7 +16,13 @@ public class RewinPostRequest {
 			int idPost = Integer.parseInt(requestSplitted[1]);
 			
 			StringBuilder request = new StringBuilder();
-			request.append("rewin").append(":").append(idPost);
+		
+			for(int i = 0; i < requestSplitted.length; i++) {
+				request.append(requestSplitted[i]);
+				
+				if(i < requestSplitted.length - 1)
+					request.append(":");
+			}
 			
 			writerOutput.write(request.toString());
 			writerOutput.newLine();
@@ -24,7 +30,13 @@ public class RewinPostRequest {
 			
 			String error = readerInput.readLine();
 			
-			if(error.equals(TypeError.IDPOSTNOTEXISTS)) {
+			if(error.equals(TypeError.INVALIDREQUESTERROR)) {
+				System.err.println("Number of arguments insert for rewin post operation is not valid, you must type only: rewin <id post>");
+				return;
+			}else if(error.equals(TypeError.CLIENTNOTLOGGED)) {
+				System.err.println("You can't do this operation because you are not logged in Winsome");
+				return;
+			}if(error.equals(TypeError.IDPOSTNOTEXISTS)) {
 				System.err.println("You can't rewin this post because it doesn't exists");
 				return;
 			}else if(error.equals(TypeError.POSTINYOURBLOG)) {

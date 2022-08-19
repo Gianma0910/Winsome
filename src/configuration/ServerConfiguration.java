@@ -62,8 +62,6 @@ public class ServerConfiguration {
 	public String VOTESFILENAMEPATH;
 	/** Name of the fie where there are stored all the transactions made by the server to distributed the earns*/
 	public String TRANSACTIONSFILENAMEPATH;
-	/** Name of the file where there are stored all the user's follower*/
-	public String FOLLOWERFILENAMEPATH;
 	/** Name of the file where there are stored all the users that a certain user x is following in Winsome */
 	public String FOLLOWINGFILENAMEPATH;
 	
@@ -86,7 +84,7 @@ public class ServerConfiguration {
 			   && prop.containsKey("CALLBACKSERVICENAME") && prop.containsKey("SOCKETTIMEOUT") && prop.containsKey("COREPOOLSIZE") && prop.containsKey("MAXIMUMCOREPOOLSIZE")
 			   && prop.containsKey("KEEPALIVETIME") && prop.containsKey("THREADBLOCKINGQUEUE") && prop.containsKey("DELAYBACKUP") && prop.containsKey("DELAYEARNINGSCALCULATION")
 			   && prop.containsKey("AUTHORPERCENTAGEEARN") && prop.containsKey("USERSFILENAMEPATH") && prop.containsKey("POSTSFILENAMEPATH") && prop.containsKey("COMMENTSFILENAMEPATH")
-			   && prop.containsKey("VOTESFILENAMEPATH") && prop.containsKey("TRANSACTIONSFILENAMEPATH") && prop.containsKey("FOLLOWERFILENAMEPATH") && prop.containsKey("FOLLOWINGFILENAMEPATH") && prop.containsKey("MUTABLEDATAPOSTSFILENAMEPATH")) {
+			   && prop.containsKey("VOTESFILENAMEPATH") && prop.containsKey("TRANSACTIONSFILENAMEPATH") && prop.containsKey("FOLLOWINGFILENAMEPATH") && prop.containsKey("MUTABLEDATAPOSTSFILENAMEPATH")) {
 				
 				//check the port
 				try {
@@ -187,7 +185,6 @@ public class ServerConfiguration {
 				COMMENTSFILENAMEPATH = prop.getProperty("COMMENTSFILENAMEPATH");
 				VOTESFILENAMEPATH = prop.getProperty("VOTESFILENAMEPATH");
 				TRANSACTIONSFILENAMEPATH = prop.getProperty("TRANSACTIONSFILENAMEPATH");
-				FOLLOWERFILENAMEPATH = prop.getProperty("FOLLOWERFILENAMEPATH");
 				FOLLOWINGFILENAMEPATH = prop.getProperty("FOLLOWINGFILENAMEPATH");
 				
 			}else {

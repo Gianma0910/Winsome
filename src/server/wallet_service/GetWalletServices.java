@@ -3,7 +3,7 @@ package server.wallet_service;
 import java.io.IOException;
 import java.net.Socket;
 
-public interface GetWallet {
+public interface GetWalletServices {
 
 	void getWallet(Socket socket) throws IOException;
 

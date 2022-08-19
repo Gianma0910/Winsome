@@ -5,7 +5,7 @@ import java.net.Socket;
 
 import RMI.RMICallback;
 
-public interface Following {
+public interface FollowingService {
 
 	void addFollower(String usernameToFollow, RMICallback stubCallbackRegistration, Socket socket) throws IOException;
 	

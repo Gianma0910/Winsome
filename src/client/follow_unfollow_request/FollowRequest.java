@@ -9,13 +9,16 @@ import utility.TypeError;
 public class FollowRequest {
 
 	public static void performAddFollowerAction(String[] requestSplitted, BufferedReader readerInput, BufferedWriter writerOutput) throws IOException {
-		if(requestSplitted.length != 2)
-			throw new IllegalArgumentException("Number of arguments insert for following operation is not valid, you must type only: follow <username>");
 		
-		String username = requestSplitted[1];
+		String username = null;
 		StringBuilder requestClient = new StringBuilder();
 		
-		requestClient.append("follow").append(":").append(username);
+		for(int i = 0; i < requestSplitted.length; i++) {
+			requestClient.append(requestSplitted[i]);
+			
+			if(i < requestSplitted.length - 1)
+				requestClient.append(":");
+		}
 		
 		writerOutput.write(requestClient.toString());
 		writerOutput.newLine();
@@ -23,17 +26,29 @@ public class FollowRequest {
 		
 		String response = readerInput.readLine();
 		
-		if(response.equals(TypeError.FOLLOWERNOTEXISTS))
+		if(response.equals(TypeError.INVALIDREQUESTERROR))
+			System.err.println("Number of arguments insert for following operation is not valid, you must type only: follow <username>");
+		
+		if(response.equals(TypeError.CLIENTNOTLOGGED))
+			System.err.println("You can't do this operation because you are not logged in Winsome");
+		
+		if(response.equals(TypeError.FOLLOWERNOTEXISTS)) {
+			username = requestSplitted[1];
 			System.err.println("You can't follow user " + username + " because he doesn't exists in Winsome");
-			
-		if(response.equals(TypeError.FOLLOWERERROR))
+		}
+		
+		if(response.equals(TypeError.FOLLOWERERROR)) {
+			username = requestSplitted[1];
 			System.err.println("You can't follow user " + username + " because you already followed him");
+		}
 		
 		if(response.equals(TypeError.FOLLOWHIMSELFERROR))
 			System.err.println("You can't follow yourself");
 		
-		if(response.equals(TypeError.SUCCESS))
+		if(response.equals(TypeError.SUCCESS)) {
+			username = requestSplitted[1];
 			System.out.println("Now you are following user " + username);
+		}
 		
 		return;
 	}

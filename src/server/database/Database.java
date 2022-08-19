@@ -3,6 +3,7 @@ package server.database;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -10,6 +11,7 @@ import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -20,6 +22,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
@@ -50,7 +55,9 @@ public class Database extends Storage{
 	/**Concurrent collection that contains user to be backuped in user's file
 	 * <K, V>: K is a String that represents the username; V is an User object with the username specified in K */
 	private ConcurrentHashMap<String, User> userToBeBackedup;
-	//private ConcurrentHashMap<String, User> userBackuped;
+	
+	private ConcurrentHashMap<String, User> userBackedUp;
+	
 	/** Concurrent colleciton that contains user logged in Winsome
 	 * <K, V>: K is the client socket; V is a String that represents the logged user's username */
 	private ConcurrentHashMap<Socket, String> userLoggedIn;
@@ -65,7 +72,7 @@ public class Database extends Storage{
 	
 	private ConcurrentHashMap<Integer, Post> postToBeBackedup;
 	
-	//private ConcurrentHashMap<Integer, Post> postBackedup;
+	private ConcurrentHashMap<Integer, Post> postBackedup;
 	
 	private ConcurrentHashMap<String, ArrayList<Post>> userFeed;
 	
@@ -77,19 +84,22 @@ public class Database extends Storage{
 	
 	private boolean firstBackupForUsers = false;
 	
+	private boolean postDelatedSinceLastBackup = false;
+	
 	/**
 	 * Basic constructor for Database class
 	 */
 	public Database() {
 		this.userRegistered = new ConcurrentHashMap<String, User>();
 		this.userToBeBackedup = new ConcurrentHashMap<String, User>();
-		//this.userBackuped = new ConcurrentHashMap<String, User>();
+		this.userBackedUp = new ConcurrentHashMap<String, User>();
 		this.userLoggedIn = new ConcurrentHashMap<Socket, String>();
 		this.userFollowing = new ConcurrentHashMap<String, ArrayList<String>>();
 		this.userFollower = new ConcurrentHashMap<String, ArrayList<String>>();
 		this.blogUser = new ConcurrentHashMap<String, ArrayList<Post>>();
 		this.allPosts = new ConcurrentHashMap<Integer, Post>();
 		this.postToBeBackedup = new ConcurrentHashMap<Integer, Post>();
+		this.postBackedup = new ConcurrentHashMap<Integer, Post>();
 		this.userFeed = new ConcurrentHashMap<String, ArrayList<Post>>();
 		this.postRewinnedByUser = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Post>>();
 		
@@ -234,6 +244,11 @@ public class Database extends Storage{
 		}else {
 			following.add(usernameNewFollowing);
 		}
+		
+		User u = getUserByUsername(usernameUpdateFollowing);
+		
+		u.addFollowing(usernameNewFollowing);
+		
 		return;
 	}
 	
@@ -244,6 +259,10 @@ public class Database extends Storage{
 		ArrayList<String> following = userFollowing.get(usernameUpdateFollowing);
 		
 		following.remove(usernameToRemove);
+		
+		User u = getUserByUsername(usernameUpdateFollowing);
+		
+		u.removeFollowing(usernameToRemove);
 		
 		return;
 	}
@@ -773,10 +792,9 @@ public class Database extends Storage{
 		 return Double.toString(u.getTransactions().stream().mapToDouble(t -> t.getAmount()).sum() * exchangeRate);
 	}	
 	
-	public void loadUsersFromJsonFile(File usersFile, File followingFile, File followerFile, File transactionsFile) throws IOException {
+	public void loadUsersFromJsonFile(File usersFile, File followingFile, File transactionsFile) throws IOException {
 		Objects.requireNonNull(usersFile, "Users file is null");
 		Objects.requireNonNull(followingFile, "Following file is null");
-		Objects.requireNonNull(followerFile, "Followers file is null");
 		Objects.requireNonNull(transactionsFile, "Transactions file is null");
 		
 		Gson gson = new Gson();
@@ -870,44 +888,8 @@ public class Database extends Storage{
 					
 					for(String s : following) {
 						this.addFollowing(username, s);
+						this.addFollower(s, username);
 					}
-				}
-				reader.endObject();
-			}
-			reader.endArray();
-		}
-		try(InputStream is = new FileInputStream(followerFile); JsonReader reader = new JsonReader(new InputStreamReader(is))){
-			reader.setLenient(true);
-			reader.beginArray();
-			
-			while(reader.hasNext()) {
-				reader.beginObject();
-				
-				String nameAttribute = null;
-				String username = null;
-				ArrayList<String> followers = new ArrayList<String>();
-				
-				while(reader.hasNext()) {
-					nameAttribute = reader.nextName();
-					
-					switch(nameAttribute){
-						case "username" : {
-							username = reader.nextString();
-							break;
-						}
-						case "followers" : {
-							reader.beginArray();
-							
-							while(reader.hasNext())
-								followers.add(reader.nextString());
-							reader.endArray();
-							
-							break;
-						}
-					}
-					
-					for(String s : followers)
-						this.addFollower(username, s);
 				}
 				reader.endObject();
 			}
@@ -958,6 +940,54 @@ public class Database extends Storage{
 		}
 	}
 	
+	public void  backupUsers(File usersFile, File followingFile, File transactionsFile) throws IOException {
+		Objects.requireNonNull(usersFile, "Users file is null");
+		Objects.requireNonNull(followingFile, "Following file is null");
+		Objects.requireNonNull(transactionsFile, "Transactions file is null");
+		
+		backupCached(new ExclusionStrategy() {
+			
+			@Override
+			public boolean shouldSkipField(FieldAttributes f) {
+				return (f.getDeclaringClass() == User.class && f.getName().equals("following") && f.getName().equals("transactions"));
+			}
+			
+			@Override
+			public boolean shouldSkipClass(Class<?> arg0) {
+				
+				return false;
+			}
+		}, usersFile, userBackedUp, userToBeBackedup, firstBackupForUsers);
+		firstBackupForUsers = false;
+		userBackedUp = new ConcurrentHashMap<String, User>();
+		
+		backupNonCached(new ExclusionStrategy() {
+			
+			@Override
+			public boolean shouldSkipField(FieldAttributes f) {
+				return (f.getDeclaringClass() == User.class && !f.getName().equals("username") && !f.getName().equals("following"));
+			}
+			
+			@Override
+			public boolean shouldSkipClass(Class<?> arg0) {
+				return false;
+			}
+		}, followingFile, userBackedUp);
+		
+		backupNonCached(new ExclusionStrategy() {
+			
+			@Override
+			public boolean shouldSkipField(FieldAttributes f) {
+				return (f.getDeclaringClass() == User.class && !f.getName().equals("username") && !f.getName().equals("transactions"));
+			}
+			
+			@Override
+			public boolean shouldSkipClass(Class<?> arg0) {
+				return false;
+			}
+		}, transactionsFile, userBackedUp);
+	} 
+	
 	public void loadPostsFromJsonFile(File postsFile, File votesFile, File commentsFile, File mutableDataPostsFile) throws IOException {
 		Objects.requireNonNull(postsFile, "Posts file is null");
 		Objects.requireNonNull(votesFile, "Votes file is null");
@@ -982,7 +1012,7 @@ public class Database extends Storage{
 					nameAttribute = reader.nextName();
 					
 					switch(nameAttribute) {
-						case "id": {
+						case "idPost": {
 							id = reader.nextInt();
 							parsedPosts.putIfAbsent(id, new JsonObject());
 							parsedPosts.get(id).addProperty(nameAttribute, id);
@@ -1007,7 +1037,69 @@ public class Database extends Storage{
 			}
 			reader.endArray();
 		}
-		
+		try(InputStream is = new FileInputStream(votesFile); JsonReader reader = new JsonReader(new InputStreamReader(is))){
+			reader.setLenient(true);
+			reader.beginArray();
+			
+			while(reader.hasNext()) {
+				reader.beginObject();
+				
+				String nameAttribute = null;
+				int id = -1;
+				JsonArray votes = new JsonArray();
+				
+				while(reader.hasNext()) {
+					nameAttribute = reader.nextName();
+					
+					switch (nameAttribute) {
+						case "idPost":{
+							id = reader.nextInt();					
+							break;
+						}
+						case "votes":{
+							votes = loadVotesFromJsonFile(votesFile);
+						
+							break;
+						}
+					}
+				}
+				reader.endObject();
+				
+				parsedPosts.get(id).add("votes", votes);
+			}
+			reader.endArray();
+		}
+		try(InputStream is = new FileInputStream(commentsFile); JsonReader reader = new JsonReader(new InputStreamReader(is))){
+			reader.setLenient(true);
+			reader.beginArray();
+			
+			while(reader.hasNext()) {
+				reader.beginObject();
+				
+				String nameAttribute = null;
+				int id = -1;
+				JsonArray comments = new JsonArray();
+				
+				while(reader.hasNext()) {
+					nameAttribute = reader.nextName();
+					
+					switch(nameAttribute) {
+						case "idPost": {
+							id = reader.nextInt();
+							break;
+						}
+						case "comments": {
+							comments = loadCommentsFromJsonFile(commentsFile);
+							break;
+						}
+					}	
+				}
+				reader.endObject();
+				
+				parsedPosts.get(id).add("comments", comments);
+			}
+			reader.endArray();
+		}
 		try(InputStream is = new FileInputStream(mutableDataPostsFile); JsonReader reader = new JsonReader(new InputStreamReader(is))){
 			reader.setLenient(true);
 			reader.beginArray();
@@ -1017,100 +1109,150 @@ public class Database extends Storage{
 				
 				String nameAttribute = null;
 				int id = -1;
-				int newVotes = -1;
 				int iterations = -1;
-				JsonArray rewinners = new JsonArray();
 				JsonObject newCommentsBy = new JsonObject();
+				int newVotes = -1;
 				JsonArray curators = new JsonArray();
-				JsonArray comments = new JsonArray();
-				JsonArray votes = new JsonArray();
+				JsonArray rewinners = new JsonArray();
 				
 				while(reader.hasNext()) {
 					nameAttribute = reader.nextName();
 					
-					switch(nameAttribute) {
-						case "id": {
+					switch (nameAttribute) {
+						case "idPost": {
 							id = reader.nextInt();
-							break;
-						}
-						case "rewin":{
-							reader.beginArray();
-							
-							while(reader.hasNext())
-								rewinners.add(reader.nextString());
-							
-							reader.endArray();
-							break;
-						}
-						case "newVotes": {
-							newVotes = reader.nextInt();
 							break;
 						}
 						case "iterations": {
 							iterations = reader.nextInt();
 							break;
 						}
-						case "curators": {
-							reader.beginArray();
-							
-							while(reader.hasNext())
-								curators.add(reader.nextString());
-						
-							reader.endArray();
-							
+						case "newVotes": {
+							newVotes = reader.nextInt();
 							break;
 						}
 						case "newCommentsBy": {
 							reader.beginObject();
-							
 							while(reader.hasNext())
 								newCommentsBy.addProperty(reader.nextName(), reader.nextInt());
-							
 							reader.endObject();
-							
 							break;
 						}
-						case "comments": {
-							comments = loadCommentsFromJsonFile(commentsFile);
-							
+						case "curators": {
+							reader.beginArray();
+							while(reader.hasNext()) 
+								curators.add(reader.nextString());
+							reader.endArray();
 							break;
 						}
-						case "votes": {
-							votes = loadVotesFromJsonFile(votesFile);
-							
+						case "rewinners": {
+							reader.beginArray();
+							while(reader.hasNext())
+								rewinners.add(reader.nextString());
+							reader.endArray();
 							break;
 						}
 					}
 				}
 				reader.endObject();
-				parsedPosts.get(id).add("rewin", rewinners);
+				
+				parsedPosts.get(id).addProperty("iterations", iterations);
+				parsedPosts.get(id).addProperty("newVotes", newVotes);
 				parsedPosts.get(id).add("newCommentsBy", newCommentsBy);
 				parsedPosts.get(id).add("curators", curators);
-				parsedPosts.get(id).add("comments", comments);
-				parsedPosts.get(id).add("votes", votes);
-				parsedPosts.get(id).addProperty("newVotes", newVotes);
-				parsedPosts.get(id).addProperty("iterations", iterations);
+				parsedPosts.get(id).add("rewinners", rewinners);
 			}
 			reader.endArray();
+		}
+		
+		this.postRecoveredFromBackup = true;
+		
+		for(Entry<Integer, JsonObject> entry : parsedPosts.entrySet()) {
+			Post p = gson.fromJson(entry.getValue(), Post.class);
+			this.allPosts.putIfAbsent(entry.getKey(), p);
+			this.postBackedup.putIfAbsent(entry.getKey(), p);
+			this.blogUser.get(p.getAuthor()).add(p);
 			
-			this.postRecoveredFromBackup = true;
-			
-			for(Entry<Integer, JsonObject> entry : parsedPosts.entrySet()) {
-				Post p = gson.fromJson(entry.getValue(), Post.class);
-				this.allPosts.putIfAbsent(entry.getKey(), p);
-				this.blogUser.get(p.getAuthor()).add(p);
-				
-				LinkedHashSet<String> rewinners = p.getRewin();
-				
-				for(String s : rewinners) 
-					this.postRewinnedByUser.get(s).add(p);
-				
-				ArrayList<String> followers = this.userFollower.get(p.getAuthor());
-				
-				for(String s : followers)
-					this.userFeed.get(s).add(p);
+			for(String s : p.getRewin()) {
+				this.postRewinnedByUser.get(s).add(p);
 			}
 		}
+		
+		loadUsersFeed();
+		
+		return;
+	}
+	
+	public void backupPosts(File postsFile, File votesFile, File commentsFile, File mutableDataPostFile) throws FileNotFoundException, NullPointerException, IOException {
+		Objects.requireNonNull(postsFile, "Posts file is null");
+		Objects.requireNonNull(votesFile, "Votes file is null");
+		Objects.requireNonNull(commentsFile, "Comments file is null");
+		Objects.requireNonNull(mutableDataPostFile, "Mutable data posts file is null");
+	
+		ExclusionStrategy strategy = new ExclusionStrategy() {
+			
+			@Override
+			public boolean shouldSkipField(FieldAttributes f) {
+				return (f.getDeclaringClass() == Post.class && !f.getName().equals("idPost") && !f.getName().equals("author")
+						&& !f.getName().equals("title") && !f.getName().equals("content"));
+			}
+			
+			@Override
+			public boolean shouldSkipClass(Class<?> arg0) {
+				return false;
+			}
+		};
+		
+		if(postDelatedSinceLastBackup) {
+			postDelatedSinceLastBackup = false;
+			backupNonCached(strategy, postsFile, postBackedup);
+		}
+		
+		backupCached(strategy, postsFile, postBackedup, postToBeBackedup, postRecoveredFromBackup);
+		postToBeBackedup = new ConcurrentHashMap<Integer, Post>();
+		postRecoveredFromBackup = false;
+		
+		backupNonCached(new ExclusionStrategy() {
+			
+			@Override
+			public boolean shouldSkipField(FieldAttributes f) {
+				return (f.getDeclaringClass() == Post.class && !f.getName().equals("idPost") && !f.getName().equals("votes"));
+			}
+			
+			@Override
+			public boolean shouldSkipClass(Class<?> arg0) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+		}, votesFile, postBackedup);
+		
+		backupNonCached(new ExclusionStrategy() {
+			
+			@Override
+			public boolean shouldSkipField(FieldAttributes f) {
+				return (f.getDeclaringClass() == Post.class && !f.getName().equals("idPost") && !f.getName().equals("comments"));
+			}
+			
+			@Override
+			public boolean shouldSkipClass(Class<?> arg0) {
+				return false;
+			}
+		}, commentsFile, postBackedup);
+	
+		backupNonCached(new ExclusionStrategy() {
+			
+			@Override
+			public boolean shouldSkipField(FieldAttributes f) {
+				return (f.getDeclaringClass() == Post.class && !f.getName().equals("idPost") && !f.getName().equals("iterations") 
+						&& !f.getName().equals("rewin") && !f.getName().equals("newCommentsBy") 
+						&& !f.getName().equals("curators") && !f.getName().equals("newVotes"));
+			}
+			
+			@Override
+			public boolean shouldSkipClass(Class<?> arg0) {
+				return false;
+			}
+		}, mutableDataPostFile, postBackedup);
 	}
 	
 	private JsonArray loadCommentsFromJsonFile(File commentsFile) throws IOException {
@@ -1129,7 +1271,7 @@ public class Database extends Storage{
 				while(reader.hasNext()) {
 					nameAttribute = reader.nextName();
 					
-					if(nameAttribute.equals("id")) obj.addProperty(nameAttribute, reader.nextString());
+					if(nameAttribute.equals("idPost")) obj.addProperty(nameAttribute, reader.nextString());
 					else if(nameAttribute.equals("author")) obj.addProperty(nameAttribute, reader.nextString());
 					else if(nameAttribute.equals("content")) obj.addProperty(nameAttribute, reader.nextString());
 				}
@@ -1158,7 +1300,7 @@ public class Database extends Storage{
 				while(reader.hasNext()) {
 					nameAttribute = reader.nextName();
 					
-					if(nameAttribute.equals("id")) obj.addProperty(nameAttribute, reader.nextInt());
+					if(nameAttribute.equals("idPost")) obj.addProperty(nameAttribute, reader.nextInt());
 					else if(nameAttribute.equals("authorVote")) obj.addProperty(nameAttribute, reader.nextString());
 					else if(nameAttribute.equals("vote")) obj.addProperty(nameAttribute, reader.nextInt());
 				}
@@ -1169,5 +1311,19 @@ public class Database extends Storage{
 		}
 		
 		return votes;
+	}
+	
+	private void loadUsersFeed() {
+		Iterator<User> userIt = this.userRegistered.values().iterator();
+		Collection<Post> posts = this.allPosts.values();
+		
+		while(userIt.hasNext()) {
+			ArrayList<Post> feed = this.userFeed.get(userIt.next().getUsername());
+			ArrayList<String> following = this.userFollowing.get(userIt.next().getUsername());
+			for(String s : following) {
+				Stream<Post> stream = posts.stream().filter(p -> p.getAuthor().equals(s));
+				feed.addAll(stream.collect(Collectors.toList()));
+			}
+		}
 	}
 }

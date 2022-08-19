@@ -18,15 +18,18 @@ import utility.TypeError;
 public class ShowPostRequest {
 
 	public static void performShowPostAction(String [] requestSplitted, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException {
-		if(requestSplitted.length != 3)
-			throw new IllegalArgumentException("Number of arguments insert for show post operation is invalid, you must type only: show post <idPost>");
-	
+
 		try {
 			int idPost = Integer.parseInt(requestSplitted[2]);
 
 			StringBuilder request = new StringBuilder();
-
-			request.append(requestSplitted[0]).append(":").append(requestSplitted[1]).append(":").append(idPost);
+			
+			for(int i = 0; i < requestSplitted.length; i++) {
+				request.append(requestSplitted[i]);
+				
+				if(i < requestSplitted.length - 1)
+					request.append(":");
+			}
 
 			writerOutput.write(request.toString());
 			writerOutput.newLine();
@@ -34,7 +37,13 @@ public class ShowPostRequest {
 
 			String error = readerInput.readLine();
 
-			if(error.equals(TypeError.IDPOSTNOTEXISTS)) {
+			if(error.equals(TypeError.INVALIDREQUESTERROR)) {
+				System.err.println("Number of arguments insert for show post operation is not valid, you must type only: show post <id post>");
+				return;
+			}else if(error.equals(TypeError.CLIENTNOTLOGGED)) {
+				System.err.println("You can't do this operation because you are not logged in Winsome");
+				return;
+			}else if(error.equals(TypeError.IDPOSTNOTEXISTS)) {
 				System.err.println("The specified idPost doesn't exists");
 				return;
 			}else if(error.equals(TypeError.SUCCESS)){

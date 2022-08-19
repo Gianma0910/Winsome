@@ -9,18 +9,20 @@ import configuration.ServerConfiguration;
 import server.database.Database;
 import utility.TypeError;
 
-public class LoginImpl implements Login{
+public class LoginServiceImpl implements LoginService{
 
 	private Database db;
 	private BufferedWriter writerOutput;
 	
-	public LoginImpl(Database db, BufferedWriter writerOutput) {
+	public LoginServiceImpl(Database db, BufferedWriter writerOutput) {
 		this.db = db;
 		this.writerOutput = writerOutput;
 	}
 	
 	public void login(String username, String password, Socket socketClient, ServerConfiguration serverConf) throws IOException {
 		String error;
+		
+		ConcurrentHashMap<Socket, String> userLogged = db.getUserLoggedIn();
 		
 		//check if the username is registered in Winsome
 		if(!db.isUserRegistered(username)) {
@@ -36,16 +38,14 @@ public class LoginImpl implements Login{
 			return;
 		}
 		
-		ConcurrentHashMap<Socket, String> usrLogged = db.getUserLoggedIn();
-			
 		//check if the username is already logged
-		if(usrLogged.containsValue(username)) {
+		if(userLogged.containsValue(username)) {
 			error = TypeError.USRALREADYLOGGED;
 			sendError(error, writerOutput);
 			return;
 		}
 		
-		if(usrLogged.containsKey(socketClient)) {
+		if(userLogged.containsKey(socketClient)) {
 			error = TypeError.CLIENTALREADYLOGGED;
 			sendError(error, writerOutput);
 			return;

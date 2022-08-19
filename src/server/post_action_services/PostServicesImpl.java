@@ -24,11 +24,17 @@ public class PostServicesImpl implements PostServices {
 	
 	@Override
 	public void createPost(String [] requestSplitted, Socket socket) throws IOException {
+		String error;
+		
+		if(db.getUserLoggedIn().containsKey(socket) == false) {
+			error = TypeError.CLIENTNOTLOGGED;
+			sendError(error, writerOutput);
+			return;
+		}
+		
 		String titlePost = requestSplitted[1];
 		String contentPost = requestSplitted[2];
 		String authorPost = db.getUsernameBySocket(socket);
-		
-		String error;
 		
 		if(titlePost.length() > 20) {
 			error = TypeError.TITLELENGTHERROR;
@@ -48,6 +54,11 @@ public class PostServicesImpl implements PostServices {
 	
 	@Override
 	public void viewUserPost(Socket socket) throws IOException {
+		if(db.getUserLoggedIn().containsKey(socket) == false) {
+			sendError(TypeError.CLIENTNOTLOGGED, writerOutput);
+			return;
+		}
+		
 		String username = db.getUsernameBySocket(socket);
 		
 		String serializationUserPost = db.getUserPostJson(username);
@@ -61,6 +72,11 @@ public class PostServicesImpl implements PostServices {
 	
 	@Override
 	public void viewUserFeed(Socket socket) throws IOException {
+		if(db.getUserLoggedIn().containsKey(socket) == false) {
+			sendError(TypeError.CLIENTNOTLOGGED, writerOutput);
+			return;
+		}
+		
 		String username = db.getUsernameBySocket(socket);
 		
 		String serializationUserFeed = db.getUserFeedJson(username);
@@ -74,6 +90,11 @@ public class PostServicesImpl implements PostServices {
 	
 	@Override
 	public void viewPost(String idPostToParse, Socket socket) throws IOException {
+		if(db.getUserLoggedIn().containsKey(socket) == false) {
+			sendError(TypeError.CLIENTNOTLOGGED, writerOutput);
+			return;
+		}
+		
 		int idPost = Integer.parseInt(idPostToParse);
 		
 		String username = db.getUsernameBySocket(socket);
@@ -104,6 +125,11 @@ public class PostServicesImpl implements PostServices {
 	
 	@Override
 	public void deletePost(String idPostToParse, Socket socket) throws IOException {
+		if(db.getUserLoggedIn().containsKey(socket) == false) {
+			sendError(TypeError.CLIENTNOTLOGGED, writerOutput);
+			return;
+		}
+		
 		int idPost = Integer.parseInt(idPostToParse);
 		
 		String username = db.getUsernameBySocket(socket);
@@ -131,6 +157,11 @@ public class PostServicesImpl implements PostServices {
 	
 	@Override
 	public void ratePost(String idPostToParse, String voteToParse, Socket socket) throws IOException {
+		if(db.getUserLoggedIn().containsKey(socket) == false) {
+			sendError(TypeError.CLIENTNOTLOGGED, writerOutput);
+			return;
+		}
+		
 		int idPost = Integer.parseInt(idPostToParse);
 		int vote = Integer.parseInt(voteToParse);
 		
@@ -181,6 +212,11 @@ public class PostServicesImpl implements PostServices {
 	
 	@Override
 	public void commentPost(String idPostToParse, String contentComment, Socket socket) throws IOException {
+		if(db.getUserLoggedIn().containsKey(socket) == false) {
+			sendError(TypeError.CLIENTNOTLOGGED, writerOutput);
+			return;
+		}
+		
 		int idPost = Integer.parseInt(idPostToParse);
 		
 		String authorComment = db.getUsernameBySocket(socket);
@@ -215,6 +251,11 @@ public class PostServicesImpl implements PostServices {
 	
 	@Override
 	public void rewinPost(String idPostToParse, Socket socket) throws IOException {
+		if(db.getUserLoggedIn().containsKey(socket) == false) {
+			sendError(TypeError.CLIENTNOTLOGGED, writerOutput);
+			return;
+		}
+			
 		int idPost = Integer.parseInt(idPostToParse);
 		String authorRewin = db.getUsernameBySocket(socket);
 		

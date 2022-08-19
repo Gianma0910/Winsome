@@ -10,17 +10,22 @@ import RMI.RMICallback;
 import server.database.Database;
 import utility.TypeError;
 
-public class UnfollowingImpl implements Unfollowing {
+public class UnfollowingServiceImpl implements UnfollowingService {
 	private Database db;
 	private BufferedWriter writerOutput;
 	
-	public UnfollowingImpl(Database db, BufferedWriter writerOutput) {
+	public UnfollowingServiceImpl(Database db, BufferedWriter writerOutput) {
 		this.db = db;
 		this.writerOutput = writerOutput;
 	}
 	
 	@Override
 	public void removeFollowing(String usernameToUnfollow, RMICallback stubCallbackRegistration, Socket socket) throws IOException {
+		if(db.getUserLoggedIn().containsKey(socket) == false) {
+			sendError(TypeError.CLIENTNOTLOGGED, writerOutput);
+			return;
+		}
+		
 		if(!db.isUserRegistered(usernameToUnfollow)) {
 			sendError(TypeError.UNFOLLOWINGNOTEXISTS, writerOutput);
 			return;

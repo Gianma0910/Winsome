@@ -21,5 +21,4 @@ MUTABLEDATAPOSTSFILENAMEPATH=src/files/mutable_data_posts.txt
 COMMENTSFILENAMEPATH=src/files/comments.txt
 VOTESFILENAMEPATH=src/files/votes.txt
 TRANSACTIONSFILENAMEPATH=src/files/transactions.txt
-FOLLOWERFILENAMEPATH=src/files/follower.txt
 FOLLOWINGFILENAMEPATH=src/files/following.txt

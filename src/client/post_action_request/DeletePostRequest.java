@@ -10,21 +10,32 @@ public class DeletePostRequest {
 
 	public static void performDeletePostAction(String [] requestSplitted, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException {
 		if(requestSplitted.length != 2)
-			throw new IllegalArgumentException("Number of arguments insert for delete post operation is not valid, you must type only: delete <idPost>");
 		
 		try {
 			int idPost = Integer.parseInt(requestSplitted[1]);
 			
 			StringBuilder request = new StringBuilder();
-			request.append("delete").append(":").append(idPost);
 			
+			for(int i = 0; i < requestSplitted.length; i++) {
+				request.append(requestSplitted[i]);
+				
+				if(i < requestSplitted.length - 1)
+					request.append(":");
+			}
+	
 			writerOutput.write(request.toString());
 			writerOutput.newLine();
 			writerOutput.flush();
 			
 			String error = readerInput.readLine();
 			
-			if(error.equals(TypeError.IDPOSTNOTEXISTS)) {
+			if(error.equals(TypeError.INVALIDREQUESTERROR)) {
+				System.err.println("Number of arguments insert for delete post operation is not valid, you must type only: delete <idPost>");
+				return;
+			}else if(error.equals(TypeError.CLIENTNOTLOGGED)) {
+				System.err.println("You can't do this operation because you are not logged in Winsome");
+				return;
+			}else if(error.equals(TypeError.IDPOSTNOTEXISTS)) {
 				System.err.println("You can't delete this post because it doesn't exists");
 				return;
 			}else if(error.equals(TypeError.DELETEPOSTFEEDERROR)) {

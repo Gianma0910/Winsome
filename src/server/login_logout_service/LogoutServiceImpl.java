@@ -3,16 +3,17 @@ package server.login_logout_service;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.ConcurrentHashMap;
 
 import server.database.Database;
 import utility.TypeError;
 
-public class LogoutImpl implements Logout{
+public class LogoutServiceImpl implements LogoutService{
 	
 	private Database db;
 	private BufferedWriter writerOutput;
 	
-	public LogoutImpl(Database db, BufferedWriter writerOutput) {
+	public LogoutServiceImpl(Database db, BufferedWriter writerOutput) {
 		this.db = db;
 		this.writerOutput = writerOutput;
 	}
@@ -20,15 +21,23 @@ public class LogoutImpl implements Logout{
 	public void logout(Socket socketClient) throws IOException {
 		String error;
 		
-		if(db.removeUserLoggedIn(socketClient) == true)
+		ConcurrentHashMap<Socket, String> userLogged = db.getUserLoggedIn();
+		
+		if(!userLogged.containsKey(socketClient))
+			error = TypeError.CLIENTNOTLOGGED;
+		else if(db.removeUserLoggedIn(socketClient) == true)
 			error = TypeError.SUCCESS;
 		else 
 			error = TypeError.LOGOUTERROR;
 		
+		sendError(error, writerOutput);
+		
+		return;
+	}
+	
+	private void sendError(String error, BufferedWriter writerOutput) throws IOException {
 		writerOutput.write(error);
 		writerOutput.newLine();
 		writerOutput.flush();
-		
-		return;
 	}
 }

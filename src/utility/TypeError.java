@@ -62,4 +62,8 @@ public class TypeError {
 	public static final String POSTNOTINYOURFEED = "POSTNOTINYOURFEED";
 	/** This error occurs only when a user try to login twice*/
 	public static final String CLIENTALREADYLOGGED = "CLIENTALREADYLOGGED";
+	/** This error occurs only when a client isn't logged and try to do some operation not equals to register or login*/
+	public static final String CLIENTNOTLOGGED = "CLIENTNOTLOGGED";
+	/** This error occurs only when a user send an invalid request */
+	public static final String INVALIDREQUESTERROR = "INVALIDREQUESTERROR";
 }

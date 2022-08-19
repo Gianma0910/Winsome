@@ -17,7 +17,13 @@ public class RatePostRequest {
 			int vote = Integer.parseInt(requestSplitted[2]);
 			
 			StringBuilder request = new StringBuilder();
-			request.append("rate").append(":").append(idPost).append(":").append(vote);
+			
+			for(int i = 0; i < requestSplitted.length; i++) {
+				request.append(requestSplitted[i]);
+				
+				if(i < requestSplitted.length - 1)
+					request.append(":");
+			}
 			
 			writerOutput.write(request.toString());
 			writerOutput.newLine();
@@ -25,7 +31,13 @@ public class RatePostRequest {
 			
 			String error = readerInput.readLine();
 			
-			if(error.equals(TypeError.VOTEPOSTNOTEXISTS)) {
+			if(error.equals(TypeError.INVALIDREQUESTERROR)) {
+				System.err.println("Number of arguments insert for rate post operation is not valid, you must type only: rate <id post> <vote> (vote must be 1 or -1)");
+				return;
+			}else if(error.equals(TypeError.CLIENTNOTLOGGED)) {
+				System.err.println("You can't do this operation because you are not logged in Winsome");
+				return;
+			}else if(error.equals(TypeError.VOTEPOSTNOTEXISTS)) {
 				System.err.println("You can't vote this post because it doesn't exists");
 				return;
 			}else if(error.equals(TypeError.VOTENUMBERNOTVALID)) {

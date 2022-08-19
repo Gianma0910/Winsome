@@ -10,17 +10,22 @@ import RMI.RMICallback;
 import server.database.Database;
 import utility.TypeError;
 
-public class FollowingImpl implements Following {
+public class FollowingServiceImpl implements FollowingService {
 	private Database db;
 	private BufferedWriter writerOutput;
 	
-	public FollowingImpl(Database db, BufferedWriter writerOutput) {
+	public FollowingServiceImpl(Database db, BufferedWriter writerOutput) {
 		this.db = db;
 		this.writerOutput = writerOutput;
 	}
 	
 	@Override
 	public void addFollower(String usernameToFollow, RMICallback stubCallbackRegistration, Socket socket) throws IOException {
+		if(db.getUserLoggedIn().containsKey(socket) == false) {
+			sendError(TypeError.CLIENTNOTLOGGED, writerOutput);
+			return;
+		}
+		
 		if(!db.isUserRegistered(usernameToFollow)) {
 			sendError(TypeError.FOLLOWERNOTEXISTS, writerOutput);
 			return;

@@ -9,13 +9,16 @@ import utility.TypeError;
 public class UnfollowRequest {
 
 	public static void performRemoveFollowerAction(String[] requestSplitted, BufferedReader readerInput, BufferedWriter writerOutput) throws IOException {
-		if(requestSplitted.length != 2)
-			throw new IllegalArgumentException("Number of arguments insert for unfollow operation is not valid, you must type only: unfollow <username>");
 		
-		String username = requestSplitted[1];
+		String username = null;
 		StringBuilder requestClient = new StringBuilder();
 		
-		requestClient.append("unfollow").append(":").append(username);
+		for(int i = 0; i < requestSplitted.length; i++) {
+			requestClient.append(requestSplitted[i]);
+			
+			if(i < requestSplitted.length - 1)
+				requestClient.append(":");
+		}
 		
 		writerOutput.write(requestClient.toString());
 		writerOutput.newLine();
@@ -23,17 +26,29 @@ public class UnfollowRequest {
 		
 		String response = readerInput.readLine();
 		
-		if(response.equals(TypeError.UNFOLLOWINGNOTEXISTS))
+		if(response.equals(TypeError.INVALIDREQUESTERROR))
+			System.err.println("Number of arguments insert for unfollow operation is not valid, you must type only: unfollow <username>");
+		
+		if(response.equals(TypeError.CLIENTNOTLOGGED))
+			System.err.println("You can't do this operation because you are not logged in Winsome");
+		
+		if(response.equals(TypeError.UNFOLLOWINGNOTEXISTS)) {
+			username = null;
 			System.err.println("You can't unfollow user " + username + " because he doesn't exists in Winsome");
-		
-		if(response.equals(TypeError.UNFOLLOWERERROR))
+		}
+			
+		if(response.equals(TypeError.UNFOLLOWERERROR)) {
+			username = null;
 			System.err.println("You can't unfollow user " + username + " because you already unfollowed him");
-		
+		}
+			
 		if(response.equals(TypeError.UNFOLLOWHIMSELFERROR))
 			System.err.println("You can't unfollow yourself");
 			
-		if(response.equals(TypeError.SUCCESS))
+		if(response.equals(TypeError.SUCCESS)) {
+			username = null;
 			System.out.println("Now you are unfollowing user " + username);
+		}
 		
 		return;
 	}

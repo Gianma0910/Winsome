@@ -17,6 +17,8 @@ public class User{
 	private ArrayList<String> tagList;
 	
 	private ArrayList<Transaction> transactions;
+
+	private ArrayList<String> following;
 	
 	/**
 	 * Basic constructor for a User
@@ -30,6 +32,7 @@ public class User{
 		this.tagList = tags;
 		
 		this.transactions = new ArrayList<>();
+		this.following = new ArrayList<>();
 	}
 
 	/** Return user's username*/
@@ -56,6 +59,14 @@ public class User{
 	
 	public ArrayList<Transaction> getTransactions(){
 		return transactions;
+	}
+	
+	public void addFollowing(String username) {
+		following.add(username);
+	}
+	
+	public void removeFollowing(String username) {
+		following.remove(username);
 	}
 }
 

@@ -62,7 +62,6 @@ public class ClientMain {
 		String request;
 		Scanner scan = new Scanner(System.in);
 		boolean shutdown = false;
-		boolean isUserLogged = false;
 		
 		while(!shutdown) {
 			request = scan.nextLine();
@@ -76,7 +75,6 @@ public class ClientMain {
 			}
 			case "login" : {
 				LoginRequest.performLoginAction(requestSplitted, clientConf, writerOutput, readerInput, multicastClient, stubClientDatabase);
-				isUserLogged = true;
 				break;
 			}
 			case "logout" : {
@@ -84,56 +82,41 @@ public class ClientMain {
 				break;
 			}
 			case "list": {
-				if(isUserLogged == false)
-					throw new ClientNotLoggedException("You can't do this operation because you are not logged in. Please use register operation or login operation");
-					
-				if(requestSplitted.length != 2)
-					throw new IllegalArgumentException("Number of arguments insert for view list operation is not valid, you must type: list users, list followers, list following");
-				
 				if(requestSplitted[1].equals("users")) {
 					ViewListUsersRequest.performViewListUsers(requestSplitted, writerOutput, readerInput);
 					break;
 				}else if(requestSplitted[1].equals("followers")) {
+					if(requestSplitted.length != 2)
+						System.err.println("Number of arguments insert for view list followers operation is not valid, you must type only: list followers");
+					
 					ViewListFollowersRequest.performViewListFollowers(stubClientDatabase);
 					break;
 				}else if(requestSplitted[1].equals("following")){
+					if(requestSplitted.length != 2)
+						System.err.println("Number of arguments insert for view list following operation is not valid, you must type only: list following");
+					
 					ViewListFollowingRequest.performViewListFollowing(stubClientDatabase);
 					break;
 				}
 			}
 			case "follow" : {
-				if(isUserLogged == false)
-					throw new ClientNotLoggedException("You can't do this operation because you are not logged in. Please use register operation or login operation");
-				
 				FollowRequest.performAddFollowerAction(requestSplitted, readerInput, writerOutput);
 				break;
 			}
 			case "unfollow": {
-				if(isUserLogged == false)
-					throw new ClientNotLoggedException("You can't do this operation because you are not logged in. Please use register operation or login operation");
-				
 				UnfollowRequest.performRemoveFollowerAction(requestSplitted, readerInput, writerOutput);
 				break;
 			}
 			case "post": {
-				if(isUserLogged == false)
-					throw new ClientNotLoggedException("You can't do this operation because you are not logged in. Please use register operation or login operation");
-				
 				String [] r = request.split(" \"");
 				PostRequest.performCreatePost(r, readerInput, writerOutput);
 				break;
 			}
 			case "blog": {
-				if(isUserLogged == false)
-					throw new ClientNotLoggedException("You can't do this operation because you are not logged in. Please use register operation or login operation");
-				
 				ViewBlogRequest.performViewBlogAction(requestSplitted, writerOutput, readerInput);
 				break;
 			}
 			case "show": {
-				if(isUserLogged == false)
-					throw new ClientNotLoggedException("You can't do this operation because you are not logged in. Please use register operation or login operation");
-				
 				if(requestSplitted[1].equals("feed")) {
 					ShowFeedRequest.performShowFeedRequest(requestSplitted, writerOutput, readerInput);
 					break;
@@ -143,38 +126,23 @@ public class ClientMain {
 				}
 			}
 			case "delete": {
-				if(isUserLogged == false)
-					throw new ClientNotLoggedException("You can't do this operation because you are not logged in. Please use register operation or login operation");
-				
 				DeletePostRequest.performDeletePostAction(requestSplitted, writerOutput, readerInput);
 				break;
 			}
 			case "rate": {
-				if(isUserLogged == false)
-					throw new ClientNotLoggedException("You can't do this operation because you are not logged in. Please use register operation or login operation");
-				
 				RatePostRequest.performRatePostAction(requestSplitted, writerOutput, readerInput);
 				break;
 			}
 			case "comment": {
-				if(isUserLogged == false)
-					throw new ClientNotLoggedException("You can't do this operation because you are not logged in. Please use register operation or login operation");
-				
 				String [] takeComment = request.split("\"");
 				CommentPostRequest.performCommentPostAction(requestSplitted, takeComment, writerOutput, readerInput);
 				break;
 			}
 			case "rewin": {
-				if(isUserLogged == false)
-					throw new ClientNotLoggedException("You can't do this operation because you are not logged in. Please use register operation or login operation");
-				
 				RewinPostRequest.performRewinPostAction(requestSplitted, writerOutput, readerInput);
 				break;
 			}
 			case "wallet": {
-				if(isUserLogged == false)
-					throw new ClientNotLoggedException("You can't do this operation because yuo ar enot logged in. Please use register operation or login operation");
-				
 				if(requestSplitted.length == 1)
 					GetWalletRequest.performGetWalletAction(requestSplitted, writerOutput, readerInput);
 				else if(requestSplitted.length == 2)
