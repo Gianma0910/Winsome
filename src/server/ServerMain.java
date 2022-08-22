@@ -1,5 +1,6 @@
 package server;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
@@ -18,6 +19,7 @@ import RMI.RMICallbackImpl;
 import RMI.RMIRegistration;
 import RMI.RMIRegistrationImpl;
 import configuration.ServerConfiguration;
+import exceptions.IllegalFileException;
 import exceptions.InvalidConfigurationException;
 import server.database.Database;
 
@@ -58,11 +60,21 @@ public class ServerMain {
 		
 		System.out.println("File properties read successfully\n");
 		
-		db.loadUsersFromJsonFile(new File(serverConf.USERSFILENAMEPATH), new File(serverConf.FOLLOWINGFILENAMEPATH), new File(serverConf.TRANSACTIONSFILENAMEPATH));
+		try {
+			db.loadUsersFromJsonFile(serverConf.USERSFILENAMEPATH, serverConf.FOLLOWINGFILENAMEPATH, serverConf.TRANSACTIONSFILENAMEPATH);
+		} catch (IllegalFileException | FileNotFoundException e) {
+			System.err.println("Warning: users could not be recovered from backup.");
+			e.printStackTrace();
+		}
 
 		System.out.println("Upload of users to database completed succesfully");
 		
-		db.loadPostsFromJsonFile(new File(serverConf.POSTSFILENAMEPATH), new File(serverConf.VOTESFILENAMEPATH), new File(serverConf.COMMENTSFILENAMEPATH), new File(serverConf.MUTABLEDATAPOSTSFILENAMEPATH));
+		try {
+			db.loadPostsFromJsonFile(serverConf.POSTSFILENAMEPATH, serverConf.VOTESFILENAMEPATH, serverConf.COMMENTSFILENAMEPATH, serverConf.MUTABLEDATAPOSTSFILENAMEPATH);
+		} catch (IllegalFileException | FileNotFoundException e) {
+			System.err.println("Warning: posts could not be recovered from backup.");
+			e.printStackTrace();
+		}
 
 		System.out.println("Upload of posts to database completed successfully");
 		System.out.println("Server is now running...\n");

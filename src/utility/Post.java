@@ -33,16 +33,32 @@ public class Post {
 		this.curators = new LinkedHashSet<String>();
 	}
 	
+	public void setIdPost(int id) {
+		this.idPost = id;
+	}
+	
 	public int getIdPost() {
 		return idPost;
+	}
+	
+	public void setTitle(String title) {
+		this.title = title;
 	}
 	
 	public String getTitle() {
 		return title;
 	}
 	
+	public void setContent(String content) {
+		this.content = content;
+	}
+	
 	public String getContent() {
 		return content;
+	}
+	
+	public void setAuthor(String author) {
+		this.author = author;
 	}
 	
 	public String getAuthor() {
@@ -131,6 +147,14 @@ public class Post {
 	
 	public void incrementNumUserComments(String username) {
 		newCommentsBy.compute(username, (k ,v) -> v == null ? 1 : v + 1);
+	}
+	
+	public Map<String, Integer> getNewCommentsBy(){
+		return newCommentsBy;
+	}
+	
+	public void setNewCommentsBy(Map<String, Integer> newCommentsBy) {
+		this.newCommentsBy = newCommentsBy;
 	}
 	
 	public GainAndCurators getGainAndCurators() {

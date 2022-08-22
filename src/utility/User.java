@@ -68,5 +68,9 @@ public class User{
 	public void removeFollowing(String username) {
 		following.remove(username);
 	}
+	
+	public ArrayList<String> getFollowing(){
+		return following;
+	}
 }
 
