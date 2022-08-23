@@ -13,23 +13,65 @@ import utility.TypeError;
 public class RegisterRequest {
 
 	public static void performRegisterAction(String [] requestSplitted, ClientConfiguration clientConf) {
-		if(requestSplitted.length != 8)
+		if(requestSplitted.length < 4 || requestSplitted.length > 8) {
 			System.err.println("Number of arguments insert for the registration operation is invalid, you must type: register <username> <password> <tags> (tags is a list of 5 string)");
+			return;
+		}
 		
 		String username  = requestSplitted[1];
 		String password  = requestSplitted[2];
-		String tag1 = requestSplitted[3];
-		String tag2 = requestSplitted[4];
-		String tag3 = requestSplitted[5];
-		String tag4 = requestSplitted[6];
-		String tag5 = requestSplitted[7];
 		
+		int lengthRequest = requestSplitted.length;
 		ArrayList<String> tagList = new ArrayList<String>();
-		tagList.add(tag1);
-		tagList.add(tag2);
-		tagList.add(tag3);
-		tagList.add(tag4);
-		tagList.add(tag5);
+		
+		switch (lengthRequest) {
+		case 4: {
+			String tag1 = requestSplitted[3];
+			tagList.add(tag1);
+			break;
+		}
+		case 5: {
+			String tag1 = requestSplitted[3];
+			String tag2 = requestSplitted[4];
+			tagList.add(tag1);
+			tagList.add(tag2);
+			break;
+			
+		}
+		case 6: {
+			String tag1 = requestSplitted[3];
+			String tag2 = requestSplitted[4];
+			String tag3 = requestSplitted[5];
+			tagList.add(tag1);
+			tagList.add(tag2);
+			tagList.add(tag3);
+			break;
+		}
+		case 7: {
+			String tag1 = requestSplitted[3];
+			String tag2 = requestSplitted[4];
+			String tag3 = requestSplitted[5];
+			String tag4 = requestSplitted[6];
+			tagList.add(tag1);
+			tagList.add(tag2);
+			tagList.add(tag3);
+			tagList.add(tag4);
+			break;
+		}
+		case 8 : {
+			String tag1 = requestSplitted[3];
+			String tag2 = requestSplitted[4];
+			String tag3 = requestSplitted[5];
+			String tag4 = requestSplitted[6];
+			String tag5 = requestSplitted[7];
+			tagList.add(tag1);
+			tagList.add(tag2);
+			tagList.add(tag3);
+			tagList.add(tag4);
+			tagList.add(tag5);
+			break;
+		}
+		}
 		
 		try {
 			Registry reg = LocateRegistry.getRegistry(clientConf.RMIREGISTRYHOST, clientConf.RMIREGISTRYPORT);

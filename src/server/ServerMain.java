@@ -24,7 +24,7 @@ import exceptions.InvalidConfigurationException;
 import server.database.Database;
 
 public class ServerMain {
-
+	
 	public static void main(String[] args) throws InvalidConfigurationException, AlreadyBoundException, IOException, InterruptedException {
 		if(args.length != 1) {
 			System.err.println("Usage: java ServerMain <path configuration file>");
@@ -61,7 +61,7 @@ public class ServerMain {
 		System.out.println("File properties read successfully\n");
 		
 		try {
-			db.loadUsersFromJsonFile(serverConf.USERSFILENAMEPATH, serverConf.FOLLOWINGFILENAMEPATH, serverConf.TRANSACTIONSFILENAMEPATH);
+			db.loadUsersFromJsonFile(new File(serverConf.USERSFILENAMEPATH), new File(serverConf.FOLLOWINGFILENAMEPATH), new File(serverConf.TRANSACTIONSFILENAMEPATH));
 		} catch (IllegalFileException | FileNotFoundException e) {
 			System.err.println("Warning: users could not be recovered from backup.");
 			e.printStackTrace();
@@ -70,7 +70,7 @@ public class ServerMain {
 		System.out.println("Upload of users to database completed succesfully");
 		
 		try {
-			db.loadPostsFromJsonFile(serverConf.POSTSFILENAMEPATH, serverConf.VOTESFILENAMEPATH, serverConf.COMMENTSFILENAMEPATH, serverConf.MUTABLEDATAPOSTSFILENAMEPATH);
+			db.loadPostsFromJsonFile(new File(serverConf.POSTSFILENAMEPATH), new File(serverConf.VOTESFILENAMEPATH), new File(serverConf.COMMENTSFILENAMEPATH), new File(serverConf.MUTABLEDATAPOSTSFILENAMEPATH));
 		} catch (IllegalFileException | FileNotFoundException e) {
 			System.err.println("Warning: posts could not be recovered from backup.");
 			e.printStackTrace();

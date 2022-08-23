@@ -35,14 +35,26 @@ public class User{
 		this.following = new ArrayList<>();
 	}
 
+	public void setUsername(String username) {
+		this.username = username;
+	}
+	
 	/** Return user's username*/
 	public String getUsername() {
 		return username;
 	}
 	
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	
 	/** Return user's password*/
 	public String getPassword() {
 		return password;
+	}
+	
+	public void setTagList(ArrayList<String> tagList) {
+		this.tagList = tagList;
 	}
 	
 	/** Return user's tag list*/

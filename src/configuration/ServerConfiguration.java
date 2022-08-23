@@ -8,6 +8,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Properties;
 
+import exceptions.IllegalFileException;
 import exceptions.InvalidConfigurationException;
 import exceptions.InvalidPortNumberException;
 
@@ -50,20 +51,22 @@ public class ServerConfiguration {
 	public int DELAYBACKUP;
 	/** Author percentage earn used to distributed the earn for a post*/
 	public float AUTHORPERCENTAGEEARN;
+	/** Directory where files will be created to storage database data*/
+	public String DIRECTORYFORFILE;
 	/** Name of the file where there are stored all the users of winsome*/
-	public String USERSFILENAMEPATH;
+	public String USERSFILENAMEPATH = "users.json";
 	/** Name of the file where there are stored all the posts created in winsome*/
-	public String POSTSFILENAMEPATH;
+	public String POSTSFILENAMEPATH = "posts.json";
 	/** Name of the file where there are stored all the posts' mutable data */
-	public String MUTABLEDATAPOSTSFILENAMEPATH;
+	public String MUTABLEDATAPOSTSFILENAMEPATH = "mutable_data.json";
 	/** Name of the file where there are stored all the posts' comments*/
-	public String COMMENTSFILENAMEPATH;
+	public String COMMENTSFILENAMEPATH = "comments.json";
 	/** Name of the file where there are stored all the posts' votes*/
-	public String VOTESFILENAMEPATH;
+	public String VOTESFILENAMEPATH = "votes.json";
 	/** Name of the fie where there are stored all the transactions made by the server to distributed the earns*/
-	public String TRANSACTIONSFILENAMEPATH;
+	public String TRANSACTIONSFILENAMEPATH = "transactions.json";
 	/** Name of the file where there are stored all the users that a certain user x is following in Winsome */
-	public String FOLLOWINGFILENAMEPATH;
+	public String FOLLOWINGFILENAMEPATH = "following.json";
 	
 	/**
 	 * Basic constructor where all the parameters are set by reading a configuration file
@@ -83,8 +86,7 @@ public class ServerConfiguration {
 			   && prop.containsKey("RMIREGISTRYHOST") && prop.containsKey("MULTICASTPORT") && prop.containsKey("MULTICASTADDRESS") && prop.containsKey("REGISTRATIONSERVICENAME")
 			   && prop.containsKey("CALLBACKSERVICENAME") && prop.containsKey("SOCKETTIMEOUT") && prop.containsKey("COREPOOLSIZE") && prop.containsKey("MAXIMUMCOREPOOLSIZE")
 			   && prop.containsKey("KEEPALIVETIME") && prop.containsKey("THREADBLOCKINGQUEUE") && prop.containsKey("DELAYBACKUP") && prop.containsKey("DELAYEARNINGSCALCULATION")
-			   && prop.containsKey("AUTHORPERCENTAGEEARN") && prop.containsKey("USERSFILENAMEPATH") && prop.containsKey("POSTSFILENAMEPATH") && prop.containsKey("COMMENTSFILENAMEPATH")
-			   && prop.containsKey("VOTESFILENAMEPATH") && prop.containsKey("TRANSACTIONSFILENAMEPATH") && prop.containsKey("FOLLOWINGFILENAMEPATH") && prop.containsKey("MUTABLEDATAPOSTSFILENAMEPATH")) {
+			   && prop.containsKey("AUTHORPERCENTAGEEARN") && prop.containsKey("DIRECTORYFORFILE")) {
 				
 				//check the port
 				try {
@@ -176,16 +178,24 @@ public class ServerConfiguration {
 					throw new InvalidConfigurationException(e.getMessage());
 				}
 				
+				try {
+					DIRECTORYFORFILE = prop.getProperty("DIRECTORYFORFILE");
+					checkIsDirectory(DIRECTORYFORFILE);
+				}catch(IllegalFileException e) {
+					throw new InvalidConfigurationException(e.getMessage());
+				}
+				
 				RMIREGISTRYHOST = prop.getProperty("RMIREGISTRYHOST");
 				REGISTRATIONSERVICENAME = prop.getProperty("REGISTRATIONSERVICENAME");
 				CALLBACKSERVICENAME = prop.getProperty("CALLBACKSERVICENAME");
-				USERSFILENAMEPATH = prop.getProperty("USERSFILENAMEPATH");
-				POSTSFILENAMEPATH = prop.getProperty("POSTSFILENAMEPATH");
-				MUTABLEDATAPOSTSFILENAMEPATH = prop.getProperty("MUTABLEDATAPOSTSFILENAMEPATH");
-				COMMENTSFILENAMEPATH = prop.getProperty("COMMENTSFILENAMEPATH");
-				VOTESFILENAMEPATH = prop.getProperty("VOTESFILENAMEPATH");
-				TRANSACTIONSFILENAMEPATH = prop.getProperty("TRANSACTIONSFILENAMEPATH");
-				FOLLOWINGFILENAMEPATH = prop.getProperty("FOLLOWINGFILENAMEPATH");
+				
+				USERSFILENAMEPATH = DIRECTORYFORFILE.concat("/").concat(USERSFILENAMEPATH);
+				POSTSFILENAMEPATH = DIRECTORYFORFILE.concat("/").concat(POSTSFILENAMEPATH);
+				VOTESFILENAMEPATH = DIRECTORYFORFILE.concat("/").concat(VOTESFILENAMEPATH);
+				COMMENTSFILENAMEPATH = DIRECTORYFORFILE.concat("/").concat(COMMENTSFILENAMEPATH);
+				FOLLOWINGFILENAMEPATH = DIRECTORYFORFILE.concat("/").concat(FOLLOWINGFILENAMEPATH);
+				MUTABLEDATAPOSTSFILENAMEPATH = DIRECTORYFORFILE.concat("/").concat(MUTABLEDATAPOSTSFILENAMEPATH);
+				TRANSACTIONSFILENAMEPATH = DIRECTORYFORFILE.concat("/").concat(TRANSACTIONSFILENAMEPATH);
 				
 			}else {
 				throw new InvalidConfigurationException("File properties doesn't contains all the necessary properties. Check the file and the documentation");
@@ -221,6 +231,14 @@ public class ServerConfiguration {
 	 */
 	public String getMulticastInfo() {
 		return MULTICASTADDRESS.toString() + ":" + MULTICASTPORT;
+	}
+	
+	private void checkIsDirectory(String dir) throws IllegalFileException{
+		File directory = new File(dir);
+		if(directory.isDirectory() == false)
+			throw new IllegalFileException("The path specified in server configuration file isn't a valid directory");
+		
+		return;
 	}
 	
 }

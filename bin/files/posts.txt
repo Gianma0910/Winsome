@@ -1,8 +1,0 @@
-{
-  "0": {
-    "idPost": 0,
-    "title": "ciao",
-    "content": "Mi chiamo pipp",
-    "author": "pippo"
-  }
-}
