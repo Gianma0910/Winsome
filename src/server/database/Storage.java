@@ -1,12 +1,9 @@
 package server.database;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.FileChannel;
@@ -23,8 +20,6 @@ import java.util.Scanner;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
 
 public abstract class Storage {
 
@@ -39,11 +34,26 @@ public abstract class Storage {
 		
 		fileToBeStoredIn.getParentFile().mkdirs();
 		
-		FileOutputStream fos = new FileOutputStream(fileToBeStoredIn, false);
-		String s = gson.toJson(data);
-		fos.write(s.getBytes());
-		fos.close();
-	
+		ByteBuffer buffer = ByteBuffer.allocate(BUFFERSIZE);
+		int i = 0;
+		
+		try(FileOutputStream fos = new FileOutputStream(fileToBeStoredIn, false); FileChannel channel = fos.getChannel()){
+			writeChar(channel, '[');
+			for(Iterator<V> it = data.values().iterator(); it.hasNext(); i++) {
+				V v = it.next();
+				byte[] bytes = gson.toJson(v).getBytes();
+				for(int offset = 0; offset < bytes.length; offset += BUFFERSIZE) {
+					buffer.clear();
+					buffer.put(bytes, offset, Math.min(BUFFERSIZE, bytes.length - offset));
+					buffer.flip();
+					while(buffer.hasRemaining()) 
+						channel.write(buffer);
+				}
+				if(i < data.size() - 1) 
+					writeChar(channel, ',');
+			}
+			writeChar(channel, ']');
+		}
 	}
 	
 	public static <T> void backupNonCached(ExclusionStrategy strategy, File fileToBeStoredIn, Collection<T> data) throws FileNotFoundException, IOException{
@@ -57,10 +67,26 @@ public abstract class Storage {
 		
 		fileToBeStoredIn.getParentFile().mkdirs();
 		
-		FileOutputStream fos = new FileOutputStream(fileToBeStoredIn, false);
-		String s = gson.toJson(data);
-		fos.write(s.getBytes());
-		fos.close();
+		ByteBuffer buffer = ByteBuffer.allocate(BUFFERSIZE);
+		int i = 0;
+		
+		try(FileOutputStream fos = new FileOutputStream(fileToBeStoredIn, false); FileChannel channel = fos.getChannel()){
+			writeChar(channel, '[');
+			for(Iterator<T> it = data.iterator(); it.hasNext(); i++) {
+				T t = it.next();
+				byte[] bytes = gson.toJson(t).getBytes();
+				for(int offset = 0; offset < bytes.length; offset += BUFFERSIZE) {
+					buffer.clear();
+					buffer.put(bytes, offset, Math.min(BUFFERSIZE, bytes.length - offset));
+					buffer.flip();
+					while(buffer.hasRemaining())
+						channel.write(buffer);
+				}
+				if(i < data.size() - 1)
+					writeChar(channel, ',');
+			}
+			writeChar(channel, ']');
+		}
 	}
 	
 	public static <K, V> void backupCached(ExclusionStrategy strategy, File fileToBeStoredIn, Map<K, V> backedUpData, Map<K, V> toBeBackedUpData, boolean firtsBackupAndNonEmptyStorage) throws IOException {

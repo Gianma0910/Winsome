@@ -9,7 +9,7 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 
 import java.rmi.NotBoundException;
-
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 import client.follow_unfollow_request.FollowRequest;
@@ -59,7 +59,7 @@ public class ClientMain {
 		
 		FollowerDatabaseImpl stubClientDatabase = new FollowerDatabaseImpl();
 		
-		String request;
+		String request = null;
 		Scanner scan = new Scanner(System.in);
 		boolean shutdown = false;
 		
@@ -110,8 +110,7 @@ public class ClientMain {
 				break;
 			}
 			case "post": {
-				String [] r = request.split(" \"");
-				PostRequest.performCreatePost(r, readerInput, writerOutput);
+				PostRequest.performCreatePost(command, scan, readerInput, writerOutput);
 				break;
 			}
 			case "blog": {
@@ -153,6 +152,7 @@ public class ClientMain {
 				
 				break;
 			}
+			
 			default: {
 				System.err.println("This command doesn't exists, please check the documentation");
 				break;

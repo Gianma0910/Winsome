@@ -23,7 +23,7 @@ public class PostServicesImpl implements PostServices {
 	}
 	
 	@Override
-	public void createPost(String [] requestSplitted, Socket socket) throws IOException {
+	public void createPost(String title, String content, Socket socket) throws IOException {
 		String error;
 		
 		if(db.getUserLoggedIn().containsKey(socket) == false) {
@@ -31,23 +31,21 @@ public class PostServicesImpl implements PostServices {
 			sendError(error, writerOutput);
 			return;
 		}
-		
-		String titlePost = requestSplitted[1];
-		String contentPost = requestSplitted[2];
+	
 		String authorPost = db.getUsernameBySocket(socket);
 		
-		if(titlePost.length() > 20) {
+		if(title.length() > 20) {
 			error = TypeError.TITLELENGTHERROR;
 			sendError(error, writerOutput);
 			return;
-		}else if(contentPost.length() > 500) {
+		}else if(content.length() > 500) {
 			error = TypeError.CONTENTLENGTHERROR;
 			sendError(error, writerOutput);
 			return;
 		}
 		
 		int idPost = db.getAndIncrementIdPost();
-		error = db.addPostInWinsome(idPost, authorPost, titlePost, contentPost);
+		error = db.addPostInWinsome(idPost, authorPost, title, content);
 		 
 		sendError(error, writerOutput);	
 	}

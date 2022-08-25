@@ -7,18 +7,21 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.Base64;
 import java.util.Objects;
 
 import RMI.RMICallback;
 import configuration.ServerConfiguration;
 import server.database.Database;
-import server.follow_unfollow_service.FollowingServiceImpl;
-import server.follow_unfollow_service.UnfollowingServiceImpl;
-import server.login_logout_service.LoginServiceImpl;
-import server.login_logout_service.LogoutServiceImpl;
+import server.follow_unfollow_services.FollowingServiceImpl;
+import server.follow_unfollow_services.UnfollowingServiceImpl;
+import server.load_action_services.LoadFollowersServiceImpl;
+import server.load_action_services.LoadFollowingServiceImpl;
+import server.login_logout_services.LoginServiceImpl;
+import server.login_logout_services.LogoutServiceImpl;
 import server.post_action_services.PostServicesImpl;
-import server.view_list_users_service.ViewListUsersServiceImpl;
-import server.wallet_service.GetWalletServicesImpl;
+import server.view_list_users_services.ViewListUsersServiceImpl;
+import server.wallet_services.GetWalletServicesImpl;
 import utility.TypeError;
 
 /**
@@ -69,10 +72,6 @@ public class TaskHandler implements Runnable {
 
 				//read the request client (receive)
 				requestClient = readerInput.readLine();
-
-				//socket.setSoTimeout(10000);
-
-				System.out.println(requestClient);
 				
 				//split the request client using the caharacter ":"
 				String [] requestSplitted = requestClient.split(":");
@@ -146,10 +145,24 @@ public class TaskHandler implements Runnable {
 					break;
 				}
 				case "post": {
-					PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
+					if(requestSplitted.length != 1) {
+						sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
+					}else{
+						sendError(TypeError.SUCCESS, writerOutput);
+						
+						String createPostRequest = readerInput.readLine();
+						String [] createPostRequestSplitted = createPostRequest.split(" ");
+						
+						byte[] titleBytes = Base64.getDecoder().decode(createPostRequestSplitted[0]);
+						byte[] contentBytes = Base64.getDecoder().decode(createPostRequestSplitted[1]);
+						
+						String title = new String(titleBytes, 0, titleBytes.length);
+						String content = new String(contentBytes, 0, contentBytes.length);
+						
+						PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
 
-					postServices.createPost(requestSplitted, socket);
-
+						postServices.createPost(title, content, socket);
+					}
 
 					break;
 				}
@@ -234,6 +247,21 @@ public class TaskHandler implements Runnable {
 						walletServicesImpl.getWalletInBitcoin(socket);
 					else 
 						sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
+					
+					break;
+				}
+				case "load": {
+					if(requestSplitted[1].equals("followers")) {
+						LoadFollowersServiceImpl loadServicesImpl = new LoadFollowersServiceImpl(db, writerOutput);
+						
+						loadServicesImpl.loadFollowers(stubCallbackRegistration, requestSplitted[2]);
+						
+					}else if(requestSplitted[1].equals("following")) {
+						LoadFollowingServiceImpl loadServicesImpl = new LoadFollowingServiceImpl(db, writerOutput);
+						
+						loadServicesImpl.loadFollowing(stubCallbackRegistration, requestSplitted[2]);
+						
+					}
 					
 					break;
 				}

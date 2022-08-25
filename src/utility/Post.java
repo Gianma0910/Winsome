@@ -33,32 +33,16 @@ public class Post {
 		this.curators = new LinkedHashSet<String>();
 	}
 	
-	public void setIdPost(int id) {
-		this.idPost = id;
-	}
-	
 	public int getIdPost() {
 		return idPost;
-	}
-	
-	public void setTitle(String title) {
-		this.title = title;
 	}
 	
 	public String getTitle() {
 		return title;
 	}
 	
-	public void setContent(String content) {
-		this.content = content;
-	}
-	
 	public String getContent() {
 		return content;
-	}
-	
-	public void setAuthor(String author) {
-		this.author = author;
 	}
 	
 	public String getAuthor() {
@@ -69,18 +53,22 @@ public class Post {
 		return rewin;
 	}
 	
-	public void addRewin(String rewinUser) {
+	public synchronized void addRewin(String rewinUser) {
 		this.rewin.add(rewinUser);
+	}
+	
+	public synchronized void removeRewin(String rewinUser) {
+		this.rewin.remove(rewinUser);
+	}
+	
+	public synchronized void removeAllRewin() {
+		this.rewin.removeAll(rewin);
 	}
 	
 	public boolean isRewinned() {
 		return rewin.size() != 0 ? true : false;
 	}
-	
-	public void setRewin(LinkedHashSet<String> rewin) {
-		this.rewin = rewin;
-	}
-	
+
 	public void setVotes(LinkedHashSet<Vote> votes) {
 		this.votes = votes;
 	}
@@ -89,40 +77,28 @@ public class Post {
 		return votes;
 	}
 	
-	public void addVote(Vote v) {
+	public synchronized void addVote(Vote v) {
 		votes.add(v);
 	}
 	
-	public void removeAllVotes() {
+	public synchronized void removeAllVotes() {
 		votes.removeAll(votes);
-	}
-	
-	public void setComments(LinkedHashSet<Comment> comments) {
-		this.comments = comments;
 	}
 	
 	public LinkedHashSet<Comment> getComments(){
 		return comments;
 	}
 	
-	public void addComment(Comment c) {
+	public synchronized void addComment(Comment c) {
 		comments.add(c);
 	}
 	
-	public void removeAllComment() {
+	public synchronized void removeAllComment() {
 		comments.removeAll(comments);
-	}
-	
-	public void setInteractions(int iterations) {
-		this.iterations = iterations;
 	}
 	
 	public int getiterations() {
 		return iterations;
-	}
-	
-	public void setCurators(LinkedHashSet<String> curators) {
-		this.curators = curators;
 	}
 	
 	public LinkedHashSet<String> getCurators(){

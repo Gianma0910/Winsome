@@ -5,7 +5,7 @@ import java.net.Socket;
 
 public interface PostServices {
 
-	void createPost(String [] requestSplitted, Socket socket) throws IOException;
+	void createPost(String title, String content, Socket socket) throws IOException;
 	
 	void viewUserPost(Socket socket) throws IOException;
 	

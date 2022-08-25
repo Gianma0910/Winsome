@@ -84,6 +84,32 @@ public class LoginRequest{
 				e.printStackTrace();
 			}
 
+			StringBuilder requestLoadFollower = new StringBuilder();
+			requestLoadFollower.append("load").append(":").append("followers").append(":").append(username);
+			
+			writerOutput.write(requestLoadFollower.toString());
+			writerOutput.newLine();
+			writerOutput.flush();
+			
+			String response2 = readerInput.readLine();
+			
+			if(response2.equals(TypeError.SUCCESS)) {
+				System.out.println("Loading followers list for " + username + " completed successfully");
+			}
+			
+			StringBuilder requestLoadFollowing = new StringBuilder();
+			requestLoadFollowing.append("load").append(":").append("following").append(":").append(username);
+			
+			writerOutput.write(requestLoadFollowing.toString());
+			writerOutput.newLine();
+			writerOutput.flush();
+			
+			String response3 = readerInput.readLine();
+			
+			if(response3.equals(TypeError.SUCCESS)) {
+				System.out.println("Loading following list for " + username + " completed successfully");
+			}
+			
 			return;
 		}
 	}

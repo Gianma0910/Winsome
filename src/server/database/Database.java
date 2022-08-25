@@ -29,6 +29,8 @@ import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 
@@ -600,6 +602,7 @@ public class Database extends Storage{
 			
 			p.removeAllComment();
 			p.removeAllVotes();
+			p.removeAllRewin();
 			
 			allPosts.remove(idPost, p);
 			blogUser.get(authorPost).remove(p);
@@ -607,6 +610,15 @@ public class Database extends Storage{
 			
 			if(postBackedup.contains(idPost)) {
 				postBackedup.remove(idPost, p);
+			}
+			
+			for(String s : postRewinnedByUser.keySet()) {
+				ConcurrentLinkedQueue<Post> postRewinned = postRewinnedByUser.get(s);
+				if(postRewinned.contains(p)) {
+					postRewinned.remove(p);
+					blogUser.get(s).remove(p);
+				}
+				else continue;
 			}
 			
 			postDeletedSinceLastBackup = true;
@@ -839,7 +851,6 @@ public class Database extends Storage{
 		Objects.requireNonNull(transactionsFile, "Transactions file is null");
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		Type userType = new TypeToken<ConcurrentHashMap<String, User>>(){} .getType();
 		
 		Map<String, User> parsedUsers = new HashMap<String, User>();
 		
@@ -893,29 +904,78 @@ public class Database extends Storage{
 				}
 				
 				try(FileInputStream fis = new FileInputStream(followingFile); JsonReader reader = new JsonReader(new InputStreamReader(fis))){
-					Map<String, User> dataInFollowingFile = gson.fromJson(reader, userType);
-
-					for(String s : dataInFollowingFile.keySet()) {
-						User u = dataInFollowingFile.get(s);
-						ArrayList<String> followingUser = u.getFollowing();
-
-						for(String follow : followingUser) {
-							parsedUsers.get(u.getUsername()).addFollowing(follow);
-						}
+					reader.setLenient(true);
+					reader.beginArray();
+					
+					while(reader.hasNext()) {
+						reader.beginObject();
+						String nameAttribute = null;
+						String username = null;
+						ArrayList<String> following = new ArrayList<>();
 						
+						while(reader.hasNext()) {
+							nameAttribute = reader.nextName();
+							switch (nameAttribute) {
+								case "username": {
+									username = reader.nextString();
+									break;
+								}
+								case "following": {
+									reader.beginArray();
+									while(reader.hasNext()) {
+										following.add(reader.nextString());
+									}
+									reader.endArray();
+								}
+							}
+							for(String s : following) {
+								parsedUsers.get(username).addFollowing(s);
+							}
+						}
+						reader.endObject();
 					}
+					reader.endArray();
 				}
 				
 				try(FileInputStream fis = new FileInputStream(transactionsFile); JsonReader reader = new JsonReader(new InputStreamReader(fis))){
-					Map<String, User> dataInTransactionsFile = gson.fromJson(reader, userType);
-
-					for(String s : dataInTransactionsFile.keySet()) {
-						User u = dataInTransactionsFile.get(s);
-						ArrayList<Transaction> transactionsUser = u.getTransactions();
-						for(Transaction t : transactionsUser) {
-							parsedUsers.get(u.getUsername()).addTransaction(t);
+					reader.setLenient(true);
+					reader.beginArray();
+					
+					while(reader.hasNext()) {
+						reader.beginObject();
+						String nameAttribute;
+						String username = null;
+						JsonObject obj = new JsonObject();
+						while(reader.hasNext()) {
+							nameAttribute = reader.nextName();
+							boolean flag = false;
+							switch(nameAttribute) {
+								case "username": {
+									username = reader.nextString();
+									break;
+								}
+								case "transactions": {
+									reader.beginArray();
+									while(reader.hasNext()) {
+										flag = true;
+										reader.beginObject();
+										while(reader.hasNext()) {
+											nameAttribute = reader.nextName();
+											if(nameAttribute.equals("amount")) obj.addProperty(nameAttribute, reader.nextDouble());
+											else if(nameAttribute.equals("timestamp")) obj.addProperty(nameAttribute, reader.nextString());
+										}
+										reader.endObject();
+										if(flag) {
+											parsedUsers.get(username).addTransaction(gson.fromJson(obj, Transaction.class));
+										}
+									}
+									reader.endArray();
+								}
+							}
 						}
+						reader.endObject();
 					}
+					reader.endArray();
 				}
 				
 				for(Entry<String, User> entry : parsedUsers.entrySet()) {
@@ -997,9 +1057,8 @@ public class Database extends Storage{
 		Objects.requireNonNull(mutableDataPostsFile, "Mutable data posts file is null");
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		Type postType = new TypeToken<Map<Integer, Post>>(){} .getType();
 		
-		Map<Integer, Post> parsedPosts = new HashMap<>();
+		Map<Integer, JsonObject> parsedPosts = new HashMap<>();
 	
 		if(Files.exists(postsFile.toPath(), LinkOption.NOFOLLOW_LINKS) && Files.exists(votesFile.toPath(), LinkOption.NOFOLLOW_LINKS)
 		   && Files.exists(commentsFile.toPath(), LinkOption.NOFOLLOW_LINKS) && Files.exists(mutableDataPostsFile.toPath(), LinkOption.NOFOLLOW_LINKS)) {
@@ -1042,56 +1101,173 @@ public class Database extends Storage{
 						}
 					}
 					reader.endObject();
-					parsedPosts.putIfAbsent(id, new Post(-1, null, null, null));
-					parsedPosts.get(id).setIdPost(id);
-					parsedPosts.get(id).setTitle(title);
-					parsedPosts.get(id).setContent(content);
-					parsedPosts.get(id).setAuthor(author);
+					parsedPosts.putIfAbsent(id, new JsonObject());
+					parsedPosts.get(id).addProperty("idPost", id);
+					parsedPosts.get(id).addProperty("title", title);
+					parsedPosts.get(id).addProperty("content", content);
+					parsedPosts.get(id).addProperty("author", author);
 				}
 				reader.endArray();
 			}
 			
 			try(FileInputStream fis = new FileInputStream(votesFile); JsonReader reader = new JsonReader(new InputStreamReader(fis))){
-				Map<Integer, Post> dataInVotesFile = gson.fromJson(reader, postType);
-
-				for(Integer i : dataInVotesFile.keySet()) {
-					Post p = dataInVotesFile.get(i);
-					parsedPosts.get(p.getIdPost()).setVotes(p.getVotes());
+				reader.setLenient(true);
+				reader.beginArray();
+				
+				while(reader.hasNext()) {
+					reader.beginObject();
+					String nameAttribute = null;
+					int id = -1;
+					JsonArray votes = new JsonArray();
+					while(reader.hasNext()) {
+						nameAttribute = reader.nextName();
+						switch(nameAttribute) {
+							case "idPost": {
+								id = reader.nextInt();
+								break;
+							}
+							case "votes": {
+								reader.beginArray();
+								while(reader.hasNext()) {
+									reader.beginObject();
+									JsonObject obj = new JsonObject();
+									while(reader.hasNext()) {
+										nameAttribute = reader.nextName();
+										if(nameAttribute.equals("idPost")) obj.addProperty(nameAttribute, reader.nextInt());
+										else if(nameAttribute.equals("authorVote")) obj.addProperty(nameAttribute, reader.nextString());
+										else if(nameAttribute.equals("vote")) obj.addProperty(nameAttribute, reader.nextInt());
+									}
+									reader.endObject();
+									votes.add(obj);
+								}
+								reader.endArray();
+								break;
+							}
+						}
+					}
+					reader.endObject();
+					parsedPosts.get(id).add("votes", votes);
 				}
+				reader.endArray();
 			}
 			
 			try(FileInputStream fis = new FileInputStream(commentsFile); JsonReader reader = new JsonReader(new InputStreamReader(fis))){
-				Map<Integer, Post> dataInCommentsFile = gson.fromJson(reader, postType);
-			
-				for(Integer i : dataInCommentsFile.keySet()) {
-					Post p = dataInCommentsFile.get(i);
-					parsedPosts.get(p.getIdPost()).setComments(p.getComments());
+				reader.setLenient(true);
+				reader.beginArray();
+				
+				while(reader.hasNext()) {
+					reader.beginObject();
+					String nameAttribute = null;
+					int id = -1;
+					JsonArray comments = new JsonArray();
+					while(reader.hasNext()) {
+						nameAttribute = reader.nextName();
+						switch(nameAttribute) {
+							case "idPost": {
+								id = reader.nextInt();
+								break;
+							}
+							case "comments": {
+								reader.beginArray();
+								while(reader.hasNext()) {
+									reader.beginObject();
+									JsonObject obj = new JsonObject();
+									while(reader.hasNext()) {
+										nameAttribute = reader.nextName();
+										if(nameAttribute.equals("idPost")) obj.addProperty(nameAttribute, reader.nextInt());
+										else if(nameAttribute.equals("author")) obj.addProperty(nameAttribute, reader.nextString());
+										else if(nameAttribute.equals("content")) obj.addProperty(nameAttribute, reader.nextString());
+									}
+									reader.endObject();
+									comments.add(obj);
+								}
+								reader.endArray();
+							}
+						}
+					}
+					reader.endObject();
+					parsedPosts.get(id).add("comments", comments);
 				}
+				reader.endArray();
 			}
 			
 			try(FileInputStream fis = new FileInputStream(mutableDataPostsFile); JsonReader reader = new JsonReader(new InputStreamReader(fis))){
-				Map<Integer, Post> dataInMutablePostFile = gson.fromJson(reader, postType);
-
-				for(Integer i : dataInMutablePostFile.keySet()) {
-					Post p = dataInMutablePostFile.get(i);
-					parsedPosts.get(p.getIdPost()).setInteractions(p.getiterations());
-					parsedPosts.get(p.getIdPost()).setRewin(p.getRewin());
-					parsedPosts.get(p.getIdPost()).setNewVotes(p.getNewVotes());
-					parsedPosts.get(p.getIdPost()).setCurators(p.getCurators());
-					parsedPosts.get(p.getIdPost()).setNewCommentsBy(p.getNewCommentsBy());
-				} 
+				reader.setLenient(true);
+				reader.beginArray();
+				
+				while(reader.hasNext()) {
+					reader.beginObject();
+					String nameAttribute = null;
+					int id = -1;
+					int newVotes = -1;
+					int iterations = -1;
+					JsonObject newCommentsBy = new JsonObject();
+					JsonArray curators = new JsonArray();
+					JsonArray rewinners = new JsonArray();
+					while(reader.hasNext()) {
+						nameAttribute = reader.nextName();
+						switch(nameAttribute) {
+							case "idPost": {
+								id = reader.nextInt();
+								break;
+							}
+							case "rewin": {
+								reader.beginArray();
+								while(reader.hasNext()) {
+									rewinners.add(reader.nextString());
+								}
+								reader.endArray();
+								break;
+							}
+							case "iterations": {
+								iterations = reader.nextInt();
+								break;
+							}
+							case "newVotes": {
+								newVotes = reader.nextInt();
+								break;
+							}
+							case "newCommentsBy": {
+								reader.beginObject();
+								while(reader.hasNext()) {
+									newCommentsBy.addProperty(reader.nextName(), reader.nextInt());
+								}
+								reader.endObject();
+								break;
+							}
+							case "curators": {
+								reader.beginArray();
+								while(reader.hasNext()) {
+									curators.add(reader.nextString());
+								}
+								reader.endArray();
+								break;
+							}
+						}
+					}
+					reader.endObject();
+					parsedPosts.get(id).add("rewin", rewinners);
+					parsedPosts.get(id).add("newCommentsBy", newCommentsBy);
+					parsedPosts.get(id).add("curators", curators);
+					parsedPosts.get(id).addProperty("iterations", iterations);
+					parsedPosts.get(id).addProperty("newVotes", newVotes);
+				}
+				reader.endArray();
 			}
 			
-			for(Entry<Integer, Post> entry : parsedPosts.entrySet()) {
-				Post p = entry.getValue();
+			for(Entry<Integer, JsonObject> entry : parsedPosts.entrySet()) {
+				Post p = gson.fromJson(entry.getValue(), Post.class);
 				this.allPosts.putIfAbsent(entry.getKey(), p);
 				this.postBackedup.putIfAbsent(entry.getKey(), p);
 				this.blogUser.get(p.getAuthor()).add(p);
+				this.idPost.set(entry.getKey());
 				
 				for(String s : p.getRewin()) {
 					this.postRewinnedByUser.get(s).add(p);
 				}
 			}
+			
+			this.idPost.getAndIncrement();
 		}else {postsFile.createNewFile(); votesFile.createNewFile(); commentsFile.createNewFile(); mutableDataPostsFile.createNewFile();}
 	
 		return;
@@ -1132,7 +1308,7 @@ public class Database extends Storage{
 
 			@Override
 			public boolean shouldSkipField(FieldAttributes f) {
-				return (f.getDeclaringClass() == Post.class && !f.getName().equals("idPost") && !f.getName().equals("votes") && !f.getName().equals("authorVote"));
+				return (f.getDeclaringClass() == Post.class && !f.getName().equals("idPost") && !f.getName().equals("votes"));
 			}
 
 			@Override
@@ -1145,7 +1321,7 @@ public class Database extends Storage{
 
 			@Override
 			public boolean shouldSkipField(FieldAttributes f) {
-				return (f.getDeclaringClass() == Post.class && !f.getName().equals("idPost") && !f.getName().equals("comments") && !f.getName().equals("author"));
+				return (f.getDeclaringClass() == Post.class && !f.getName().equals("idPost") && !f.getName().equals("comments"));
 			}
 
 			@Override

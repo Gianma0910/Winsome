@@ -62,7 +62,7 @@ public class User{
 		return tagList;
 	}
 	
-	public void addTransaction(Transaction t) {
+	public synchronized void addTransaction(Transaction t) {
 		Objects.requireNonNull(t, "Transaction to add is null");
 		
 		transactions.add(t);
@@ -73,11 +73,11 @@ public class User{
 		return transactions;
 	}
 	
-	public void addFollowing(String username) {
+	public synchronized void addFollowing(String username) {
 		following.add(username);
 	}
 	
-	public void removeFollowing(String username) {
+	public synchronized void removeFollowing(String username) {
 		following.remove(username);
 	}
 	
