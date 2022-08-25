@@ -50,7 +50,7 @@ public class ClientMain {
 		ClientConfiguration clientConf = new ClientConfiguration(configurationFile);
 		
 		System.out.println("File properties read successfully\n");
-		
+
 		Socket socketTCP = new Socket(clientConf.SERVERADDRESS, clientConf.TCPPORT);
 		BufferedWriter writerOutput = new BufferedWriter(new OutputStreamWriter(socketTCP.getOutputStream()));
 		BufferedReader readerInput = new BufferedReader(new InputStreamReader(socketTCP.getInputStream()));
@@ -63,6 +63,8 @@ public class ClientMain {
 		Scanner scan = new Scanner(System.in);
 		boolean shutdown = false;
 		
+		System.out.println("Welcome to Winsome! Please register or login if you are already registered");
+		
 		while(!shutdown) {
 			request = scan.nextLine();
 			String [] requestSplitted = request.split(" ");
@@ -70,7 +72,7 @@ public class ClientMain {
 			
 			switch(command) {
 			case "register" : {
-				RegisterRequest.performRegisterAction(requestSplitted, clientConf);				
+				RegisterRequest.performRegisterAction(requestSplitted, clientConf, writerOutput, readerInput, multicastClient, stubClientDatabase);				
 				break;
 			}
 			case "login" : {

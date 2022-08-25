@@ -9,7 +9,6 @@ import utility.TypeError;
 public class DeletePostRequest {
 
 	public static void performDeletePostAction(String [] requestSplitted, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException {
-		if(requestSplitted.length != 2)
 		
 		try {
 			int idPost = Integer.parseInt(requestSplitted[1]);

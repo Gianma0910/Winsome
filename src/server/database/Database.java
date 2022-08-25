@@ -13,23 +13,17 @@ import java.net.Socket;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
@@ -79,7 +73,7 @@ public class Database extends Storage{
 	
 	private ConcurrentHashMap<Integer, Post> postBackedup;
 	
-	private ConcurrentHashMap<String, ArrayList<Post>> userFeed;
+//	private ConcurrentHashMap<String, ArrayList<Post>> userFeed;
 	
 	private ConcurrentHashMap<String, ConcurrentLinkedQueue<Post>> postRewinnedByUser;
 	
@@ -90,8 +84,6 @@ public class Database extends Storage{
 	private boolean firstBackupForUsers = false;
 	
 	private boolean postDeletedSinceLastBackup = false;
-	
-	private ReentrantReadWriteLock backupLock = new ReentrantReadWriteLock(true);
 	
 	/**
 	 * Basic constructor for Database class
@@ -107,7 +99,7 @@ public class Database extends Storage{
 		this.allPosts = new ConcurrentHashMap<Integer, Post>();
 		this.postToBeBackedup = new ConcurrentHashMap<Integer, Post>();
 		this.postBackedup = new ConcurrentHashMap<Integer, Post>();
-		this.userFeed = new ConcurrentHashMap<String, ArrayList<Post>>();
+		//this.userFeed = new ConcurrentHashMap<String, ArrayList<Post>>();
 		this.postRewinnedByUser = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Post>>();
 		
 		this.idPost = new AtomicInteger(0);
@@ -236,8 +228,6 @@ public class Database extends Storage{
 				followers.add(usernameNewFollower);
 			}
 			
-			addPostToUserFeedByFollower(usernameNewFollower, usernameUpdateFollower);
-			
 			return;
 		}
 	}
@@ -250,8 +240,6 @@ public class Database extends Storage{
 			ArrayList<String> followers = userFollower.get(usernameUpdateFollower);
 			
 			followers.remove(usernameToRemove);
-			
-			removePostFromUserFeedByFollower(usernameToRemove, usernameUpdateFollower);
 		}
 	}
 
@@ -428,12 +416,6 @@ public class Database extends Storage{
 			allPosts.putIfAbsent(idPost, newPost);
 			postToBeBackedup.putIfAbsent(idPost, newPost);
 
-			ArrayList<String> authorFollower = userFollower.get(authorPost);
-
-			for(String s : authorFollower) {
-				addPostToUserFeedByAddingPost(s, newPost);
-			}
-
 			return "New post created with id: " + idPost;
 
 		}
@@ -479,28 +461,35 @@ public class Database extends Storage{
 		return "[]";
 	}
 	
-	public void setUserFeed(String username) {
-		Objects.requireNonNull(username, "Username used to set his feed is null");
-		
-		if(Objects.requireNonNull(userFeed) != null) {
-			userFeed.putIfAbsent(username, new ArrayList<Post>());
-			
-			return;
-		}
-	}
+//	public void setUserFeed(String username) {
+//		Objects.requireNonNull(username, "Username used to set his feed is null");
+//		
+//		if(Objects.requireNonNull(userFeed) != null) {
+//			userFeed.putIfAbsent(username, new ArrayList<Post>());
+//			
+//			return;
+//		}
+//	}
 	
 	public String getUserFeedJson(String username) {
 		Objects.requireNonNull(username, "Username used to get his feed is null");
 		
-		if(Objects.requireNonNull(userFeed) != null && Objects.requireNonNull(userFeed.keySet()) != null) {
-			ArrayList<Post> feedPost = userFeed.get(username);
+		if(Objects.requireNonNull(blogUser) != null && Objects.requireNonNull(blogUser.keySet()) != null
+				&& Objects.requireNonNull(userFollowing) != null && Objects.requireNonNull(userFollowing.keySet()) != null) {
+			ArrayList<String> following = userFollowing.get(username);
+			
+			ArrayList<Post> feed = new ArrayList<>();
+			
+			for(String s : following) {
+				ArrayList<Post> postUser = blogUser.get(s);
+				feed.addAll(postUser);
+			}
 			
 			Gson gson = new GsonBuilder().addSerializationExclusionStrategy(new ExclusionStrategy() {
 				
 				@Override
 				public boolean shouldSkipField(FieldAttributes f) {
-					return (f.getDeclaringClass() == Post.class && f.getName().equals("content") && f.getName().equals("rewin") && f.getName().equals("votes") && f.getName().equals("comments")
-							&& f.getName().equals("iterations") && f.getName().equals("newCommentsBy") && f.getName().equals("newVotes") && f.getName().equals("curators"));
+					return (f.getDeclaringClass() == Post.class && !f.getName().equals("idPost") && !f.getName().equals("author") && !f.getName().equals("title"));
 				}
 				
 				@Override
@@ -509,95 +498,23 @@ public class Database extends Storage{
 				}
 			}).create();
 			
-			StringBuilder serializedPost = new StringBuilder();
-			Iterator<Post> it = feedPost.iterator();
+			Iterator<Post> it = feed.iterator();
+			StringBuilder serializationPosts = new StringBuilder();
 			
-			serializedPost.append("[");
+			serializationPosts.append("[");
 			while(it.hasNext()) {
-				serializedPost.append(gson.toJson(it.next()));
-				if(it.hasNext())
-					serializedPost.append(", ");
+				serializationPosts.append(gson.toJson(it.next()));
+				
+				if(it.hasNext()) {
+					serializationPosts.append(", ");
+				}
 			}
-			serializedPost.append("]");
+			serializationPosts.append("]");
 			
-			return serializedPost.toString();
+			return serializationPosts.toString();
 		}
 		
 		return "[]";
-	}
-	
-	private void addPostToUserFeedByFollower(String usernameUpdateFeed, String usernameTakePost) {
-		Objects.requireNonNull(usernameUpdateFeed, "Username used to update his feed is null");
-		Objects.requireNonNull(usernameTakePost, "Username used to take post to add to a certain user's feed is null");
-		
-		if(Objects.requireNonNull(userFeed) != null && Objects.requireNonNull(userFeed.keySet()) != null
-				&& Objects.requireNonNull(blogUser) != null && Objects.requireNonNull(blogUser.keySet()) != null) {
-			ArrayList<Post> feed = userFeed.get(usernameUpdateFeed);
-			
-			if(feed == null) 
-				feed = new ArrayList<Post>();
-			
-			ArrayList<Post> posts = blogUser.get(usernameTakePost);
-			
-			feed.addAll(posts);
-			
-			return;
-		}
-	}
-	
-	private void removePostFromUserFeedByFollower(String usernameUpdateFeed, String usernameTakePost) {
-		Objects.requireNonNull(usernameUpdateFeed, "Username used to update his feed is null");
-		Objects.requireNonNull(usernameTakePost, "Username used to remove post from user's feed is null");
-		
-		if(Objects.requireNonNull(userFeed) != null && Objects.requireNonNull(userFeed.keySet()) != null) {
-			ArrayList<Post> feed = userFeed.get(usernameUpdateFeed);
-			Iterator<Post> it = feed.iterator();
-			
-			while(it.hasNext()) {
-				Post p = it.next();
-				if(usernameTakePost.equals(p.getAuthor()))
-					it.remove();
-				else continue;
-			}
-			
-			return;
-		}
-	}
-	
-	private void addPostToUserFeedByAddingPost(String usernameUpdateFeed, Post newPost) {
-		Objects.requireNonNull(usernameUpdateFeed, "Username used to update his feed is null");
-		Objects.requireNonNull(newPost, "The post that must be added to user's feed is null");
-		
-		if(Objects.requireNonNull(userFeed) != null && Objects.requireNonNull(userFeed.keySet()) != null) {
-			ArrayList<Post> feed = userFeed.get(usernameUpdateFeed);
-			
-			feed.add(newPost);
-			
-			return;
-		}
-	}
-	
-	private void removePostFromUserFeedByDeletingPost(int idPost, String authorPost) {
-		Objects.requireNonNull(idPost, "Id used to get the specified post is null");
-		Objects.requireNonNull(authorPost, "Author post is null");
-		
-		if(Objects.requireNonNull(userFollower) != null && Objects.requireNonNull(userFollower.keySet()) != null) {
-			ArrayList<String> followerAuthorPost = userFollower.get(authorPost);
-			
-			for(String s : followerAuthorPost) {
-				ArrayList<Post> feedAuthorPostFollower = userFeed.get(s);
-				Iterator<Post> it = feedAuthorPostFollower.iterator();
-				while(it.hasNext()) {
-					Post p = it.next();
-					if(p.getIdPost() == idPost) {
-						it.remove();
-						break;
-					}else continue;
-				}
-			}
-			
-			return;
-		}
 	}
 	
 	public String getPostByIdJson(int idPost) {
@@ -646,8 +563,17 @@ public class Database extends Storage{
 		Objects.requireNonNull(idPost, "Id used to get the specified post is null");
 		Objects.requireNonNull(username, "Username used to get user's feed is null");
 		
-		if(Objects.requireNonNull(userFeed) != null && Objects.requireNonNull(userFeed.keySet()) != null) {
-			ArrayList<Post> feed = userFeed.get(username);
+		if(Objects.requireNonNull(blogUser) != null && Objects.requireNonNull(blogUser.keySet()) != null
+				&& Objects.requireNonNull(userFollowing) != null && Objects.requireNonNull(userFollowing.keySet()) != null) {
+			
+			ArrayList<String> following = userFollowing.get(username);
+			ArrayList<Post> feed = new ArrayList<>();
+			
+			for(String s : following) {
+				ArrayList<Post> postUser = blogUser.get(s);
+				feed.addAll(postUser);
+			}
+			
 			Post p = getPostById(idPost);
 			
 			return feed.contains(p);
@@ -676,12 +602,17 @@ public class Database extends Storage{
 			p.removeAllVotes();
 			
 			allPosts.remove(idPost, p);
-			blogUser.remove(authorPost, p);
+			blogUser.get(authorPost).remove(p);
+			postToBeBackedup.remove(idPost, p);
 			
-			removePostFromUserFeedByDeletingPost(idPost, authorPost);
+			if(postBackedup.contains(idPost)) {
+				postBackedup.remove(idPost, p);
+			}
+			
+			postDeletedSinceLastBackup = true;
 		}
 	}
-	
+
 	public void addVoteToPost(int idPost, int vote, String authorVote) {
 		Objects.requireNonNull(idPost, "Id post is null");
 		Objects.requireNonNull(vote, "New vote for post is null");
@@ -811,24 +742,6 @@ public class Database extends Storage{
 			}
 			
 			blogUser.get(authorRewin).add(p);
-			
-			ArrayList<String> followerAuthorRewin = userFollower.get(authorRewin);
-		
-			for(String s : followerAuthorRewin) {
-				addPostToFeedByRewin(s, p);
-			}
-		}
-	}
-	
-	private void addPostToFeedByRewin(String usernameUpdateFeed, Post p) {
-		Objects.requireNonNull(usernameUpdateFeed, "Author rewin is null");
-		Objects.requireNonNull(p, "Post to add into feed is null");
-		
-		if(Objects.requireNonNull(userFeed) != null && Objects.requireNonNull(userFeed.keySet()) != null) {
-			ArrayList<Post> feed = userFeed.get(usernameUpdateFeed);
-			feed.add(p);
-			
-			return;
 		}
 	}
 	
@@ -933,61 +846,96 @@ public class Database extends Storage{
 		this.firstBackupForUsers = true;
 	
 		if(Files.exists(usersFile.toPath(), LinkOption.NOFOLLOW_LINKS) && Files.exists(followingFile.toPath(), LinkOption.NOFOLLOW_LINKS) && Files.exists(transactionsFile.toPath(), LinkOption.NOFOLLOW_LINKS)) {
-			try(FileInputStream fis = new FileInputStream(usersFile); JsonReader reader = new JsonReader(new InputStreamReader(fis))){
-				Map<String, User> dataInUsersFile = gson.fromJson(reader, userType);
+			
+			if(usersFile.length() == 0 || followingFile.length() == 0 || transactionsFile.length() == 0) {
+				throw new IllegalFileException("Files for upload users data exists, but some of them are empty. Impossible to do upload of data");
+			}else {
+				try(FileInputStream fis = new FileInputStream(usersFile); JsonReader reader = new JsonReader(new InputStreamReader(fis))){
+					reader.setLenient(true);
+					reader.beginArray();
 				
-				for(String s : dataInUsersFile.keySet()) {
-					User u = dataInUsersFile.get(s);
-					parsedUsers.putIfAbsent(u.getUsername(), new User(null, null, new ArrayList<String>()));
-					parsedUsers.get(u.getUsername()).setUsername(u.getUsername());
-					parsedUsers.get(u.getUsername()).setPassword(u.getPassword());
-					parsedUsers.get(u.getUsername()).setTagList(u.getTagList());
+					while(reader.hasNext()) {
+						reader.beginObject();
+						String nameAttribute = null;
+						String username = null;
+						String password = null;
+						ArrayList<String> tags = null;
+						
+						while(reader.hasNext()) {
+							nameAttribute = reader.nextName();
+							switch(nameAttribute) {
+								case "username": {
+									username = reader.nextString();
+									break;
+								}
+								case "password": {
+									password = reader.nextString();
+									break;
+								}
+								case "tagList": {
+									reader.beginArray();
+									tags = new ArrayList<>();
+									while(reader.hasNext()) {
+										tags.add(reader.nextString());
+									}
+									reader.endArray();
+									break;
+								}
+							}
+						}
+						reader.endObject();
+						parsedUsers.putIfAbsent(username, new User(null, null, new ArrayList<>()));
+						parsedUsers.get(username).setUsername(username);
+						parsedUsers.get(username).setPassword(password);
+						parsedUsers.get(username).setTagList(tags);
+					}
+					reader.endArray();
 				}
-			}
-			
-			try(FileInputStream fis = new FileInputStream(followingFile); JsonReader reader = new JsonReader(new InputStreamReader(fis))){
-				Map<String, User> dataInFollowingFile = gson.fromJson(reader, userType);
+				
+				try(FileInputStream fis = new FileInputStream(followingFile); JsonReader reader = new JsonReader(new InputStreamReader(fis))){
+					Map<String, User> dataInFollowingFile = gson.fromJson(reader, userType);
 
-				for(String s : dataInFollowingFile.keySet()) {
-					User u = dataInFollowingFile.get(s);
+					for(String s : dataInFollowingFile.keySet()) {
+						User u = dataInFollowingFile.get(s);
+						ArrayList<String> followingUser = u.getFollowing();
+
+						for(String follow : followingUser) {
+							parsedUsers.get(u.getUsername()).addFollowing(follow);
+						}
+						
+					}
+				}
+				
+				try(FileInputStream fis = new FileInputStream(transactionsFile); JsonReader reader = new JsonReader(new InputStreamReader(fis))){
+					Map<String, User> dataInTransactionsFile = gson.fromJson(reader, userType);
+
+					for(String s : dataInTransactionsFile.keySet()) {
+						User u = dataInTransactionsFile.get(s);
+						ArrayList<Transaction> transactionsUser = u.getTransactions();
+						for(Transaction t : transactionsUser) {
+							parsedUsers.get(u.getUsername()).addTransaction(t);
+						}
+					}
+				}
+				
+				for(Entry<String, User> entry : parsedUsers.entrySet()) {
+					User u = entry.getValue();
+					this.userRegistered.putIfAbsent(entry.getKey(), u);
+					this.userBackedUp.putIfAbsent(entry.getKey(), u);
+					this.userFollower.putIfAbsent(entry.getKey(), new ArrayList<String>());
+					this.userFollowing.putIfAbsent(entry.getKey(), new ArrayList<String>());
+					this.blogUser.putIfAbsent(entry.getKey(), new ArrayList<Post>());
+					this.postRewinnedByUser.putIfAbsent(entry.getKey(), new ConcurrentLinkedQueue<Post>());
+				}
+				
+				for(User u : userRegistered.values()) {
 					ArrayList<String> followingUser = u.getFollowing();
-					for(String follow : followingUser) {
-						parsedUsers.get(u.getUsername()).addFollowing(follow);
+					for(String username : followingUser) {
+						this.userFollowing.get(u.getUsername()).add(username);
+						this.userFollower.get(username).add(u.getUsername());
 					}
 				}
 			}
-			
-			try(FileInputStream fis = new FileInputStream(transactionsFile); JsonReader reader = new JsonReader(new InputStreamReader(fis))){
-				Map<String, User> dataInTransactionsFile = gson.fromJson(reader, userType);
-
-				for(String s : dataInTransactionsFile.keySet()) {
-					User u = dataInTransactionsFile.get(s);
-					ArrayList<Transaction> transactionsUser = u.getTransactions();
-					for(Transaction t : transactionsUser) {
-						parsedUsers.get(u.getUsername()).addTransaction(t);
-					}
-				}
-			}
-			
-			for(Entry<String, User> entry : parsedUsers.entrySet()) {
-				User u = entry.getValue();
-				this.userRegistered.putIfAbsent(entry.getKey(), u);
-				this.userFollower.putIfAbsent(entry.getKey(), new ArrayList<String>());
-				this.userFollowing.putIfAbsent(entry.getKey(), new ArrayList<String>());
-				this.userFeed.putIfAbsent(entry.getKey(), new ArrayList<Post>());
-				this.blogUser.putIfAbsent(entry.getKey(), new ArrayList<Post>());
-				this.postRewinnedByUser.putIfAbsent(entry.getKey(), new ConcurrentLinkedQueue<Post>());
-			}
-			
-			for(User u : userRegistered.values()) {
-				ArrayList<String> followingUser = u.getFollowing();
-				for(String username : followingUser) {
-					this.userFollowing.get(u.getUsername()).add(username);
-					this.userFollower.get(username).add(u.getUsername());
-				}
-			}
-			
-			System.out.println(this.userRegistered);
 		}else {usersFile.createNewFile(); followingFile.createNewFile(); transactionsFile.createNewFile();}
 	}
 	
@@ -996,50 +944,49 @@ public class Database extends Storage{
 		Objects.requireNonNull(followingFile, "Following file is null");
 		Objects.requireNonNull(transactionsFile, "Transactions file is null");
 		
-		try {
-			backupLock.writeLock().lock();
-			backupCached(new ExclusionStrategy() {
-				
-				@Override
-				public boolean shouldSkipField(FieldAttributes f) {
-					return (f.getDeclaringClass() == User.class && !f.getName().equals("username") && !f.getName().equals("password") && !f.getName().equals("tagList"));
-				}
-				
-				@Override
-				public boolean shouldSkipClass(Class<?> arg0) {
-					
-					return false;
-				}
-			}, usersFile, userBackedUp, userToBeBackedup, firstBackupForUsers);
-			firstBackupForUsers = false;
-			userBackedUp = new ConcurrentHashMap<String, User>();
-			
-			backupNonCached(new ExclusionStrategy() {
-				
-				@Override
-				public boolean shouldSkipField(FieldAttributes f) {
-					return (f.getDeclaringClass() == User.class && !f.getName().equals("username") && !f.getName().equals("following"));
-				}
-				
-				@Override
-				public boolean shouldSkipClass(Class<?> arg0) {
-					return false;
-				}
-			}, followingFile, userBackedUp);
-			
-			backupNonCached(new ExclusionStrategy() {
-				
-				@Override
-				public boolean shouldSkipField(FieldAttributes f) {
-					return (f.getDeclaringClass() == User.class && !f.getName().equals("username") && !f.getName().equals("transactions"));
-				}
-				
-				@Override
-				public boolean shouldSkipClass(Class<?> arg0) {
-					return false;
-				}
-			}, transactionsFile, userBackedUp);
-		}finally {backupLock.writeLock().unlock();}
+		backupCached(new ExclusionStrategy() {
+
+			@Override
+			public boolean shouldSkipField(FieldAttributes f) {
+				return (f.getDeclaringClass() == User.class && !f.getName().equals("username") && !f.getName().equals("password") && !f.getName().equals("tagList"));
+			}
+
+			@Override
+			public boolean shouldSkipClass(Class<?> arg0) {
+
+				return false;
+			}
+		}, usersFile, userBackedUp, userToBeBackedup, firstBackupForUsers);
+		firstBackupForUsers = false;
+		userBackedUp.putAll(userToBeBackedup);
+		userToBeBackedup = new ConcurrentHashMap<String, User>();
+
+		backupNonCached(new ExclusionStrategy() {
+
+			@Override
+			public boolean shouldSkipField(FieldAttributes f) {
+				return (f.getDeclaringClass() == User.class && !f.getName().equals("username") && !f.getName().equals("following"));
+			}
+
+			@Override
+			public boolean shouldSkipClass(Class<?> arg0) {
+				return false;
+			}
+		}, followingFile, userBackedUp);
+
+		backupNonCached(new ExclusionStrategy() {
+
+			@Override
+			public boolean shouldSkipField(FieldAttributes f) {
+				return (f.getDeclaringClass() == User.class && !f.getName().equals("username") && !f.getName().equals("transactions"));
+			}
+
+			@Override
+			public boolean shouldSkipClass(Class<?> arg0) {
+				return false;
+			}
+		}, transactionsFile, userBackedUp);
+
 		
 	} 
 	
@@ -1057,17 +1004,51 @@ public class Database extends Storage{
 		if(Files.exists(postsFile.toPath(), LinkOption.NOFOLLOW_LINKS) && Files.exists(votesFile.toPath(), LinkOption.NOFOLLOW_LINKS)
 		   && Files.exists(commentsFile.toPath(), LinkOption.NOFOLLOW_LINKS) && Files.exists(mutableDataPostsFile.toPath(), LinkOption.NOFOLLOW_LINKS)) {
 			
+			if(postsFile.length() == 0 || votesFile.length() == 0 || commentsFile.length() == 0 || mutableDataPostsFile.length() == 0) {
+				throw new IllegalFileException("Files for upload posts data exists, but some of them are empty. Impossible to do upload of data");
+			}
+			
 			try(FileInputStream fis = new FileInputStream(postsFile); JsonReader reader = new JsonReader(new InputStreamReader(fis))){
-				Map<Integer, Post> dataInPostsFile = gson.fromJson(reader, postType);
+				reader.setLenient(true);
+				reader.beginArray();
 				
-				for(Integer i : dataInPostsFile.keySet()) {
-					Post p = dataInPostsFile.get(i);
-					parsedPosts.putIfAbsent(p.getIdPost(), new Post(0, null, null, null));
-					parsedPosts.get(p.getIdPost()).setIdPost(p.getIdPost());
-					parsedPosts.get(p.getIdPost()).setAuthor(p.getAuthor());
-					parsedPosts.get(p.getIdPost()).setTitle(p.getTitle());
-					parsedPosts.get(p.getIdPost()).setContent(p.getContent());
+				while(reader.hasNext()) {
+					reader.beginObject();
+					String nameAttribute = null;
+					int id = -1;
+					String author = null;
+					String title = null;
+					String content = null;
+					while(reader.hasNext()) {
+						nameAttribute = reader.nextName();
+						
+						switch(nameAttribute) {
+							case "idPost": {
+								id = reader.nextInt();
+								break;
+							}
+							case "author":{
+								author = reader.nextString();
+								break;
+							}
+							case "title": {
+								title = reader.nextString();
+								break;
+							}
+							case "content": {
+								content = reader.nextString();
+								break;
+							}
+						}
+					}
+					reader.endObject();
+					parsedPosts.putIfAbsent(id, new Post(-1, null, null, null));
+					parsedPosts.get(id).setIdPost(id);
+					parsedPosts.get(id).setTitle(title);
+					parsedPosts.get(id).setContent(content);
+					parsedPosts.get(id).setAuthor(author);
 				}
+				reader.endArray();
 			}
 			
 			try(FileInputStream fis = new FileInputStream(votesFile); JsonReader reader = new JsonReader(new InputStreamReader(fis))){
@@ -1104,14 +1085,13 @@ public class Database extends Storage{
 			for(Entry<Integer, Post> entry : parsedPosts.entrySet()) {
 				Post p = entry.getValue();
 				this.allPosts.putIfAbsent(entry.getKey(), p);
+				this.postBackedup.putIfAbsent(entry.getKey(), p);
 				this.blogUser.get(p.getAuthor()).add(p);
 				
 				for(String s : p.getRewin()) {
 					this.postRewinnedByUser.get(s).add(p);
 				}
 			}
-			
-			loadUsersFeed();
 		}else {postsFile.createNewFile(); votesFile.createNewFile(); commentsFile.createNewFile(); mutableDataPostsFile.createNewFile();}
 	
 		return;
@@ -1137,79 +1117,58 @@ public class Database extends Storage{
 			}
 		};
 		
-		try {
-			backupLock.writeLock().lock();
-			
-			if(postDeletedSinceLastBackup) {
-				postDeletedSinceLastBackup = false;
-				backupNonCached(strategy, postsFile, postBackedup);
-			}
-			
-			backupCached(strategy, postsFile, postBackedup, postToBeBackedup, postRecoveredFromBackup);
-			postToBeBackedup = new ConcurrentHashMap<Integer, Post>();
-			postRecoveredFromBackup = false;
-			
-			backupNonCached(new ExclusionStrategy() {
-				
-				@Override
-				public boolean shouldSkipField(FieldAttributes f) {
-					return (f.getDeclaringClass() == Post.class && !f.getName().equals("idPost") && !f.getName().equals("votes") && !f.getName().equals("authorVote"));
-				}
-				
-				@Override
-				public boolean shouldSkipClass(Class<?> arg0) {
-					return false;
-				}
-			}, votesFile, postBackedup);
-			
-			backupNonCached(new ExclusionStrategy() {
-				
-				@Override
-				public boolean shouldSkipField(FieldAttributes f) {
-					return (f.getDeclaringClass() == Post.class && !f.getName().equals("idPost") && !f.getName().equals("comments") && !f.getName().equals("author"));
-				}
-				
-				@Override
-				public boolean shouldSkipClass(Class<?> arg0) {
-					return false;
-				}
-			}, commentsFile, postBackedup);
-		
-			backupNonCached(new ExclusionStrategy() {
-				
-				@Override
-				public boolean shouldSkipField(FieldAttributes f) {
-					return (f.getDeclaringClass() == Post.class && !f.getName().equals("idPost") && !f.getName().equals("iterations") 
-							&& !f.getName().equals("rewin") && !f.getName().equals("newCommentsBy") 
-							&& !f.getName().equals("curators") && !f.getName().equals("newVotes"));
-				}
-				
-				@Override
-				public boolean shouldSkipClass(Class<?> arg0) {
-					return false;
-				}
-			}, mutableDataPostFile, postBackedup);
-		}finally {backupLock.writeLock().unlock();}
-		
-	}
-	
-	private void loadUsersFeed() {
-		Iterator<User> userIt = this.userRegistered.values().iterator();
-		Collection<Post> posts = this.allPosts.values();
-		
-		while(userIt.hasNext()) {
-			ArrayList<Post> feed = this.userFeed.get(userIt.next().getUsername());
-			try {
-				ArrayList<String> following = this.userFollowing.get(userIt.next().getUsername());
-				
-				for(String s : following) {
-					Stream<Post> stream = posts.stream().filter(p -> p.getAuthor().equals(s));
-					feed.addAll(stream.collect(Collectors.toList()));
-				}
-			}catch(NoSuchElementException e) {
-				feed = new ArrayList<>();
-				continue;
-			}
+
+		if(postDeletedSinceLastBackup) {
+			postDeletedSinceLastBackup = false;
+			backupNonCached(strategy, postsFile, postBackedup);
 		}
+
+		backupCached(strategy, postsFile, postBackedup, postToBeBackedup, postRecoveredFromBackup);
+		postBackedup.putAll(postToBeBackedup);
+		postToBeBackedup = new ConcurrentHashMap<Integer, Post>();
+		postRecoveredFromBackup = false;
+
+		backupNonCached(new ExclusionStrategy() {
+
+			@Override
+			public boolean shouldSkipField(FieldAttributes f) {
+				return (f.getDeclaringClass() == Post.class && !f.getName().equals("idPost") && !f.getName().equals("votes") && !f.getName().equals("authorVote"));
+			}
+
+			@Override
+			public boolean shouldSkipClass(Class<?> arg0) {
+				return false;
+			}
+		}, votesFile, postBackedup);
+
+		backupNonCached(new ExclusionStrategy() {
+
+			@Override
+			public boolean shouldSkipField(FieldAttributes f) {
+				return (f.getDeclaringClass() == Post.class && !f.getName().equals("idPost") && !f.getName().equals("comments") && !f.getName().equals("author"));
+			}
+
+			@Override
+			public boolean shouldSkipClass(Class<?> arg0) {
+				return false;
+			}
+		}, commentsFile, postBackedup);
+
+		backupNonCached(new ExclusionStrategy() {
+
+			@Override
+			public boolean shouldSkipField(FieldAttributes f) {
+				return (f.getDeclaringClass() == Post.class && !f.getName().equals("idPost") && !f.getName().equals("iterations") 
+						&& !f.getName().equals("rewin") && !f.getName().equals("newCommentsBy") 
+						&& !f.getName().equals("curators") && !f.getName().equals("newVotes"));
+			}
+
+			@Override
+			public boolean shouldSkipClass(Class<?> arg0) {
+				return false;
+			}
+		}, mutableDataPostFile, postBackedup);
+
+
 	}
 }

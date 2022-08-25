@@ -1,0 +1,10 @@
+{
+  "pippo": {
+    "username": "pippo",
+    "following": []
+  },
+  "pluto": {
+    "username": "pluto",
+    "following": []
+  }
+}

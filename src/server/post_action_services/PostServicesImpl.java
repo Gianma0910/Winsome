@@ -139,6 +139,13 @@ public class PostServicesImpl implements PostServices {
 			return;
 		}
 		
+		if(db.isPostInFeed(idPost, username) && db.isPostAuthor(idPost, username)) {
+			db.removePostFromWinsome(idPost);
+			
+			sendError(TypeError.SUCCESS, writerOutput);
+			return;
+		}
+		
 		if(db.isPostInFeed(idPost, username)) {
 			sendError(TypeError.DELETEPOSTFEEDERROR, writerOutput);
 			return;
@@ -168,38 +175,26 @@ public class PostServicesImpl implements PostServices {
 		String authorVote = db.getUsernameBySocket(socket);
 		
 		if(db.isPostNotNull(idPost) == false) {
-			System.out.println(TypeError.VOTEPOSTNOTEXISTS);
 			sendError(TypeError.VOTEPOSTNOTEXISTS, writerOutput);
 			return;
 		}
 		
-		if(db.isPostInFeed(idPost, authorVote) && db.isPostAuthor(idPost, authorVote)) {
-			db.addVoteToPost(idPost, vote, authorVote);
-			sendError(TypeError.SUCCESS, writerOutput);
-		
-			return;
-		}
-		
 		if(db.isPostAuthor(idPost, authorVote)) {
-			System.out.println(TypeError.VOTEAUTHORPOST);
 			sendError(TypeError.VOTEAUTHORPOST, writerOutput);
 			return;
 		}
 		
 		if(db.isPostInFeed(idPost, authorVote) == false) {
-			System.out.println(TypeError.VOTEPOSTNOTINFEED);
 			sendError(TypeError.VOTEPOSTNOTINFEED, writerOutput);
 			return;
 		}
 		
 		if(db.isPostAlreadyVotedByUser(idPost, authorVote)) {
-			System.out.println(TypeError.VOTEALREADYEXISTS);
 			sendError(TypeError.VOTEALREADYEXISTS, writerOutput);
 			return;
 		}
 		
 		if(vote != 1 && vote != -1) {
-			System.out.println(TypeError.VOTENUMBERNOTVALID);
 			sendError(TypeError.VOTENUMBERNOTVALID, writerOutput);
 			return;
 		}
@@ -223,13 +218,6 @@ public class PostServicesImpl implements PostServices {
 		
 		if(db.isPostNotNull(idPost) == false) {
 			sendError(TypeError.IDPOSTNOTEXISTS, writerOutput);
-			return;
-		}
-		
-		if(db.isPostInFeed(idPost, authorComment) && db.isPostAuthor(idPost, authorComment)) {
-			db.addCommentToPost(idPost, contentComment, authorComment);
-			sendError(TypeError.SUCCESS, writerOutput);
-			
 			return;
 		}
 		

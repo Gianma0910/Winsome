@@ -84,5 +84,6 @@ public class User{
 	public ArrayList<String> getFollowing(){
 		return following;
 	}
+
 }
 

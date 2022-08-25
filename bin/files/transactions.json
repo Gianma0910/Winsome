@@ -1,0 +1,10 @@
+{
+  "pippo": {
+    "username": "pippo",
+    "transactions": []
+  },
+  "pluto": {
+    "username": "pluto",
+    "transactions": []
+  }
+}

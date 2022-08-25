@@ -7,12 +7,18 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Scanner;
 
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.Gson;
@@ -21,6 +27,8 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 
 public abstract class Storage {
+
+	private static final int BUFFERSIZE = 1024;
 	
 	public static <K, V> void backupNonCached(ExclusionStrategy strategy, File fileToBeStoredIn, Map<K, V> data) throws FileNotFoundException, IOException, NullPointerException {
 		Objects.requireNonNull(strategy, "Exclusion strategy is null");
@@ -64,41 +72,81 @@ public abstract class Storage {
 		if(toBeBackedUpData.isEmpty()) return;
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().addSerializationExclusionStrategy(strategy).create();
-		
+		ByteBuffer buffer = ByteBuffer.allocate(BUFFERSIZE);
+		byte[] data = null;
 		Path from = null;
 		Path to = null;
+		Scanner scanner = null;
 		FileOutputStream fos = null;
-		FileInputStream fis = null;
-		JsonReader reader = null;
+		FileChannel c = null;
 		
 		if(!(backedUpData.isEmpty()) || firtsBackupAndNonEmptyStorage) {
 			File copy = new File("copy-map.json");
-			fis = new FileInputStream(fileToBeStoredIn);
+			scanner = new Scanner(fileToBeStoredIn);
 			fos = new FileOutputStream(copy);
+			c = fos.getChannel();
 			
-			reader = new JsonReader(new InputStreamReader(fis));
-			Type dataType = new TypeToken<Map<K, V>>(){} .getType();
-			Map<K, V> dataInFile = gson.fromJson(reader, dataType);
-			
-			String s = gson.toJson(dataInFile);
-			fos.write(s.getBytes());
+			while(scanner.hasNextLine()) {
+				String line = scanner.nextLine();
+				if(!scanner.hasNextLine())
+					line = line.substring(0, line.length() - 1) + "\n";
+				else
+					line = line + "\n";
+				buffer.clear();
+				data = line.getBytes(StandardCharsets.US_ASCII);
+				buffer.put(data);
+				buffer.flip();
+				while(buffer.hasRemaining()) c.write(buffer);
+			}
+			scanner.close();
 			
 			from = copy.toPath();
-			to = fileToBeStoredIn.toPath();
+			to= fileToBeStoredIn.toPath();
+			
+			c.close();
+			fos.close();
+			
 			Files.copy(from, to, StandardCopyOption.REPLACE_EXISTING);
 			Files.delete(from);
-			fos.close();
-			fis.close();
 		}
 		
 		fileToBeStoredIn.getParentFile().mkdirs();
 		fos = new FileOutputStream(fileToBeStoredIn, true);
-		String s = gson.toJson(toBeBackedUpData);
-		fos.write(s.getBytes());
+		c = fos.getChannel();
 		
+		if(backedUpData.isEmpty()) writeChar(c, '[');
+		else writeChar(c, ',');
+		
+		int i = 0;
+		
+		for(Iterator<V> it = toBeBackedUpData.values().iterator(); it.hasNext(); i++) {
+			V v = it.next();
+			data = gson.toJson(v).getBytes();
+			buffer.flip();
+			buffer.clear();
+			
+			for(int offset = 0; offset < data.length; offset += BUFFERSIZE) {
+				buffer.clear();
+				buffer.put(data, offset, Math.min(BUFFERSIZE, data.length - offset));
+				buffer.flip();
+				while(buffer.hasRemaining()) c.write(buffer);
+			}
+			
+			if(i < toBeBackedUpData.size() - 1) writeChar(c, ',');
+		}
+		writeChar(c, ']');
+		
+		c.close();
 		fos.close();
-		backedUpData.putAll(toBeBackedUpData);		
+	
+	}
 
+	private static void writeChar(FileChannel c, char d) throws IOException {
+		CharBuffer charBuffer = CharBuffer.wrap(new char[] {d});
+		ByteBuffer byteBuffer = StandardCharsets.US_ASCII.encode(charBuffer);
+		
+		c.write(byteBuffer);
+		
 	}
 
 }

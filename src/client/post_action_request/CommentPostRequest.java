@@ -21,6 +21,8 @@ public class CommentPostRequest {
 			
 			StringBuilder request = new StringBuilder();
 			
+			request.append("comment").append(":").append(idPost).append(":").append(contentComment);
+			
 			writerOutput.write(request.toString());
 			writerOutput.newLine();
 			writerOutput.flush();

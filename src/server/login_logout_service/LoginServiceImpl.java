@@ -60,7 +60,6 @@ public class LoginServiceImpl implements LoginService{
 			
 		db.setFollowingListForUser(username);
 		db.setFollowerListUser(username);
-		db.setUserFeed(username);
 		db.setPostListForUser(username);
 		
 		//add the socketClient that identified the client into the Database.
