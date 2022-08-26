@@ -6,8 +6,22 @@ import java.io.IOException;
 
 import utility.TypeError;
 
+/**
+ * Class that perform the add follow request.
+ * @author Gianmarco Petrocchi.
+ *
+ */
 public class FollowRequest {
 
+	/**
+	 * Static method used to perform add follower, only when the client is already logged. It sends a request with the this syntax: follow:username, if the request is different from this syntax the client will receive a 
+	 * INVALIDREQUESTERROR. The username specified in request must be a different user registered in Winsome. A user can't follow himself, otherwise the client receive
+	 * a FOLLOWHIMSELFERROR. If the username doesn't exists in Winsome the client will receive a FOLLOWERNOTEXISTS.
+	 * @param requestSplitted Client request.
+	 * @param readerInput BufferedReader used to read/receive the response by server.
+	 * @param writerOutput BufferedWriter used to write/send the request to server. 
+	 * @throws IOException Only when occurs I/O error.
+	 */
 	public static void performAddFollowerAction(String[] requestSplitted, BufferedReader readerInput, BufferedWriter writerOutput) throws IOException {
 		
 		String username = null;

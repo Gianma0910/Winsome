@@ -8,10 +8,34 @@ import java.util.Scanner;
 
 import utility.TypeError;
 
+/**
+ * Class that perform create post request.
+ * @author Gianmarco Petrocchi.
+ */
 public class PostRequest {
 
-	public static void performCreatePost(String command, Scanner scan, BufferedReader readerInput, BufferedWriter writerOutput) throws IOException {
-		writerOutput.write(command);
+	/**
+	 * Static method used to create post, only when the client is already logged. It sends a request with this syntax: post, if the request is different from this syntax the client will receive a 
+	 * INVALIDREQUESTERROR. After a successfully response received from server, the client write in System.in the title and content of post, this two strings are encoded in Base64 and sends to server.
+	 * Title and content of post has a maximum length, 20 characters for title and 500 characters for content.
+	 * @param requestSplitted Client request.
+	 * @param scan Scanner used to write in System.in for title and content of post.
+	 * @param readerInput BufferedReader used to read/receive response by server.
+	 * @param writerOutput BufferedWriter used to write/send response to server.
+	 * @throws IOException Only when occurs I/O error. 
+	 */
+	public static void performCreatePost(String [] requestSplitted, Scanner scan, BufferedReader readerInput, BufferedWriter writerOutput) throws IOException {
+		StringBuilder request = new  StringBuilder();
+		
+		for(int i = 0; i < requestSplitted.length; i++) {
+			request.append(requestSplitted[i]);
+			
+			if(i < requestSplitted.length - 1) {
+				request.append(":");
+			}
+		}
+		
+		writerOutput.write(request.toString());
 		writerOutput.newLine();
 		writerOutput.flush();
 		

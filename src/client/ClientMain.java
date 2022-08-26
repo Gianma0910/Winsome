@@ -110,7 +110,7 @@ public class ClientMain {
 				break;
 			}
 			case "post": {
-				PostRequest.performCreatePost(command, scan, readerInput, writerOutput);
+				PostRequest.performCreatePost(requestSplitted, scan, readerInput, writerOutput);
 				break;
 			}
 			case "blog": {
@@ -135,8 +135,7 @@ public class ClientMain {
 				break;
 			}
 			case "comment": {
-				String [] takeComment = request.split("\"");
-				CommentPostRequest.performCommentPostAction(requestSplitted, takeComment, writerOutput, readerInput);
+				CommentPostRequest.performCommentPostAction(requestSplitted, writerOutput, readerInput, scan);
 				break;
 			}
 			case "rewin": {

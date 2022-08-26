@@ -221,9 +221,23 @@ public class TaskHandler implements Runnable {
 					break;
 				}
 				case "comment": {
-					PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
-				
-					postServices.commentPost(requestSplitted[1], requestSplitted[2], socket);
+					if(requestSplitted.length != 2) {
+						sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
+					}else {
+						sendError(TypeError.SUCCESS, writerOutput);
+					
+						String idPostToParse = requestSplitted[1];
+						
+						String requestAddComment = readerInput.readLine();
+						
+						byte[] requestBytes = Base64.getDecoder().decode(requestAddComment.getBytes());
+						
+						String contentComment = new String(requestBytes, 0, requestBytes.length);
+						
+						PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
+						
+						postServices.commentPost(idPostToParse, contentComment, socket);
+					}
 				
 					break;
 				}

@@ -6,8 +6,22 @@ import java.io.IOException;
 
 import utility.TypeError;
 
+/**
+ * Class that perform the remove follow request (unfollow).
+ * @author Gianmarco Petrocchi.
+ *
+ */
 public class UnfollowRequest {
 
+	/**
+	 * Static method that perform the unfollow request, only when the client is already logged. It sends a request with the this syntax: unfollow:username, if the request is different from this syntax the client will receive a 
+	 * INVALIDREQUESTERROR. The username specified in request must be a different user registered in Winsome. A user can't unfollow himself, otherwise the client receive
+	 * a UNFOLLOWHIMSELFERROR. If the username doesn't exists in Winsome the client will receive a UNFOLLOWERNOTEXISTS.
+	 * @param requestSplitted Client request.
+	 * @param readerInput BufferedReader used to read/receive the response by server.
+	 * @param writerOutput BufferedWriter used to write/send the request to server.
+	 * @throws IOException Only when occurs I/O error.
+	 */
 	public static void performRemoveFollowerAction(String[] requestSplitted, BufferedReader readerInput, BufferedWriter writerOutput) throws IOException {
 		
 		String username = null;
@@ -33,12 +47,12 @@ public class UnfollowRequest {
 			System.err.println("You can't do this operation because you are not logged in Winsome");
 		
 		if(response.equals(TypeError.UNFOLLOWINGNOTEXISTS)) {
-			username = null;
+			username = requestSplitted[1];
 			System.err.println("You can't unfollow user " + username + " because he doesn't exists in Winsome");
 		}
 			
 		if(response.equals(TypeError.UNFOLLOWERERROR)) {
-			username = null;
+			username = requestSplitted[1];
 			System.err.println("You can't unfollow user " + username + " because you already unfollowed him");
 		}
 			

@@ -15,13 +15,24 @@ import client.PostWrapperShow;
 import utility.Comment;
 import utility.TypeError;
 
+/**
+ * Class that perform show post request.
+ * @author Gianmarco Petrocchi.
+ */
 public class ShowPostRequest {
 
+	/**
+	 * Static method perform show post action, only when the client is already logged. It sends a request with this syntax: show:post:idPost, if the request is different from this syntax the client will receive
+	 * INVALIDREQUESTERROR. The idPost specified in request must be of a existed post in Winsome, otherwise the client will receive IDPOSTNOTEXISTS error. The client receive a string that represents the specified post 
+	 * and the client serialized its with Gson. The client will see title, content, number of positives and negatives votes, comments of post.
+	 * @param requestSplitted Client request.
+	 * @param writerOutput BufferedWriter used to write/send request to server.
+	 * @param readerInput BufferedReader used to read/receive response by server.
+	 * @throws IOException Only when occurs I/O error.
+	 */
 	public static void performShowPostAction(String [] requestSplitted, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException {
 
 		try {
-			int idPost = Integer.parseInt(requestSplitted[2]);
-
 			StringBuilder request = new StringBuilder();
 			
 			for(int i = 0; i < requestSplitted.length; i++) {
@@ -47,6 +58,7 @@ public class ShowPostRequest {
 				System.err.println("The specified idPost doesn't exists");
 				return;
 			}else if(error.equals(TypeError.SUCCESS)){
+				int idPost = Integer.parseInt(requestSplitted[2]);
 				String serializedPost = readerInput.readLine();
 
 				Gson gson = new GsonBuilder().create();

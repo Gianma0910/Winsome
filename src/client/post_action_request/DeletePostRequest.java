@@ -6,13 +6,23 @@ import java.io.IOException;
 
 import utility.TypeError;
 
+/**
+ * Class that perform delete post request.
+ * @author Gianmarco Petrocchi.
+ */
 public class DeletePostRequest {
 
+	/**
+	 * Static method used to perform delete post action, only when the client is already logged. It sends a request with this syntax: delete:idPost, if the request is different from this syntax the client will receive
+	 * INVALIDREQUESTERROR. The idPost specified in request must be of a existed post in Winsome, otherwise the client will receive IDPOSTNOTEXISTS error. A user can delete only post in his blog, not post in his feed.
+	 * @param requestSplitted Client request.
+	 * @param writerOutput BufferedWriter used to write/send request to server.
+	 * @param readerInput BufferedReader used to read/receive response by server.
+	 * @throws IOException Only when occurs I/O error.
+	 */
 	public static void performDeletePostAction(String [] requestSplitted, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException {
 		
 		try {
-			int idPost = Integer.parseInt(requestSplitted[1]);
-			
 			StringBuilder request = new StringBuilder();
 			
 			for(int i = 0; i < requestSplitted.length; i++) {
@@ -44,6 +54,7 @@ public class DeletePostRequest {
 				System.err.println("You can't delete this post because it isn't in your blog");
 				return;
 			}else if(error.equals(TypeError.SUCCESS)) {
+				int idPost = Integer.parseInt(requestSplitted[1]);
 				System.out.println("Post identified by id " + idPost + " is removed from Winsome");
 				return;
 			}
