@@ -7,7 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
@@ -31,7 +30,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 
 import exceptions.ClientNotRegisteredException;
@@ -101,7 +99,6 @@ public class Database extends Storage{
 		this.allPosts = new ConcurrentHashMap<Integer, Post>();
 		this.postToBeBackedup = new ConcurrentHashMap<Integer, Post>();
 		this.postBackedup = new ConcurrentHashMap<Integer, Post>();
-		//this.userFeed = new ConcurrentHashMap<String, ArrayList<Post>>();
 		this.postRewinnedByUser = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Post>>();
 		
 		this.idPost = new AtomicInteger(0);
@@ -283,6 +280,18 @@ public class Database extends Storage{
 			
 			u.addFollowing(usernameNewFollowing);
 					
+			if(userToBeBackedup.containsKey(usernameUpdateFollowing)) {
+				User user = userToBeBackedup.get(usernameUpdateFollowing);
+				
+				user.addFollowing(usernameNewFollowing);
+			}
+			
+			if(userBackedUp.containsKey(usernameUpdateFollowing)) {
+				User user = userBackedUp.get(usernameUpdateFollowing);
+				
+				user.addFollowing(usernameNewFollowing);
+			}
+			
 			return;
 		}
 	}
@@ -300,6 +309,18 @@ public class Database extends Storage{
 			
 			u.removeFollowing(usernameToRemove);
 					
+			if(userToBeBackedup.containsKey(usernameUpdateFollowing)) {
+				User user = userToBeBackedup.get(usernameUpdateFollowing);
+				
+				user.removeFollowing(usernameToRemove);
+			}
+			
+			if(userBackedUp.containsKey(usernameUpdateFollowing)) {
+				User user = userBackedUp.get(usernameUpdateFollowing);
+				
+				user.removeFollowing(usernameToRemove);
+			}
+			
 			return;	
 		}
 	}
@@ -352,7 +373,7 @@ public class Database extends Storage{
 
 				@Override
 				public boolean shouldSkipField(FieldAttributes f) {
-					return (f.getDeclaringClass() == User.class && f.getName().equals("password"));
+					return (f.getDeclaringClass() == User.class && f.getName().equals("password") && f.getName().equals("transactions") && f.getName().equals("following"));
 				}
 				
 			}).create();
@@ -462,16 +483,6 @@ public class Database extends Storage{
 		
 		return "[]";
 	}
-	
-//	public void setUserFeed(String username) {
-//		Objects.requireNonNull(username, "Username used to set his feed is null");
-//		
-//		if(Objects.requireNonNull(userFeed) != null) {
-//			userFeed.putIfAbsent(username, new ArrayList<Post>());
-//			
-//			return;
-//		}
-//	}
 	
 	public String getUserFeedJson(String username) {
 		Objects.requireNonNull(username, "Username used to get his feed is null");
@@ -606,9 +617,12 @@ public class Database extends Storage{
 			
 			allPosts.remove(idPost, p);
 			blogUser.get(authorPost).remove(p);
-			postToBeBackedup.remove(idPost, p);
 			
-			if(postBackedup.contains(idPost)) {
+			if(postToBeBackedup.containsKey(idPost)) {
+				postToBeBackedup.remove(idPost, p);
+			}
+			
+			if(postBackedup.containsKey(idPost)) {
 				postBackedup.remove(idPost, p);
 			}
 			
@@ -647,6 +661,46 @@ public class Database extends Storage{
 				int numVotes = p.getNewVotes();
 				numVotes--;
 				p.setNewVotes(numVotes);
+			}
+			
+			if(postToBeBackedup.containsKey(idPost)) {
+				for(Integer i : postToBeBackedup.keySet()) {
+					if(i == idPost) {
+						Post post = postToBeBackedup.get(i);
+						post.addVote(v);
+						
+						if(v.getVote() == 1) {
+							p.getCurators().add(authorVote);
+							int numVotes = p.getNewVotes();
+							numVotes++;
+							p.setNewVotes(numVotes);
+						}else {
+							int numVotes = p.getNewVotes();
+							numVotes--;
+							p.setNewVotes(numVotes);
+						}
+					}
+				}
+			}
+			
+			if(postBackedup.containsKey(idPost)) {
+				for(Integer i : postBackedup.keySet()) {
+					if(i == idPost) {
+						Post post = postBackedup.get(i);
+						post.addVote(v);
+						
+						if(v.getVote() == 1) {
+							p.getCurators().add(authorVote);
+							int numVotes = p.getNewVotes();
+							numVotes++;
+							p.setNewVotes(numVotes);
+						}else {
+							int numVotes = p.getNewVotes();
+							numVotes--;
+							p.setNewVotes(numVotes);
+						}
+					}
+				}
 			}
 			
 			ArrayList<Post> posts = blogUser.get(p.getAuthor());
@@ -719,6 +773,22 @@ public class Database extends Storage{
 				}else continue;
 			}
 			
+			if(postToBeBackedup.containsKey(idPost)) {
+				Post post = postToBeBackedup.get(idPost);
+				
+				post.addComment(c);
+				post.getCurators().add(authorComment);
+				post.incrementNumUserComments(authorComment);
+			}
+			
+			if(postBackedup.containsKey(idPost)) {
+				Post post = postBackedup.get(idPost);
+				
+				post.addComment(c);
+				post.getCurators().add(authorComment);
+				post.incrementNumUserComments(authorComment);
+			}
+			
 			return;
 		}
 	}
@@ -734,6 +804,18 @@ public class Database extends Storage{
 			Post p = getPostById(idPost);
 			
 			p.getRewin().add(authorRewin);
+			
+			if(postToBeBackedup.containsKey(idPost)) {
+				Post post = postToBeBackedup.get(idPost);
+				
+				post.getRewin().add(authorRewin);
+			}
+			
+			if(postBackedup.containsKey(idPost)) {
+				Post post = postBackedup.get(idPost);
+				
+				post.getRewin().add(authorRewin);
+			}
 			
 			ArrayList<Post> posts = blogUser.get(p.getAuthor());
 			

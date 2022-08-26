@@ -32,6 +32,8 @@ public class LogoutServiceImpl implements LogoutService{
 		
 		sendError(error, writerOutput);
 		
+		socketClient.close();
+		
 		return;
 	}
 	

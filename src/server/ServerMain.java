@@ -9,6 +9,7 @@ import java.rmi.AlreadyBoundException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -46,6 +47,8 @@ public class ServerMain {
 		threadPool.allowCoreThreadTimeOut(false);
 		
 		Database db = new Database();
+		
+		ArrayList<Socket> userLogged = new ArrayList<>();
 		
 		RMIRegistrationImpl registrationImpl = new RMIRegistrationImpl(db);
 		RMIRegistration stubRegistration = (RMIRegistration) UnicastRemoteObject.exportObject(registrationImpl, 0);
@@ -85,8 +88,50 @@ public class ServerMain {
 		Thread backup = new Thread(new TaskBackup(db, serverConf));
 		backup.start();
 		
-		while(true) {
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			
+			public void run() {
+				System.out.println("\nServer has now entered in shutdown mode\n");
+				
+				rewards.interrupt();
+				
+				for(Socket s : userLogged) {
+					try {
+						s.close();
+					} catch (IOException e) {
+						System.err.println("I/O error occured during shutdown");
+						e.printStackTrace();
+					}
+				}
+				
+				threadPool.shutdown();
+				try {
+					if(!threadPool.awaitTermination(serverConf.DELAYSHUTDOWNTHREADPOOL, TimeUnit.MILLISECONDS)) {
+						threadPool.shutdown();
+					}
+				} catch (InterruptedException e) {
+					threadPool.shutdownNow();
+				}
+				
+				try {backup.join(500);}
+				catch(InterruptedException e) { }
+				
+				try {rewards.join(500);}
+				catch(InterruptedException e) { }
+				
+				try {
+					serverSocketTCP.close();
+				} catch (IOException e) {
+					System.err.println("I/O error occured during shutdown");
+					e.printStackTrace();
+				}
+				serverSocketUDP.close();
+			}
+		});
+		
+		while(threadPool.isShutdown() == false) {
 			Socket socket = serverSocketTCP.accept();
+			userLogged.add(socket);
 			threadPool.execute(new TaskHandler(socket, db, serverConf, stubCallbackRegistration));
 		}
 	}

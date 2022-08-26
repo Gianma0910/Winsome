@@ -35,13 +35,13 @@ public class ServerConfiguration {
 	public String REGISTRATIONSERVICENAME;
 	/** Name of follower callback service offered by Registry*/
 	public String CALLBACKSERVICENAME;
-	/** Socket timeout for Threadpool*/
+	/** Socket timeout for thread pool*/
 	public int SOCKETTIMEOUT;
-	/** Core pool size of threadpool*/
+	/** Core pool size of thread pool*/
 	public int COREPOOLSIZE;
-	/** Keep alive time of threadpool*/
+	/** Keep alive time of thread pool*/
 	public int KEEPALIVETIME;
-	/** Maximum core pool size of threadpool */
+	/** Maximum core pool size of thread pool */
 	public int MAXIMUMCOREPOOLSIZE;
 	/** Number of thread in threadpool's BlockingQueue */
 	public int THREADBLOCKINGQUEUE;
@@ -49,6 +49,8 @@ public class ServerConfiguration {
 	public int DELAYEARNINGSCALCULATION;
 	/** Delay of database backup*/
 	public int DELAYBACKUP;
+	/** Delay of thread pool shutdown */
+	public long DELAYSHUTDOWNTHREADPOOL;
 	/** Author percentage earn used to distributed the earn for a post*/
 	public float AUTHORPERCENTAGEEARN;
 	/** Directory where files will be created to storage database data*/
@@ -86,7 +88,7 @@ public class ServerConfiguration {
 			   && prop.containsKey("RMIREGISTRYHOST") && prop.containsKey("MULTICASTPORT") && prop.containsKey("MULTICASTADDRESS") && prop.containsKey("REGISTRATIONSERVICENAME")
 			   && prop.containsKey("CALLBACKSERVICENAME") && prop.containsKey("SOCKETTIMEOUT") && prop.containsKey("COREPOOLSIZE") && prop.containsKey("MAXIMUMCOREPOOLSIZE")
 			   && prop.containsKey("KEEPALIVETIME") && prop.containsKey("THREADBLOCKINGQUEUE") && prop.containsKey("DELAYBACKUP") && prop.containsKey("DELAYEARNINGSCALCULATION")
-			   && prop.containsKey("AUTHORPERCENTAGEEARN") && prop.containsKey("DIRECTORYFORFILE")) {
+			   && prop.containsKey("AUTHORPERCENTAGEEARN") && prop.containsKey("DIRECTORYFORFILE") && prop.containsKey("DELAYSHUTDOWNTHREADPOOL")) {
 				
 				//check the port
 				try {
@@ -196,6 +198,8 @@ public class ServerConfiguration {
 				FOLLOWINGFILENAMEPATH = DIRECTORYFORFILE.concat("/").concat(FOLLOWINGFILENAMEPATH);
 				MUTABLEDATAPOSTSFILENAMEPATH = DIRECTORYFORFILE.concat("/").concat(MUTABLEDATAPOSTSFILENAMEPATH);
 				TRANSACTIONSFILENAMEPATH = DIRECTORYFORFILE.concat("/").concat(TRANSACTIONSFILENAMEPATH);
+				
+				DELAYSHUTDOWNTHREADPOOL = Long.parseLong(prop.getProperty("DELAYSHUTDOWNTHREADPOOL"));
 				
 			}else {
 				throw new InvalidConfigurationException("File properties doesn't contains all the necessary properties. Check the file and the documentation");
