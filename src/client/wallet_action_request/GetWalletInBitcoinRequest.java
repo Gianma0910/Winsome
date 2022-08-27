@@ -6,9 +6,23 @@ import java.io.IOException;
 
 import utility.TypeError;
 
+/**
+ * Class used to send and receive get wallet in bitcoin request and response.
+ * @author Gianmarco Petrocchi.
+ *
+ */
 public class GetWalletInBitcoinRequest {
 
-	public static void performGetWalletInBitcoinAction(String [] requestSplitted, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException {
+	/**
+	 * Static method used to send and receive get wallet in bitcoin request and response, only when the client is already logged. It sends a request with the following syntax: wallet:btc, if it is different from this syntax 
+	 * the client will receive INVALIDREQUESTERRROR. The client will receive a string that represents his total amount in his wallet converted in bitcoin.
+	 * @param requestSplitted Client request.
+	 * @param writerOutput BufferedWriter used to write/send request to server.
+	 * @param readerInput BufferedReader used to read/receive response by server.
+	 * @throws IOException Only when occurs I/O error.
+	 * @throws IllegalArgumentException Only when the keyword for get wallet operation is different from btc in request.
+	 */
+	public static void performGetWalletInBitcoinAction(String [] requestSplitted, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException, IllegalArgumentException {
 		if(!requestSplitted[1].equals("btc"))
 			throw new IllegalArgumentException("If you want to get your wallet in Bitcoin, you must type the keyword btc");
 		

@@ -9,21 +9,21 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 import RMI.RMICallback;
-import client.FollowerDatabaseImpl;
+import client.ClientStorageImpl;
 import client.MulticastClient;
 import configuration.ClientConfiguration;
 import exceptions.ClientNotRegisteredException;
 import utility.TypeError;
 
 /**
- * Class that perform logout request.
+ * Class used to send and receive logout request and response.
  * @author Gianmarco Petrocchi.
  *
  */
 public class LogoutRequest {
 
 	/**
-	 * Static method used to perform logout action, only when the client is already logged otherwise it will receive a CLIENTNOTLOGGED error. It sends a request with this syntax: logout, if the request is different from this syntax
+	 * Static method used to send and receive logout request and response, only when the client is already logged otherwise it will receive a CLIENTNOTLOGGED error. It sends a request with this syntax: logout, if the request is different from this syntax
 	 * the client will receive a INVALIDREQUESTERROR error. After logout the client interrupt MulticastClient thread, unregister his stub to the callback service and close the socket.
 	 * @param requestSplitted Client request.
  	 * @param writerOutput BufferedWriter used to write/send a request to server.
@@ -37,7 +37,7 @@ public class LogoutRequest {
 	 * @throws ClientNotRegisteredException Only when a user isn't registered (doesn't exists is stub).
 	 * @throws IOException Only when occurs I/O error.
 	 */
-	public static boolean performLogoutAction(String [] requestSplitted, BufferedWriter writerOutput, BufferedReader readerInput, MulticastClient multicastClient, ClientConfiguration clientConf, Socket socketTCP, FollowerDatabaseImpl stubClientDatabase) throws NotBoundException, ClientNotRegisteredException, IOException {
+	public static boolean performLogoutAction(String [] requestSplitted, BufferedWriter writerOutput, BufferedReader readerInput, MulticastClient multicastClient, ClientConfiguration clientConf, Socket socketTCP, ClientStorageImpl stubClientDatabase) throws NotBoundException, ClientNotRegisteredException, IOException {
 		
 		StringBuilder requestClient = new StringBuilder();
 		
@@ -61,7 +61,7 @@ public class LogoutRequest {
 		}else if(response.equals(TypeError.LOGOUTERROR)) {
 			System.err.println("Error during logout operation");
 		}else if(response.equals(TypeError.SUCCESS)) {
-			System.out.println("Logout operation complete succesfully");
+			System.out.println("Logout operation completed succesfully");
 			multicastClient.interrupt();
 			
 			Registry reg = LocateRegistry.getRegistry(clientConf.RMIREGISTRYHOST, clientConf.RMIREGISTRYPORT);

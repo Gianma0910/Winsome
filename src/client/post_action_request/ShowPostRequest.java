@@ -3,27 +3,24 @@ package client.post_action_request;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.LinkedHashSet;
-import java.util.Scanner;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 
 import client.PostWrapperShow;
 import utility.Comment;
 import utility.TypeError;
 
 /**
- * Class that perform show post request.
+ * Class used to send and receive show post request and response.
  * @author Gianmarco Petrocchi.
  */
 public class ShowPostRequest {
 
 	/**
-	 * Static method perform show post action, only when the client is already logged. It sends a request with this syntax: show:post:idPost, if the request is different from this syntax the client will receive
-	 * INVALIDREQUESTERROR. The idPost specified in request must be of a existed post in Winsome, otherwise the client will receive IDPOSTNOTEXISTS error. The client receive a string that represents the specified post 
+	 * Static method used to send and receive show post request and response, only when the client is already logged. It sends a request with this syntax: show:post:idPost, if the request is different from this syntax the client will receive
+	 * INVALIDREQUESTERROR. The idPost specified in request must be of a existed post in Winsome, otherwise the client will receive IDPOSTNOTEXISTS error. The client will receive a string that represents the specified post 
 	 * and the client serialized its with Gson. The client will see title, content, number of positives and negatives votes, comments of post.
 	 * @param requestSplitted Client request.
 	 * @param writerOutput BufferedWriter used to write/send request to server.

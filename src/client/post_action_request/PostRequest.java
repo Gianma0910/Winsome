@@ -3,21 +3,23 @@ package client.post_action_request;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Scanner;
 
 import utility.TypeError;
 
 /**
- * Class that perform create post request.
+ * Class used to send and receive create post request and response.
  * @author Gianmarco Petrocchi.
  */
 public class PostRequest {
 
 	/**
-	 * Static method used to create post, only when the client is already logged. It sends a request with this syntax: post, if the request is different from this syntax the client will receive a 
-	 * INVALIDREQUESTERROR. After a successfully response received from server, the client write in System.in the title and content of post, this two strings are encoded in Base64 and sends to server.
-	 * Title and content of post has a maximum length, 20 characters for title and 500 characters for content.
+	 * Static method used to send and receive create post request and response, only when the client is already logged. It sends a request with this syntax: post, if the request is different from this syntax the client will receive a 
+	 * INVALIDREQUESTERROR. After a successfully response received from server, the client write in System.in the title and content of post, this two strings are encoded in Base64 with StandardCharset.UTF_8 and sends to server.
+	 * With this char set the client could use all possible characters.
+	 * Title and content of post has a maximum length, 20 characters for title and 500 characters for content, if they don't respect this condition the post will not create.
 	 * @param requestSplitted Client request.
 	 * @param scan Scanner used to write in System.in for title and content of post.
 	 * @param readerInput BufferedReader used to read/receive response by server.
@@ -53,14 +55,11 @@ public class PostRequest {
 			System.out.print("Insert content of post:\t");
 			String content = scan.nextLine();
 			
-			byte[] encodedTitle = Base64.getEncoder().encode(title.getBytes());
-			byte[] encodedContent = Base64.getEncoder().encode(content.getBytes());
-			
-			String t = new String(encodedTitle, 0, encodedTitle.length);
-			String c = new String(encodedContent, 0, encodedContent.length);
+			String encodedTitle = Base64.getEncoder().encodeToString(title.getBytes(StandardCharsets.UTF_8));
+			String encodedContent = Base64.getEncoder().encodeToString(content.getBytes(StandardCharsets.UTF_8));
 
 			StringBuilder requestClient = new StringBuilder();
-			requestClient.append(t).append(" ").append(c);
+			requestClient.append(encodedTitle).append(" ").append(encodedContent);
 
 			writerOutput.write(requestClient.toString());
 			writerOutput.newLine();

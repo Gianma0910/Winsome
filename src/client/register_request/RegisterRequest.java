@@ -10,15 +10,32 @@ import java.rmi.registry.Registry;
 import java.util.ArrayList;
 
 import RMI.RMIRegistration;
-import client.FollowerDatabaseImpl;
+import client.ClientStorageImpl;
 import client.MulticastClient;
 import client.login_logout_request.LoginRequest;
 import configuration.ClientConfiguration;
 import utility.TypeError;
 
+/**
+ * Class used to send and receive register request and response.
+ * @author Gianmarco Petrocchi.
+ *
+ */
 public class RegisterRequest {
 
-	public static void performRegisterAction(String [] requestSplitted, ClientConfiguration clientConf, BufferedWriter writerOutput, BufferedReader readerInput, MulticastClient multicastClient, FollowerDatabaseImpl stubClientDatabase) throws IOException{
+	/**
+	 * Static method used to send and receive register request and response, only when the client is already logged. This method communicates with the registration service provided by server.
+	 * If the register action is successfully completed, this method send a login request to server and it does work like the method LoginRequest.performLoginAction(...).
+	 * In this way the client does not need to make a second separate request for login.
+	 * @param requestSplitted Client request.
+	 * @param clientConf Client configuration used in LoginRequest.performLoginAction(...).
+	 * @param writerOutput BufferedWriter used to write/send request to server.
+	 * @param readerInput BuffereReader used to read/receive response by server.
+	 * @param multicastClient Multicast client used in LoginRequest.performLoginAction(...).
+	 * @param stubClientDatabase Stub of ClientStorage used in LoginRequest.performLoginAction(...).
+	 * @throws IOException Only when occurs I/O error.
+	 */
+	public static void performRegisterAction(String [] requestSplitted, ClientConfiguration clientConf, BufferedWriter writerOutput, BufferedReader readerInput, MulticastClient multicastClient, ClientStorageImpl stubClientDatabase) throws IOException{
 		if(requestSplitted.length < 4 || requestSplitted.length > 8) {
 			System.err.println("Number of arguments insert for the registration operation is invalid, you must type: register <username> <password> <tags> (tags is a list of 5 string)");
 			return;

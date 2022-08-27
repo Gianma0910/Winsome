@@ -1,0 +1,28 @@
+[{
+  "idPost": 0,
+  "comments": []
+},{
+  "idPost": 1,
+  "comments": [
+    {
+      "idPost": 1,
+      "author": "pippo",
+      "content": "sempre forza inteeeerrr"
+    }
+  ]
+},{
+  "idPost": 3,
+  "comments": []
+},{
+  "idPost": 4,
+  "comments": [
+    {
+      "idPost": 4,
+      "author": "pluto",
+      "content": "no good"
+    }
+  ]
+},{
+  "idPost": 5,
+  "comments": []
+}]

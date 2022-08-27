@@ -7,14 +7,14 @@ import java.io.IOException;
 import utility.TypeError;
 
 /**
- * Class that perform the remove follow request (unfollow).
+ * Class used to send and receive unfollow request and response.
  * @author Gianmarco Petrocchi.
  *
  */
 public class UnfollowRequest {
 
 	/**
-	 * Static method that perform the unfollow request, only when the client is already logged. It sends a request with the this syntax: unfollow:username, if the request is different from this syntax the client will receive a 
+	 * Static used to send and receive unfollow request and response, only when the client is already logged. It sends a request with the this syntax: unfollow:username, if the request is different from this syntax the client will receive a 
 	 * INVALIDREQUESTERROR. The username specified in request must be a different user registered in Winsome. A user can't unfollow himself, otherwise the client receive
 	 * a UNFOLLOWHIMSELFERROR. If the username doesn't exists in Winsome the client will receive a UNFOLLOWERNOTEXISTS.
 	 * @param requestSplitted Client request.
@@ -60,7 +60,7 @@ public class UnfollowRequest {
 			System.err.println("You can't unfollow yourself");
 			
 		if(response.equals(TypeError.SUCCESS)) {
-			username = null;
+			username = requestSplitted[1];
 			System.out.println("Now you are unfollowing user " + username);
 		}
 		

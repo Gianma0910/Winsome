@@ -1,0 +1,50 @@
+[{
+  "idPost": 0,
+  "votes": [
+    {
+      "idPost": 0,
+      "authorVote": "minnie",
+      "vote": 1
+    }
+  ]
+},{
+  "idPost": 1,
+  "votes": [
+    {
+      "idPost": 1,
+      "authorVote": "pippo",
+      "vote": 1
+    },
+    {
+      "idPost": 1,
+      "authorVote": "minnie",
+      "vote": -1
+    }
+  ]
+},{
+  "idPost": 3,
+  "votes": [
+    {
+      "idPost": 3,
+      "authorVote": "minnie",
+      "vote": -1
+    }
+  ]
+},{
+  "idPost": 4,
+  "votes": [
+    {
+      "idPost": 4,
+      "authorVote": "pippo",
+      "vote": 1
+    },
+    {
+      "idPost": 4,
+      "authorVote": "pluto",
+      "vote": -1
+    }
+  ]
+},{
+  "idPost": 5,
+  "votes": []
+}]

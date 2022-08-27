@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Objects;
 
@@ -156,8 +157,8 @@ public class TaskHandler implements Runnable {
 						byte[] titleBytes = Base64.getDecoder().decode(createPostRequestSplitted[0]);
 						byte[] contentBytes = Base64.getDecoder().decode(createPostRequestSplitted[1]);
 						
-						String title = new String(titleBytes, 0, titleBytes.length);
-						String content = new String(contentBytes, 0, contentBytes.length);
+						String title = new String(titleBytes, StandardCharsets.UTF_8);
+						String content = new String(contentBytes, StandardCharsets.UTF_8);
 						
 						PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
 
@@ -232,7 +233,7 @@ public class TaskHandler implements Runnable {
 						
 						byte[] requestBytes = Base64.getDecoder().decode(requestAddComment.getBytes());
 						
-						String contentComment = new String(requestBytes, 0, requestBytes.length);
+						String contentComment = new String(requestBytes, StandardCharsets.UTF_8);
 						
 						PostServicesImpl postServices = new PostServicesImpl(db, writerOutput);
 						

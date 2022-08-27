@@ -13,8 +13,22 @@ import com.google.gson.reflect.TypeToken;
 import utility.Transaction;
 import utility.TypeError;
 
+/**
+ * Class used to send and receive get wallet request and response.
+ * @author Gianmarco Petrocchi.
+ *
+ */
 public class GetWalletRequest {
 
+	/**
+	 * Static method used to send and receive get wallet request and response, only when the user is already logged in Winsome. It sends a request with this syntax: wallet, if it is different from this syntax the
+	 * client will receive INVALIDREQUESTERROR. The client will receive a string that represents his transaction and his total amount in wallet. The client will see, for all the transactions, only amount and a timestamp
+	 * that indicates when it was done.
+	 * @param requestSplitted Client request.
+	 * @param writerOutput BufferedWriter used to write/send request to server.
+	 * @param readerInput BufferedReader used to read/receive response by server. 
+	 * @throws IOException Only when occurs I/O error.
+	 */
 	public static void performGetWalletAction(String [] requestSplitted, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException {
 		StringBuilder request = new StringBuilder();
 		

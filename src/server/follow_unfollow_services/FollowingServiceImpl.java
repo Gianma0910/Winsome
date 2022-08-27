@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import RMI.FollowerDatabase;
+import RMI.ClientStorage;
 import RMI.RMICallback;
 import server.database.Database;
 import utility.TypeError;
@@ -30,24 +30,36 @@ public class FollowingServiceImpl implements FollowingService {
 			sendError(TypeError.FOLLOWERNOTEXISTS, writerOutput);
 			return;
 		}
-		
-		FollowerDatabase stubUsernameAssociated = stubCallbackRegistration.getCallback(usernameToFollow);
-		
+	
 		String usernameNewFollow = db.getUsernameBySocket(socket);
-		String error = stubUsernameAssociated.addFollower(usernameNewFollow);
 		
-		if(error.equals(TypeError.FOLLOWERERROR) || error.equals(TypeError.FOLLOWHIMSELFERROR)) {
-			sendError(error, writerOutput);
-		}else if(error.equals(TypeError.SUCCESS)){
+		if(db.isUserRegistered(usernameToFollow) == true && db.isUserLogged(usernameToFollow) == false) {
 			db.addFollowing(usernameNewFollow, usernameToFollow);
 			db.addFollower(usernameToFollow, usernameNewFollow);
 			
 			ArrayList<String> followingListUser = db.getFollowingListByUsername(usernameNewFollow);
-			FollowerDatabase stub = stubCallbackRegistration.getCallback(usernameNewFollow);
+			ClientStorage stub = stubCallbackRegistration.getCallback(usernameNewFollow);
 			stub.setFollowing(followingListUser);
 			
-			sendError(error, writerOutput);
+			sendError(TypeError.SUCCESS, writerOutput);
+		}else {
+			ClientStorage stubUsernameAssociated = stubCallbackRegistration.getCallback(usernameToFollow);
+			String error = stubUsernameAssociated.addFollower(usernameNewFollow);
+			
+			if(error.equals(TypeError.FOLLOWERERROR) || error.equals(TypeError.FOLLOWHIMSELFERROR)) {
+				sendError(error, writerOutput);
+			}else if(error.equals(TypeError.SUCCESS)){
+				db.addFollowing(usernameNewFollow, usernameToFollow);
+				db.addFollower(usernameToFollow, usernameNewFollow);
+				
+				ArrayList<String> followingListUser = db.getFollowingListByUsername(usernameNewFollow);
+				ClientStorage stub = stubCallbackRegistration.getCallback(usernameNewFollow);
+				stub.setFollowing(followingListUser);
+				
+				sendError(error, writerOutput);
+			}
 		}
+
 	}
 
 	private void sendError(String error, BufferedWriter writerOutput) throws IOException {

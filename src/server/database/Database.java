@@ -43,60 +43,76 @@ import utility.User;
 import utility.Vote;
 
 /**
- * Class that contains all the data of Winsome (Users, Posts, Comments, Votes, Transactions Wallet, follower and following)
- * @author Gianmarco Petrocchi
+ * Class that contains all the data of Winsome (Users, Posts, Comments, Votes, Transactions Wallet, follower and following).
+ * @author Gianmarco Petrocchi.
  *
  */
 public class Database extends Storage{
-
-	private ConcurrentHashMap<String, User> userRegistered;
-
-	/**Concurrent collection that contains user to be backuped in user's file
-	 * <K, V>: K is a String that represents the username; V is an User object with the username specified in K */
+	
+	/**Concurrent collection that contains users to be backed up in user's file.
+	 * <K, V>: K is a String that represents the username; V is an User object with the username specified in K. */
 	private ConcurrentHashMap<String, User> userToBeBackedup;
 	
+	/**Concurrent collection that contains users already backed up in user's file.
+	 * <K, V>: K is a String that represents the username; V is an User object with the username specified in K. */
 	private ConcurrentHashMap<String, User> userBackedUp;
 	
-	/** Concurrent colleciton that contains user logged in Winsome
-	 * <K, V>: K is the client socket; V is a String that represents the logged user's username */
+	/** Concurrent collection that contains user logged in Winsome.
+	 * <K, V>: K is the client socket; V is a String that represents the logged user's username.*/
 	private ConcurrentHashMap<Socket, String> userLoggedIn;
 	
+	/**
+	 * Concurrent collection that contains, for all the registered users, his following list.
+	 * <K, V>: K is a String that represents the username; V is an ArrayList that represents his following list.*/
 	private ConcurrentHashMap<String, ArrayList<String>> userFollowing;
 	
+	/**
+	 * Concurrent collections that contains, for all the registered users, his followers list.
+	 * <K, V>: K is a String that represents the username; V is an ArrayList that represents his followers list.*/
 	private ConcurrentHashMap<String, ArrayList<String>> userFollower;
 	
+	/**
+	 * Concurrent collection that contains, for all the registered used, his posts.
+	 * <K, V>: K is a String that represents the username; V is an ArrayList that represents his posts.*/
 	private ConcurrentHashMap<String, ArrayList<Post>> blogUser;
 	
-	private ConcurrentHashMap<Integer, Post> allPosts;
-	
+	/**
+	 * Concurrent collection that contains posts to be backed up.
+	 * <K, V>: K is an Integer that represents idPost; V is a Post object with the idPost specified in K*/
 	private ConcurrentHashMap<Integer, Post> postToBeBackedup;
 	
+	/**
+	 * Concurrent collection that contains posts already backed up.
+	 * <K, V>: K is an Integer that represents idPost; V is a Post object with the idPost specified in K*/
 	private ConcurrentHashMap<Integer, Post> postBackedup;
 	
-//	private ConcurrentHashMap<String, ArrayList<Post>> userFeed;
-	
+	/**
+	 * Concurrent collection that contains posts rewinned by user.
+	 * <K, V>: K is a String that represents username of user; V is a ConcurrentLinkedQueue of rewinned posts.*/
 	private ConcurrentHashMap<String, ConcurrentLinkedQueue<Post>> postRewinnedByUser;
 	
+	/** Variable used when a new post is created. It will be increment by one and it must be unique for all posts.*/
 	private AtomicInteger idPost;
 	
+	/** Toggled on if this is the first backup and the storage has been recovered from a JSON file. */
 	private boolean postRecoveredFromBackup = false;
 	
+	/** Toggled on if this is the first backup and the storage has been recovered from a JSON file.*/
 	private boolean firstBackupForUsers = false;
 	
+	/** Toggled on if a post has been deleted since the last backup. */
 	private boolean postDeletedSinceLastBackup = false;
 	
 	/**
-	 * Basic constructor for Database class
+	 * Basic constructor for Database.
 	 */
 	public Database() {
-		this.userRegistered = new ConcurrentHashMap<String, User>();
 		this.userToBeBackedup = new ConcurrentHashMap<String, User>();
 		this.userBackedUp = new ConcurrentHashMap<String, User>();
 		this.userLoggedIn = new ConcurrentHashMap<Socket, String>();
 		this.userFollowing = new ConcurrentHashMap<String, ArrayList<String>>();
 		this.userFollower = new ConcurrentHashMap<String, ArrayList<String>>();
 		this.blogUser = new ConcurrentHashMap<String, ArrayList<Post>>();
-		this.allPosts = new ConcurrentHashMap<Integer, Post>();
 		this.postToBeBackedup = new ConcurrentHashMap<Integer, Post>();
 		this.postBackedup = new ConcurrentHashMap<Integer, Post>();
 		this.postRewinnedByUser = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Post>>();
@@ -115,8 +131,7 @@ public class Database extends Storage{
 		Objects.requireNonNull(username, "Username is null");
 		Objects.requireNonNull(u, "User is null");
 		
-		if(Objects.requireNonNull(userRegistered) != null) {
-			userRegistered.putIfAbsent(username, u);
+		if(Objects.requireNonNull(userToBeBackedup) != null) {
 			userToBeBackedup.putIfAbsent(username, u);
 		}
 	}
@@ -124,13 +139,15 @@ public class Database extends Storage{
 	/** 
 	 * Check if the user is registered
 	 * @param username User's username. Cannot be null
-	 * @return true if the user is registerd, false otherwise
+	 * @return true if the user is registered, false otherwise
 	 */
 	public boolean isUserRegistered(String username) {
 		Objects.requireNonNull(username, "Username used to check if the user is registered is null");
 		
-		if(Objects.requireNonNull(userRegistered) != null && Objects.requireNonNull(userRegistered.keySet()) != null) {
-			return userRegistered.containsKey(username);
+		if(Objects.requireNonNull(userToBeBackedup) != null && Objects.requireNonNull(userToBeBackedup.keySet()) != null
+				&& Objects.requireNonNull(userBackedUp) != null && Objects.requireNonNull(userBackedUp.keySet()) != null) {
+			
+			return (userToBeBackedup.containsKey(username) || userBackedUp.containsKey(username));
 		}
 		
 		return false;
@@ -144,10 +161,16 @@ public class Database extends Storage{
 	public User getUserByUsername(String username) {
 		Objects.requireNonNull(username, "Username used to get the specified user is null");
 		
-		if(Objects.requireNonNull(userRegistered) != null && Objects.requireNonNull(userRegistered.keySet()) != null) {
-			User u = userRegistered.get(username);
+		if(Objects.requireNonNull(userToBeBackedup) != null && Objects.requireNonNull(userToBeBackedup.keySet()) != null
+				&& Objects.requireNonNull(userBackedUp) != null && Objects.requireNonNull(userBackedUp.keySet()) != null) {
 			
-			return u;
+			if(userToBeBackedup.containsKey(username)) {
+				return userToBeBackedup.get(username);
+			}else if(userBackedUp.containsKey(username)) {
+				return userBackedUp.get(username);
+			}
+			
+			return null;
 		}
 		
 		return null;
@@ -184,6 +207,10 @@ public class Database extends Storage{
 		return false;
 	}
 	
+	/**
+	 * @param socket Socket client. Cannot be null.
+	 * @return Username of logged client identified by socket parameter.
+	 */
 	public String getUsernameBySocket(Socket socket) {
 		Objects.requireNonNull(socket, "Parameter socket use to get the logged user is null");
 		
@@ -195,7 +222,7 @@ public class Database extends Storage{
 	}
 	
 	/**
-	 * @return The ConcurrentHashMap of user that are already logged in
+	 * @return The ConcurrentHashMap of user that are already logged in.
 	 */
 	public ConcurrentHashMap<Socket, String> getUserLoggedIn(){
 		if(Objects.requireNonNull(userLoggedIn) != null && Objects.requireNonNull(userLoggedIn.keySet()) != null) {
@@ -205,6 +232,31 @@ public class Database extends Storage{
 		return null;
 	}
 	
+	/**
+	 * Check if the user with the specified username is logged in Winsome.
+	 * @param username Username of user to get. Cannot be null.
+	 * @return true if the user is logged, false otherwise.
+	 */
+	public boolean isUserLogged(String username) {
+		Objects.requireNonNull(username, "Username used to verify if the specified use is logged is null");
+		
+		if(Objects.requireNonNull(userLoggedIn) != null && Objects.requireNonNull(userLoggedIn.keySet()) != null) {
+			for(Socket socket : userLoggedIn.keySet()) {
+				if(userLoggedIn.get(socket).equals(username))
+					return true;
+				else continue;
+			}
+			
+			return false;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Set followers list of a user identified by the username.
+	 * @param username Username of user to set his followers list. Cannot be null.
+	 */
 	public void setFollowerListUser(String username) {
 		Objects.requireNonNull(username, "Username used to set his follower list is null");
 		
@@ -213,6 +265,11 @@ public class Database extends Storage{
 		}
 	}
 	
+	/**
+	 * Add follower to user's followers collection.
+	 * @param usernameUpdateFollower Username of user that receive a new follow. Cannot be null.
+	 * @param usernameNewFollower Username of a user that send follow request.
+	 */
 	public void addFollower(String usernameUpdateFollower, String usernameNewFollower) {
 		Objects.requireNonNull(usernameUpdateFollower, "Username used to update his followers is null");
 		Objects.requireNonNull(usernameNewFollower, "Username new follower is null");
@@ -231,6 +288,11 @@ public class Database extends Storage{
 		}
 	}
 
+	/**
+	 * Remove follower from user's followers collection.
+	 * @param usernameUpdateFollower Username of user that unfollow another user. Cannot be null.
+	 * @param usernameToRemove Username of user to remove from userFollower.
+	 */
 	public void removeFollower(String usernameUpdateFollower, String usernameToRemove) {
 		Objects.requireNonNull(usernameUpdateFollower, "Username used to update his followers is null");
 		Objects.requireNonNull(usernameToRemove, "Username to remove from followers is null");
@@ -242,6 +304,10 @@ public class Database extends Storage{
 		}
 	}
 
+	/**
+	 * @param username Username to get his followers list.
+	 * @return Followers list of a user identified by the username.
+	 */
 	public ArrayList<String> getFollowerListByUsername(String username) {
 		Objects.requireNonNull(username, "Username used to get his follower list is null");
 		
@@ -252,6 +318,10 @@ public class Database extends Storage{
 		return null;
 	}
 	
+	/**
+	 * Set following list of user identified by username.
+	 * @param username Username of user. Cannot be null.
+	 */
 	public void setFollowingListForUser(String username) {
 		Objects.requireNonNull(username, "Username used to set his following list is null");
 		
@@ -262,6 +332,11 @@ public class Database extends Storage{
 		return;
 	}
 	
+	/**
+	 * Add following in user's following collection.
+	 * @param usernameUpdateFollowing Username of user that follow a new user. Cannot be null.
+	 * @param usernameNewFollowing Username of user that receive a new follow. Cannot be null.
+	 */
 	public void addFollowing(String usernameUpdateFollowing, String usernameNewFollowing) {
 		Objects.requireNonNull(usernameUpdateFollowing, "Username used to update his following is null");
 		Objects.requireNonNull(usernameNewFollowing, "Username new following is null");
@@ -279,23 +354,16 @@ public class Database extends Storage{
 			User u = getUserByUsername(usernameUpdateFollowing);
 			
 			u.addFollowing(usernameNewFollowing);
-					
-			if(userToBeBackedup.containsKey(usernameUpdateFollowing)) {
-				User user = userToBeBackedup.get(usernameUpdateFollowing);
-				
-				user.addFollowing(usernameNewFollowing);
-			}
-			
-			if(userBackedUp.containsKey(usernameUpdateFollowing)) {
-				User user = userBackedUp.get(usernameUpdateFollowing);
-				
-				user.addFollowing(usernameNewFollowing);
-			}
 			
 			return;
 		}
 	}
 	
+	/**
+	 * Remove following in userFollowing collection.
+	 * @param usernameUpdateFollowing Username of user that unfollow another user. Cannot be null.
+	 * @param usernameToRemove Username of user to remove from userFollowing.
+	 */
 	public void removeFollowing(String usernameUpdateFollowing, String usernameToRemove) {
 		Objects.requireNonNull(usernameUpdateFollowing, "Username user to update his following is null");
 		Objects.requireNonNull(usernameToRemove, "Username to be removed from following is null");
@@ -308,18 +376,6 @@ public class Database extends Storage{
 			User u = getUserByUsername(usernameUpdateFollowing);
 			
 			u.removeFollowing(usernameToRemove);
-					
-			if(userToBeBackedup.containsKey(usernameUpdateFollowing)) {
-				User user = userToBeBackedup.get(usernameUpdateFollowing);
-				
-				user.removeFollowing(usernameToRemove);
-			}
-			
-			if(userBackedUp.containsKey(usernameUpdateFollowing)) {
-				User user = userBackedUp.get(usernameUpdateFollowing);
-				
-				user.removeFollowing(usernameToRemove);
-			}
 			
 			return;	
 		}
@@ -360,8 +416,10 @@ public class Database extends Storage{
 	public String getRegisteredUsersJson(String username) {
 		Objects.requireNonNull(username, "Username used to get the specified user is null");
 		
-		if(Objects.requireNonNull(userRegistered) != null && Objects.requireNonNull(userRegistered.keySet()) != null) {
-			User user = userRegistered.get(username);
+		if(Objects.requireNonNull(userToBeBackedup) != null && Objects.requireNonNull(userToBeBackedup.keySet()) != null
+				&& Objects.requireNonNull(userBackedUp) != null && Objects.requireNonNull(userBackedUp.keySet()) != null) {
+			
+			User user = getUserByUsername(username);
 			ArrayList<String> tagList = user.getTagList();
 			
 			Gson gson = new GsonBuilder().setExclusionStrategies(new ExclusionStrategy() {
@@ -381,9 +439,9 @@ public class Database extends Storage{
 			StringBuilder serializationUsers = new StringBuilder();
 			ArrayList<User> registeredUsers = new ArrayList<>();
 			
-			for(String s : userRegistered.keySet()) {
-				if(userRegistered.get(s).getUsername().equals(username)) continue;
-				else registeredUsers.add(userRegistered.get(s));
+			for(String s : userBackedUp.keySet()) {
+				if(userBackedUp.get(s).getUsername().equals(username)) continue;
+				else registeredUsers.add(userBackedUp.get(s));
 			}
 			
 			Iterator<User> it = registeredUsers.iterator();
@@ -433,10 +491,9 @@ public class Database extends Storage{
 		Post newPost = new Post(idPost, titlePost, contentPost, authorPost);
 	
 		if(Objects.requireNonNull(blogUser) != null && Objects.requireNonNull(blogUser.keySet()) != null
-				&& Objects.requireNonNull(allPosts) != null && Objects.requireNonNull(postToBeBackedup) != null) {
+				&& Objects.requireNonNull(postToBeBackedup) != null && Objects.requireNonNull(postToBeBackedup.keySet()) != null) {
 
 			blogUser.get(authorPost).add(newPost);
-			allPosts.putIfAbsent(idPost, newPost);
 			postToBeBackedup.putIfAbsent(idPost, newPost);
 
 			return "New post created with id: " + idPost;
@@ -555,8 +612,16 @@ public class Database extends Storage{
 	public Post getPostById(int idPost) {
 		Objects.requireNonNull(idPost, "Id used to get the specified post is null");
 		
-		if(Objects.requireNonNull(allPosts) != null && Objects.requireNonNull(allPosts.keySet()) != null) {
-			return allPosts.get(idPost);
+		if(Objects.requireNonNull(postToBeBackedup) != null && Objects.requireNonNull(postToBeBackedup.keySet()) != null
+				&& Objects.requireNonNull(postBackedup) != null && Objects.requireNonNull(postBackedup.keySet()) != null) {
+			
+			if(postToBeBackedup.containsKey(idPost)) {
+				return postToBeBackedup.get(idPost);
+			}else if(postBackedup.containsKey(idPost)) {
+				return postBackedup.get(idPost);
+			}
+			
+			return null;
 		}
 		
 		return null;
@@ -604,8 +669,9 @@ public class Database extends Storage{
 	public void removePostFromWinsome(int idPost) {
 		Objects.requireNonNull(idPost, "Id used to get the specifies post is null");
 		
-		if(Objects.requireNonNull(allPosts) != null && Objects.requireNonNull(allPosts.keySet()) != null
-				&& Objects.requireNonNull(blogUser) != null && Objects.requireNonNull(blogUser.keySet()) != null) {
+		if(Objects.requireNonNull(postToBeBackedup) != null && Objects.requireNonNull(postToBeBackedup.keySet()) != null
+				&& Objects.requireNonNull(blogUser) != null && Objects.requireNonNull(blogUser.keySet()) != null
+				&& Objects.requireNonNull(postBackedup) != null && Objects.requireNonNull(postBackedup.keySet()) != null) {
 			
 			Post p = getPostById(idPost);
 			
@@ -615,14 +681,11 @@ public class Database extends Storage{
 			p.removeAllVotes();
 			p.removeAllRewin();
 			
-			allPosts.remove(idPost, p);
 			blogUser.get(authorPost).remove(p);
 			
 			if(postToBeBackedup.containsKey(idPost)) {
 				postToBeBackedup.remove(idPost, p);
-			}
-			
-			if(postBackedup.containsKey(idPost)) {
+			}else if(postBackedup.containsKey(idPost)) {
 				postBackedup.remove(idPost, p);
 			}
 			
@@ -644,12 +707,13 @@ public class Database extends Storage{
 		Objects.requireNonNull(vote, "New vote for post is null");
 		Objects.requireNonNull(authorVote, "Author vote is null");
 		
-		if(Objects.requireNonNull(allPosts) != null && Objects.requireNonNull(allPosts.keySet()) != null
-				&& Objects.requireNonNull(blogUser) != null && Objects.requireNonNull(blogUser.keySet()) != null) {
-			
+		if(Objects.requireNonNull(postToBeBackedup) != null && Objects.requireNonNull(postToBeBackedup.keySet()) != null
+				&& Objects.requireNonNull(blogUser) != null && Objects.requireNonNull(blogUser.keySet()) != null
+				&& Objects.requireNonNull(postBackedup) != null && Objects.requireNonNull(postBackedup.keySet()) != null) {
+			 
 			Vote v = new Vote(idPost, authorVote, vote);
 			
-			Post p = allPosts.get(idPost);
+			Post p = getPostById(idPost);
 			p.addVote(v);
 			
 			if(v.getVote() == 1) {
@@ -663,45 +727,35 @@ public class Database extends Storage{
 				p.setNewVotes(numVotes);
 			}
 			
-			if(postToBeBackedup.containsKey(idPost)) {
-				for(Integer i : postToBeBackedup.keySet()) {
-					if(i == idPost) {
-						Post post = postToBeBackedup.get(i);
-						post.addVote(v);
-						
-						if(v.getVote() == 1) {
-							p.getCurators().add(authorVote);
-							int numVotes = p.getNewVotes();
-							numVotes++;
-							p.setNewVotes(numVotes);
-						}else {
-							int numVotes = p.getNewVotes();
-							numVotes--;
-							p.setNewVotes(numVotes);
-						}
-					}
-				}
-			}
-			
-			if(postBackedup.containsKey(idPost)) {
-				for(Integer i : postBackedup.keySet()) {
-					if(i == idPost) {
-						Post post = postBackedup.get(i);
-						post.addVote(v);
-						
-						if(v.getVote() == 1) {
-							p.getCurators().add(authorVote);
-							int numVotes = p.getNewVotes();
-							numVotes++;
-							p.setNewVotes(numVotes);
-						}else {
-							int numVotes = p.getNewVotes();
-							numVotes--;
-							p.setNewVotes(numVotes);
-						}
-					}
-				}
-			}
+//			if(postToBeBackedup.containsKey(idPost)) {
+//				Post post = postToBeBackedup.get(idPost);
+//				post.addVote(v);
+//
+//				if(v.getVote() == 1) {
+//					p.getCurators().add(authorVote);
+//					int numVotes = p.getNewVotes();
+//					numVotes++;
+//					p.setNewVotes(numVotes);
+//				}else {
+//					int numVotes = p.getNewVotes();
+//					numVotes--;
+//					p.setNewVotes(numVotes);
+//				}
+//			}else if(postBackedup.containsKey(idPost)) {
+//				Post post = postBackedup.get(idPost);
+//				post.addVote(v);
+//
+//				if(v.getVote() == 1) {
+//					p.getCurators().add(authorVote);
+//					int numVotes = p.getNewVotes();
+//					numVotes++;
+//					p.setNewVotes(numVotes);
+//				}else {
+//					int numVotes = p.getNewVotes();
+//					numVotes--;
+//					p.setNewVotes(numVotes);
+//				}
+//			}
 			
 			ArrayList<Post> posts = blogUser.get(p.getAuthor());
 			
@@ -731,8 +785,9 @@ public class Database extends Storage{
 		Objects.requireNonNull(idPost, "Id post is null");
 		Objects.requireNonNull(authorVote, "Author vote is null");
 		
-		if(Objects.requireNonNull(allPosts) != null && Objects.requireNonNull(allPosts.keySet()) != null) {
-			Post p = allPosts.get(idPost);
+		if(Objects.requireNonNull(postToBeBackedup) != null && Objects.requireNonNull(postToBeBackedup.keySet()) != null
+				&& Objects.requireNonNull(postBackedup) != null && Objects.requireNonNull(postBackedup.keySet()) != null) {
+			Post p = getPostById(idPost);
 			LinkedHashSet<Vote> votes = p.getVotes();
 			
 			for(Vote v : votes) {
@@ -754,10 +809,11 @@ public class Database extends Storage{
 		
 		Comment c = new Comment(idPost, authorComment, comment);
 		
-		if(Objects.requireNonNull(allPosts) != null && Objects.requireNonNull(allPosts.keySet()) != null
-				&& Objects.requireNonNull(blogUser) != null && Objects.requireNonNull(blogUser.keySet()) != null) {
+		if(Objects.requireNonNull(postToBeBackedup) != null && Objects.requireNonNull(postToBeBackedup.keySet()) != null
+				&& Objects.requireNonNull(blogUser) != null && Objects.requireNonNull(blogUser.keySet()) != null
+				&& Objects.requireNonNull(postBackedup) != null && Objects.requireNonNull(postBackedup.keySet()) != null) {
 			
-			Post p = allPosts.get(idPost);
+			Post p = getPostById(idPost);
 			p.addComment(c);
 			p.getCurators().add(authorComment);
 			p.incrementNumUserComments(authorComment);
@@ -773,21 +829,19 @@ public class Database extends Storage{
 				}else continue;
 			}
 			
-			if(postToBeBackedup.containsKey(idPost)) {
-				Post post = postToBeBackedup.get(idPost);
-				
-				post.addComment(c);
-				post.getCurators().add(authorComment);
-				post.incrementNumUserComments(authorComment);
-			}
-			
-			if(postBackedup.containsKey(idPost)) {
-				Post post = postBackedup.get(idPost);
-				
-				post.addComment(c);
-				post.getCurators().add(authorComment);
-				post.incrementNumUserComments(authorComment);
-			}
+//			if(postToBeBackedup.containsKey(idPost)) {
+//				Post post = postToBeBackedup.get(idPost);
+//				
+//				post.addComment(c);
+//				post.getCurators().add(authorComment);
+//				post.incrementNumUserComments(authorComment);
+//			}else if(postBackedup.containsKey(idPost)) {
+//				Post post = postBackedup.get(idPost);
+//				
+//				post.addComment(c);
+//				post.getCurators().add(authorComment);
+//				post.incrementNumUserComments(authorComment);
+//			}
 			
 			return;
 		}
@@ -805,17 +859,15 @@ public class Database extends Storage{
 			
 			p.getRewin().add(authorRewin);
 			
-			if(postToBeBackedup.containsKey(idPost)) {
-				Post post = postToBeBackedup.get(idPost);
-				
-				post.getRewin().add(authorRewin);
-			}
-			
-			if(postBackedup.containsKey(idPost)) {
-				Post post = postBackedup.get(idPost);
-				
-				post.getRewin().add(authorRewin);
-			}
+//			if(postToBeBackedup.containsKey(idPost)) {
+//				Post post = postToBeBackedup.get(idPost);
+//				
+//				post.getRewin().add(authorRewin);
+//			}else if(postBackedup.containsKey(idPost)) {
+//				Post post = postBackedup.get(idPost);
+//				
+//				post.getRewin().add(authorRewin);
+//			}
 			
 			ArrayList<Post> posts = blogUser.get(p.getAuthor());
 			
@@ -842,8 +894,8 @@ public class Database extends Storage{
 	public ConcurrentHashMap<String, GainAndCurators> calculateGains(){
 		ConcurrentHashMap<String, GainAndCurators> map = new ConcurrentHashMap<String, GainAndCurators>();
 		
-		if(Objects.requireNonNull(allPosts) != null && Objects.requireNonNull(allPosts.keySet()) != null) {
-			for(Post p : allPosts.values()) 
+		if(Objects.requireNonNull(postBackedup) != null && Objects.requireNonNull(postBackedup.keySet()) != null) {
+			for(Post p : postBackedup.values()) 
 				map.putIfAbsent(p.getAuthor(), p.getGainAndCurators());
 			
 			return map;
@@ -1062,7 +1114,6 @@ public class Database extends Storage{
 				
 				for(Entry<String, User> entry : parsedUsers.entrySet()) {
 					User u = entry.getValue();
-					this.userRegistered.putIfAbsent(entry.getKey(), u);
 					this.userBackedUp.putIfAbsent(entry.getKey(), u);
 					this.userFollower.putIfAbsent(entry.getKey(), new ArrayList<String>());
 					this.userFollowing.putIfAbsent(entry.getKey(), new ArrayList<String>());
@@ -1070,7 +1121,7 @@ public class Database extends Storage{
 					this.postRewinnedByUser.putIfAbsent(entry.getKey(), new ConcurrentLinkedQueue<Post>());
 				}
 				
-				for(User u : userRegistered.values()) {
+				for(User u : userBackedUp.values()) {
 					ArrayList<String> followingUser = u.getFollowing();
 					for(String username : followingUser) {
 						this.userFollowing.get(u.getUsername()).add(username);
@@ -1339,7 +1390,6 @@ public class Database extends Storage{
 			
 			for(Entry<Integer, JsonObject> entry : parsedPosts.entrySet()) {
 				Post p = gson.fromJson(entry.getValue(), Post.class);
-				this.allPosts.putIfAbsent(entry.getKey(), p);
 				this.postBackedup.putIfAbsent(entry.getKey(), p);
 				this.blogUser.get(p.getAuthor()).add(p);
 				this.idPost.set(entry.getKey());

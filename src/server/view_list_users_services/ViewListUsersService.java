@@ -1,6 +1,5 @@
 package server.view_list_users_services;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.net.Socket;
 

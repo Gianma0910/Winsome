@@ -1,0 +1,27 @@
+[{
+  "idPost": 0,
+  "title": "ciao",
+  "content": "sono pippo",
+  "author": "pippo"
+},{
+  "idPost": 1,
+  "title": "oggi gioca l\u0027inter",
+  "content": "sarà una bella partita",
+  "author": "pluto"
+},{
+  "idPost": 3,
+  "title": "amala sempre",
+  "content": "sempre forza inteeeeerrr!!!",
+  "author": "pippo"
+},{
+  "idPost": 4,
+  "title": "bella a tutti",
+  "content": "sono minnie",
+  "author": "minnie"
+}
+,{
+  "idPost": 5,
+  "title": "sono ritornato",
+  "content": "ero in vacanza",
+  "author": "pippo"
+}]

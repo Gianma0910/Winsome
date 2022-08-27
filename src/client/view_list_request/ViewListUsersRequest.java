@@ -13,8 +13,21 @@ import com.google.gson.reflect.TypeToken;
 import client.UserWrapper;
 import utility.TypeError;
 
+/**
+ * Class used to send and receive view list users request and response.
+ * @author Gianmarco Petrocchi.
+ *
+ */
 public class ViewListUsersRequest {
 
+	/**
+	 * Static method used to send and receive view list users request and response, only when the client is already logged. It sends a request with this syntax: list:users, if it is different from this syntax the client
+	 * will receive INVALIDREQUESTERRROR. The client will receive by server a lists of users that has at least one tag in common with him. The client will see only the username and tags of this list of users. 
+	 * @param requestSplitted Client request.
+	 * @param writerOutput BufferedWriter used to write/send request to server.
+	 * @param readerInput BufferedReader used to read/receive response by server.
+	 * @throws IOException Only when occurs I/O error.
+	 */
 	public static void performViewListUsers(String [] requestSplitted, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException {
 		StringBuilder requestClient = new StringBuilder();
 		

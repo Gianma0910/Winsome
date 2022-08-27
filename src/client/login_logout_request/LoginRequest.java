@@ -9,25 +9,25 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 import RMI.RMICallback;
-import client.FollowerDatabaseImpl;
+import client.ClientStorageImpl;
 import client.MulticastClient;
 import configuration.ClientConfiguration;
 import utility.TypeError;
 
 /**
- * Class that perform the login request. 
+ * Class used to send and receive login request and response.
  * @author Gianmarco Petrocchi.
  *
  */
 public class LoginRequest{
 
 	/**
-	 * Static method that perform the login action. A user can login if it is already registered in Winsome. It sends to server a request with this syntax: login:username:password, if the request is different
+	 * Static method used to send and receive login request and response. A user can login if it is already registered in Winsome. It sends to server a request with this syntax: login:username:password, if the request is different
 	 * from this syntax the client will receive a INVALIDREQUESTERROR. The specified username must be registered in Winsome, otherwise the client will receive a USERNAMEWRONG error. The specified password must be equals
 	 * to the password stored for the specified username, otherwise the client will receive PASSWORDWRONG error. If a client try to login again with the same user it will receive a USERALREADYLOGGED error.
 	 * If a client try to login with a different user it will receive a CLIENTALREADYLOGGED error.
 	 * When login action is successfully completed, the client must be join: a multicast group that receive notification about rewards calculation, 
-	 * a callback service that update following and followers of a user. After that the client send to server two request with the following syntax: load:followers and load:following.
+	 * a callback service that update following and followers of a user. The information about joining the multicast group will be sent by server after the client is logged in.After that the client send to server two request with the following syntax: load:followers and load:following.
 	 * This two request set following and followers for the user by using the callback service.
 	 * @param requestSplitted Client request.
 	 * @param clientConf Client configuration used to set multicastClient and stubClientDatabase.
@@ -37,7 +37,7 @@ public class LoginRequest{
 	 * @param stubClientDatabase Local storage of client that contains followers and following of a user. This two lists must be updated with a callback.
 	 * @throws IOException Only when occurs I/O error.
 	 */
-	public static void performLoginAction(String [] requestSplitted, ClientConfiguration clientConf, BufferedWriter writerOutput, BufferedReader readerInput, MulticastClient multicastClient, FollowerDatabaseImpl stubClientDatabase) throws IOException {
+	public static void performLoginAction(String [] requestSplitted, ClientConfiguration clientConf, BufferedWriter writerOutput, BufferedReader readerInput, MulticastClient multicastClient, ClientStorageImpl stubClientDatabase) throws IOException {
 
 		String username = null;
 		

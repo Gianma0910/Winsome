@@ -9,11 +9,11 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 
 import java.rmi.NotBoundException;
-import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 import client.follow_unfollow_request.FollowRequest;
 import client.follow_unfollow_request.UnfollowRequest;
+import client.help_request.HelpRequest;
 import client.login_logout_request.LoginRequest;
 import client.login_logout_request.LogoutRequest;
 import client.post_action_request.CommentPostRequest;
@@ -35,6 +35,11 @@ import exceptions.ClientNotLoggedException;
 import exceptions.ClientNotRegisteredException;
 import exceptions.InvalidConfigurationException;
 
+/**
+ * Class that represents a single client/user that will login in Winsome.
+ * @author Gianmarco Petrocchi.
+ *
+ */
 public class ClientMain {
 	
 	public static void main(String[] args) throws InvalidConfigurationException, IOException, NotBoundException, ClientNotRegisteredException, ClientNotLoggedException {
@@ -55,20 +60,20 @@ public class ClientMain {
 		BufferedWriter writerOutput = new BufferedWriter(new OutputStreamWriter(socketTCP.getOutputStream()));
 		BufferedReader readerInput = new BufferedReader(new InputStreamReader(socketTCP.getInputStream()));
 			
-		MulticastClient multicastClient = new MulticastClient();
+		MulticastClient multicastClient = new MulticastClient(); //its parameters will be set in login request.
 		
-		FollowerDatabaseImpl stubClientDatabase = new FollowerDatabaseImpl();
+		ClientStorageImpl stubClientDatabase = new ClientStorageImpl(); //its parameters will be set in login request.
 		
-		String request = null;
-		Scanner scan = new Scanner(System.in);
-		boolean shutdown = false;
+		String request = null; //client request
+		Scanner scan = new Scanner(System.in); //used to read the request
+		boolean shutdown = false; //it will be true only when the client request a logout
 		
 		System.out.println("Welcome to Winsome! Please register or login if you are already registered");
 		
 		while(!shutdown) {
 			request = scan.nextLine();
-			String [] requestSplitted = request.split(" ");
-			String command = requestSplitted[0];
+			String [] requestSplitted = request.split(" "); //request parsed by using space character
+			String command = requestSplitted[0]; //it represents the first string of the request (login, logout...)
 			
 			switch(command) {
 			case "register" : {
@@ -100,6 +105,8 @@ public class ClientMain {
 					ViewListFollowingRequest.performViewListFollowing(stubClientDatabase);
 					break;
 				}
+				
+				break;
 			}
 			case "follow" : {
 				FollowRequest.performAddFollowerAction(requestSplitted, readerInput, writerOutput);
@@ -125,6 +132,8 @@ public class ClientMain {
 					ShowPostRequest.performShowPostAction(requestSplitted, writerOutput, readerInput);
 					break;
 				}
+				
+				break;
 			}
 			case "delete": {
 				DeletePostRequest.performDeletePostAction(requestSplitted, writerOutput, readerInput);
@@ -151,7 +160,10 @@ public class ClientMain {
 				
 				break;
 			}
-			
+			case "help":{
+				HelpRequest.performHelpAction();
+				break;
+			}
 			default: {
 				System.err.println("This command doesn't exists, please check the documentation");
 				break;

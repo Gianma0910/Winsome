@@ -7,13 +7,13 @@ import java.io.IOException;
 import utility.TypeError;
 
 /**
- * Class that perform delete post request.
+ * Class used to send and receive delete post request and response.
  * @author Gianmarco Petrocchi.
  */
 public class DeletePostRequest {
 
 	/**
-	 * Static method used to perform delete post action, only when the client is already logged. It sends a request with this syntax: delete:idPost, if the request is different from this syntax the client will receive
+	 * Static method used to send and receive delete post request and response, only when the client is already logged. It sends a request with this syntax: delete:idPost, if the request is different from this syntax the client will receive
 	 * INVALIDREQUESTERROR. The idPost specified in request must be of a existed post in Winsome, otherwise the client will receive IDPOSTNOTEXISTS error. A user can delete only post in his blog, not post in his feed.
 	 * @param requestSplitted Client request.
 	 * @param writerOutput BufferedWriter used to write/send request to server.

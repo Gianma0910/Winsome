@@ -7,13 +7,26 @@ import java.net.MulticastSocket;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Thread client side that communicates with server using UDP protocol. 
+ * This thread will join a multicast group where will receive notification about gain calculation.
+ * @author Gianmarco Petrocchi
+ *
+ */
 public class MulticastClient extends Thread {
 	
+	/** Multicast UDP socket.*/
 	private MulticastSocket multicastSocket;
+	/** Multicast group to receive notification.*/
 	private InetAddress multicastGroup;
+	/** Multicast port.*/
 	private int multicastPort;
+	/** Flag to see if this thread is still running*/
 	private boolean opened;
 	
+	/**
+	 * Basic constructor. Initially the parameters are null or 0 because they will be set after a successfully login.
+	 */
 	public MulticastClient() {
 		this.multicastSocket = null;
 		this.multicastGroup = null;
@@ -37,10 +50,13 @@ public class MulticastClient extends Thread {
 				System.exit(1);
 			}
 			@SuppressWarnings("unused")
-			String s = new String(packet.getData(), StandardCharsets.US_ASCII);
+			String s = new String(packet.getData(), StandardCharsets.US_ASCII); //used only to receive the message of server.
 		}
 	}
 	
+	/**
+	 *Set the multicast socket and join the multicast group.
+	 */
 	public void setMulticastSocket() {
 		try {
 			this.multicastSocket = new MulticastSocket(multicastPort);
@@ -52,14 +68,25 @@ public class MulticastClient extends Thread {
 	
 	}
 	
+	/**
+	 * Set the multicast port.
+	 * @param multicastPort Multicast port.
+	 */
 	public void setMulticastPort(int multicastPort) {
 		this.multicastPort = multicastPort;
 	}
 	
+	/**
+	 * Set the multicast group.
+	 * @param multicastGroup Multicast group.
+	 */
 	public void setMulticastGroup(InetAddress multicastGroup) {
 		this.multicastGroup = multicastGroup;
 	}
 	
+	/**
+	 * Interrupt the current thread. It will leave the multicast group and close the multicast socket.
+	 */
 	public void interrupt() {
 		try {
 			this.opened = false;

@@ -3,15 +3,24 @@ package RMI;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
-import exceptions.UserAlreadyExistsException;
 import server.database.Database;
 import utility.TypeError;
 import utility.User;
 
+/**
+ * Class used to perform register user action.
+ * @author Gianmarco Petrocchi.
+ *
+ */
 public class RMIRegistrationImpl implements RMIRegistration {
 
+	/** Database*/
 	private Database db;
 	
+	/**
+	 * Basic constructor.
+	 * @param db Database.
+	 */
 	public RMIRegistrationImpl(Database db) {
 		super();
 		this.db = db;

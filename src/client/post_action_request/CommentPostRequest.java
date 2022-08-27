@@ -3,20 +3,22 @@ package client.post_action_request;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Scanner;
 
 import utility.TypeError;
 
 /**
- * Class that perform add comment to post.
+ * Class used to send and receive add comment request and response.
  * @author Gianmarco Petrocchi.
  */
 public class CommentPostRequest {
 
 	/**
-	 * Static method used to add comment to a specified post, only when the client is already logged. It sends a request with this syntax: comment:idPost:content, if the request is different from this syntax the client
-	 * will receive a INVALIDREQUESTERROR. The idPost specified must be of a existed post in Winsome, otherwise the client will receive IDPOSTNOTEXISTS error. A user can comment only post in his feed, not post in his blog.
+	 * Static method used to send and receive add comment request and response, only when the client is already logged. It sends a request with this syntax: comment:idPost, if the request is different from this syntax the client
+	 * will receive a INVALIDREQUESTERROR. After a successfully response receive from server, the client write in System.in the content of comment, this string is encoded in Base64 with StandardCharset.UTF_8 and then sends to server.
+	 * With this char set the client could use all possible characters.The idPost specified must be of a existed post in Winsome, otherwise the client will receive IDPOSTNOTEXISTS error. A user can comment only post in his feed, not post in his blog.
 	 * @param requestSplitted Client request.
 	 * @param writerOutput BufferedWriter used to write/send request to server.
 	 * @param readerInput BufferedReader used to read/receive response by server.
@@ -53,11 +55,9 @@ public class CommentPostRequest {
 				System.out.print("Insert the content of comment:\t");
 				String contentComment = scan.nextLine();
 				
-				byte[] encodedContentComment = Base64.getEncoder().encode(contentComment.getBytes());
+				String encodedContentComment = Base64.getEncoder().encodeToString(contentComment.getBytes(StandardCharsets.UTF_8));
 				
-				String cc = new String(encodedContentComment, 0, encodedContentComment.length);
-				
-				writerOutput.write(cc);
+				writerOutput.write(encodedContentComment);
 				writerOutput.newLine();
 				writerOutput.flush();
 				

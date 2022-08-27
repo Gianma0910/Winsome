@@ -12,8 +12,8 @@ import exceptions.InvalidConfigurationException;
 import exceptions.InvalidPortNumberException;
 
 /**
- * Class used to set the parameters for client that are used during the interaction with server
- * @author Gianmarco Petrocchi
+ * Class used to set the parameters for client that are used during the interaction with server.
+ * @author Gianmarco Petrocchi.
  *
  */
 public class ClientConfiguration {

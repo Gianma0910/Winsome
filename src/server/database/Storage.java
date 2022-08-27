@@ -119,7 +119,7 @@ public abstract class Storage {
 				else
 					line = line + "\n";
 				buffer.clear();
-				data = line.getBytes(StandardCharsets.US_ASCII);
+				data = line.getBytes(StandardCharsets.UTF_8);
 				buffer.put(data);
 				buffer.flip();
 				while(buffer.hasRemaining()) c.write(buffer);
@@ -169,7 +169,7 @@ public abstract class Storage {
 
 	private static void writeChar(FileChannel c, char d) throws IOException {
 		CharBuffer charBuffer = CharBuffer.wrap(new char[] {d});
-		ByteBuffer byteBuffer = StandardCharsets.US_ASCII.encode(charBuffer);
+		ByteBuffer byteBuffer = StandardCharsets.UTF_8.encode(charBuffer);
 		
 		c.write(byteBuffer);
 		

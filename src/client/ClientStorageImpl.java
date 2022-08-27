@@ -6,16 +6,29 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import RMI.FollowerDatabase;
+import RMI.ClientStorage;
 import utility.TypeError;
 
-public class FollowerDatabaseImpl extends UnicastRemoteObject implements FollowerDatabase, Serializable {
+@SuppressWarnings("serial")
+/**
+ * Class that represents the storage where there are updated followers and following lists.
+ * This two lists are updated with callback service and asynchronous response by server.
+ * @author Gianmarco Petrocchi.
+ */
+public class ClientStorageImpl extends UnicastRemoteObject implements ClientStorage, Serializable {
 
+	/** Followers list.*/
 	private ArrayList<String> followers;
+	/** Following list.*/
 	private ArrayList<String> following;
+	/** Username that the client used to login in Winsome.*/
 	private String username;
 	
-	public FollowerDatabaseImpl() throws RemoteException {
+	/**
+	 * Basic constructor. The username initially is null because it will be set after a successfully login.
+	 * @throws RemoteException Only when occurs remote error.
+	 */
+	public ClientStorageImpl() throws RemoteException {
 		super();
 		this.followers = new ArrayList<>();
 		this.following = new ArrayList<>();
@@ -74,16 +87,26 @@ public class FollowerDatabaseImpl extends UnicastRemoteObject implements Followe
 		return following;
 	}
 	
+	/**
+	 * @return Followers list.
+	 */
 	public ArrayList<String> getFollowers(){
 		return followers;
 	}
 	
+	/**
+	 * Set the username of client. Method used after a successfully login.
+	 * @param username Username used by client to login.
+	 */
 	public void setUsername(String username) {
 		Objects.requireNonNull(username, "Username to associate is null");
 		
 		this.username = username;
 	}
 	
+	/**
+	 * @return The username that the client used to login.
+	 */
 	public String getUsername() {
 		return username;
 	}

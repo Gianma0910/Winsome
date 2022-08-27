@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import RMI.FollowerDatabase;
+import RMI.ClientStorage;
 import RMI.RMICallback;
 import server.database.Database;
 import utility.TypeError;
@@ -31,7 +31,7 @@ public class UnfollowingServiceImpl implements UnfollowingService {
 			return;
 		}
 		
-		FollowerDatabase stubUsernameAssociated = stubCallbackRegistration.getCallback(usernameToUnfollow);
+		ClientStorage stubUsernameAssociated = stubCallbackRegistration.getCallback(usernameToUnfollow);
 		
 		String usernameRemoveFollow = db.getUsernameBySocket(socket);
 		String error = stubUsernameAssociated.removeFollower(usernameRemoveFollow);
@@ -43,7 +43,7 @@ public class UnfollowingServiceImpl implements UnfollowingService {
 			db.removeFollower(usernameToUnfollow, usernameRemoveFollow);
 			
 			ArrayList<String> followingListUser = db.getFollowingListByUsername(usernameRemoveFollow);
-			FollowerDatabase stub = stubCallbackRegistration.getCallback(usernameRemoveFollow);
+			ClientStorage stub = stubCallbackRegistration.getCallback(usernameRemoveFollow);
 			stub.setFollowing(followingListUser);
 			
 			sendError(error, writerOutput);

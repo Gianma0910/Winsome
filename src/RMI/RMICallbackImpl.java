@@ -6,17 +6,26 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import exceptions.ClientNotRegisteredException;
 
+/**
+ * Class that represents a list of ClientStorage stub. This class is used to register a client stub into followers/following update service.
+ * @author Gianmarco Petrocchi.
+ *
+ */
 public class RMICallbackImpl implements RMICallback {
 	
-	private ConcurrentHashMap<String, FollowerDatabase> clientsStubs;
+	/**
+	 * Map of users that are registered in followers/following service. 
+	 * <K, V>: K is a String that represents the username used by client to logged in Winsome, V is a ClientStorgeObject that represents the stub.
+	 */
+	private ConcurrentHashMap<String, ClientStorage> clientsStubs;
 	
 	public RMICallbackImpl() {
 		super();
-		this.clientsStubs = new ConcurrentHashMap<String, FollowerDatabase>();
+		this.clientsStubs = new ConcurrentHashMap<String, ClientStorage>();
 	}
 
 	@Override
-	public void registerForCallback(FollowerDatabase stub, String username) throws RemoteException{
+	public void registerForCallback(ClientStorage stub, String username) throws RemoteException{
 		Objects.requireNonNull(stub, "Stub is null");
 		Objects.requireNonNull(username, "Username associate to the stub is null");
 	
@@ -24,7 +33,7 @@ public class RMICallbackImpl implements RMICallback {
 	}
 
 	@Override
-	public void unregisterForCallback(FollowerDatabase stub) throws RemoteException, ClientNotRegisteredException {
+	public void unregisterForCallback(ClientStorage stub) throws RemoteException, ClientNotRegisteredException {
 		Objects.requireNonNull(stub, "The specified stub is null");
 		
 		if(!clientsStubs.containsValue(stub))
@@ -39,7 +48,7 @@ public class RMICallbackImpl implements RMICallback {
 	}
 	
 	@Override
-	public FollowerDatabase getCallback(String username) {
+	public ClientStorage getCallback(String username) {
 		return clientsStubs.get(username);
 	}
 	

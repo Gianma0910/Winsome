@@ -13,8 +13,21 @@ import com.google.gson.reflect.TypeToken;
 import client.PostWrapper;
 import utility.TypeError;
 
+/**
+ * Class used to send and receive view blog request and response.
+ * @author Gianmarco Petrocchi.
+ *
+ */
 public class ViewBlogRequest {
 
+	/**
+	 * Static method used to send and receive view blog request and response, only when the client is already logged. It sends a request with this syntax: blog, if it is different from this syntax the client will receive
+	 * INVALIDREQUESTERROR. The client will receive by server a string that represents the list of his posts and then it serialized its with Gson. The client will see idPost, author and title of posts.
+	 * @param request ClientRequest.
+	 * @param writerOutput BufferedWriter used to write/send request to server.
+	 * @param readerInput BufferedReader used to read/receive response by server.
+	 * @throws IOException Only when occurs I/O error.
+	 */
 	public static void performViewBlogAction(String [] request, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException {
 		
 		StringBuilder requestClient = new StringBuilder();

@@ -1,0 +1,53 @@
+[{
+  "username": "minnie",
+  "transactions": [
+    {
+      "amount": 0.05981943576527995,
+      "timestamp": "Sat Aug 27 16:03:38 CEST 2022"
+    },
+    {
+      "amount": 0.03679546805226399,
+      "timestamp": "Sat Aug 27 16:04:06 CEST 2022"
+    },
+    {
+      "amount": 0.011899345608898453,
+      "timestamp": "Sat Aug 27 16:04:20 CEST 2022"
+    }
+  ]
+},{
+  "username": "pluto",
+  "transactions": [
+    {
+      "amount": 0.029909717882639974,
+      "timestamp": "Sat Aug 27 16:03:31 CEST 2022"
+    },
+    {
+      "amount": 0.022643364955239376,
+      "timestamp": "Sat Aug 27 16:03:45 CEST 2022"
+    },
+    {
+      "amount": 0.019518382750519602,
+      "timestamp": "Sat Aug 27 16:04:06 CEST 2022"
+    }
+  ]
+},{
+  "username": "pippo",
+  "transactions": [
+    {
+      "amount": 0.01586579414519794,
+      "timestamp": "Sat Aug 27 16:03:31 CEST 2022"
+    },
+    {
+      "amount": 0.03173158829039588,
+      "timestamp": "Sat Aug 27 16:03:38 CEST 2022"
+    },
+    {
+      "amount": 0.012011312461858216,
+      "timestamp": "Sat Aug 27 16:03:45 CEST 2022"
+    },
+    {
+      "amount": 0.022432288411979976,
+      "timestamp": "Sat Aug 27 16:04:20 CEST 2022"
+    }
+  ]
+}]

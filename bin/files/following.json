@@ -1,0 +1,18 @@
+[{
+  "username": "minnie",
+  "following": [
+    "pippo",
+    "pluto"
+  ]
+},{
+  "username": "pluto",
+  "following": [
+    "minnie"
+  ]
+},{
+  "username": "pippo",
+  "following": [
+    "pluto",
+    "minnie"
+  ]
+}]

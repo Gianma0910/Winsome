@@ -13,67 +13,67 @@ import exceptions.InvalidConfigurationException;
 import exceptions.InvalidPortNumberException;
 
 /**
- * Class used to set the parameters for server that are used during the interaction with client
- * @author Gianmarco Petrocchi
+ * Class used to set the parameters for server that are used during the interaction with client.
+ * @author Gianmarco Petrocchi.
  */
 public class ServerConfiguration {
-	/** Server address*/
+	/** Server address.*/
 	public InetAddress SERVERADDRESS;
-	/** TCP port*/
+	/** TCP port.*/
 	public int TCPPORT;
-	/** UDP port*/
+	/** UDP port.*/
 	public int UDPPORT;
-	/** Port where is located the RMI Registry*/
+	/** Port where is located the RMI Registry.*/
 	public int RMIREGISTRYPORT;
-	/** Host where is located the RMI Registry*/
+	/** Host where is located the RMI Registry.*/
 	public String RMIREGISTRYHOST;
-	/** Multicast port */
+	/** Multicast port. */
 	public int MULTICASTPORT;
-	/** Multicast address */
+	/** Multicast address. */
 	public InetAddress MULTICASTADDRESS;
-	/** Name of the registration service offered by Registry*/
+	/** Name of the registration service offered by Registry.*/
 	public String REGISTRATIONSERVICENAME;
-	/** Name of follower callback service offered by Registry*/
+	/** Name of follower callback service offered by Registry.*/
 	public String CALLBACKSERVICENAME;
-	/** Socket timeout for thread pool*/
+	/** Socket timeout for thread pool.*/
 	public int SOCKETTIMEOUT;
-	/** Core pool size of thread pool*/
+	/** Core pool size of thread pool.*/
 	public int COREPOOLSIZE;
-	/** Keep alive time of thread pool*/
+	/** Keep alive time of thread pool.*/
 	public int KEEPALIVETIME;
-	/** Maximum core pool size of thread pool */
+	/** Maximum core pool size of thread pool. */
 	public int MAXIMUMCOREPOOLSIZE;
-	/** Number of thread in threadpool's BlockingQueue */
+	/** Number of thread in threadpool's BlockingQueue. */
 	public int THREADBLOCKINGQUEUE;
-	/** Delay of calculation earnings */
+	/** Delay of calculation earnings. */
 	public int DELAYEARNINGSCALCULATION;
-	/** Delay of database backup*/
+	/** Delay of database backup.*/
 	public int DELAYBACKUP;
-	/** Delay of thread pool shutdown */
+	/** Delay of thread pool shutdown. */
 	public long DELAYSHUTDOWNTHREADPOOL;
-	/** Author percentage earn used to distributed the earn for a post*/
+	/** Author percentage earn used to distributed the earn for a post.*/
 	public float AUTHORPERCENTAGEEARN;
-	/** Directory where files will be created to storage database data*/
+	/** Directory where files will be created to storage database data.*/
 	public String DIRECTORYFORFILE;
-	/** Name of the file where there are stored all the users of winsome*/
+	/** Name of the file where there are stored all the users of winsome.*/
 	public String USERSFILENAMEPATH = "users.json";
-	/** Name of the file where there are stored all the posts created in winsome*/
+	/** Name of the file where there are stored all the posts created in winsome.*/
 	public String POSTSFILENAMEPATH = "posts.json";
-	/** Name of the file where there are stored all the posts' mutable data */
+	/** Name of the file where there are stored all the posts' mutable data. */
 	public String MUTABLEDATAPOSTSFILENAMEPATH = "mutable_data.json";
-	/** Name of the file where there are stored all the posts' comments*/
+	/** Name of the file where there are stored all the posts' comments.*/
 	public String COMMENTSFILENAMEPATH = "comments.json";
-	/** Name of the file where there are stored all the posts' votes*/
+	/** Name of the file where there are stored all the posts' votes.*/
 	public String VOTESFILENAMEPATH = "votes.json";
-	/** Name of the fie where there are stored all the transactions made by the server to distributed the earns*/
+	/** Name of the fie where there are stored all the transactions made by the server to distributed the earns.*/
 	public String TRANSACTIONSFILENAMEPATH = "transactions.json";
-	/** Name of the file where there are stored all the users that a certain user x is following in Winsome */
+	/** Name of the file where there are stored all the users that a certain user x is following in Winsome. */
 	public String FOLLOWINGFILENAMEPATH = "following.json";
 	
 	/**
-	 * Basic constructor where all the parameters are set by reading a configuration file
-	 * @param configurationFile Where there are parameters. Cannot be null
-	 * @throws InvalidConfigurationException Occurs when there are some error during configuration of server
+	 * Basic constructor where all the parameters are set by reading a configuration file.
+	 * @param configurationFile Where there are parameters. Cannot be null.
+	 * @throws InvalidConfigurationException Occurs when there are some error during configuration of server.
 	 */
 	public ServerConfiguration(File configurationFile) throws InvalidConfigurationException{
 		try {
@@ -210,12 +210,12 @@ public class ServerConfiguration {
 	}
 	
 	/**
-	 * This method check is the port number is legal and then return an Integer that represents the port number
-	 * @param portNumber Port number. Cannot be null
-	 * @return An Integer that represents the port number
-	 * @throws InvalidPortNumberException Occurs when the port number is illegal, it isn't belongs [1024, 65535]
-	 * @throws NumberFormatException Occurs when the string does not contains a parsable integer
-	 * @throws NullPointerException Occurs when the parameter is null
+	 * This method check is the port number is legal and then return an Integer that represents the port number.
+	 * @param portNumber Port number. Cannot be null.
+	 * @return An Integer that represents the port number.
+	 * @throws InvalidPortNumberException Occurs when the port number is illegal, it isn't belongs [1024, 65535].
+	 * @throws NumberFormatException Occurs when the string does not contains a parsable integer.
+	 * @throws NullPointerException Occurs when the parameter is null.
 	 */
 	private int checkAndGetPortNumber(String portNumber) throws InvalidPortNumberException, NumberFormatException, NullPointerException{
 		
@@ -230,8 +230,8 @@ public class ServerConfiguration {
 	}
 	
 	/** 
-	 * This method return the multicast info for client 
-	 * @return Multicast info for client (MULTICAST_ADDRESS, MULTICAST_PORT)
+	 * This method return the multicast info for client.
+	 * @return Multicast info for client (MULTICAST_ADDRESS, MULTICAST_PORT).
 	 */
 	public String getMulticastInfo() {
 		return MULTICASTADDRESS.toString() + ":" + MULTICASTPORT;

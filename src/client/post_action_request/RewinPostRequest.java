@@ -7,15 +7,15 @@ import java.io.IOException;
 import utility.TypeError;
 
 /**
- * Class that perform rewin post request.
+ * Class used to send and receive rewin post request and response.
  * @author Gianmarco Petrocchi.
  *
  */
 public class RewinPostRequest {
 
 	/**
-	 * Static class used to rewin post action, only when the client is already logged. It sends a request with this syntax: rewin:idPost, if the request is different from this syntax the client will receive
-	 * INVALIDREQUESTERROR. The idPost must be of a existed post in Winsome, otherwise the client will receive IDPOSTNOTEXISTS. A user can rewin only post in his feed, not post in his blog.
+	 * Static class used to send and receive rewin post request and response, only when the client is already logged. It sends a request with this syntax: rewin:idPost, if the request is different from this syntax the client will receive
+	 * INVALIDREQUESTERROR. The idPost must be of a existed post in Winsome, otherwise the client will receive IDPOSTNOTEXISTS. A user can rewin/share only post in his feed, not post in his blog.
 	 * @param requestSplitted Client request.
 	 * @param writerOutput BufferedWriter used to write/send request to server.
 	 * @param readerInput BufferedReader used to read/receive response by server.

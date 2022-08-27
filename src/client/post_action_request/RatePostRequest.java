@@ -7,13 +7,13 @@ import java.io.IOException;
 import utility.TypeError;
 
 /**
- * Class that perform the rate post request.
+ * Class used to send and receive rate post request and response.
  * @author Gianmarco Petrocchi.
  */
 public class RatePostRequest {
 
 	/**
-	 * Static method used to perform rate post action, only when the client is already logged. It sends a request with this syntax: rate:idPost:vote, if this request is different from this syntax the client will receive
+	 * Static method used to send and receive rate post request and response, only when the client is already logged. It sends a request with this syntax: rate:idPost:vote, if this request is different from this syntax the client will receive
 	 * INVALIDREQUESTERROR. The idPost specified in request must be of a existed post in Winsome, otherwise the client will receive VOTEPOSTNOTEXISTS. A user can vote only post in his feed, not post in his blog. 
 	 * The vote specified in request must be an Integer, 1 or -1 not other number otherwise the client will receive VOTENUMBERNOTVALID error.
 	 * @param requestSplitted Client request.

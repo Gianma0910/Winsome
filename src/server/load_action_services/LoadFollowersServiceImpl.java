@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
-import RMI.FollowerDatabase;
+import RMI.ClientStorage;
 import RMI.RMICallback;
 import server.database.Database;
 import utility.TypeError;
@@ -22,7 +22,7 @@ public class LoadFollowersServiceImpl implements LoadFollowersService{
 	
 	@Override
 	public void loadFollowers(RMICallback stubCallbackRegistration, String username) throws RemoteException, IOException {
-		FollowerDatabase databaseClient = stubCallbackRegistration.getCallback(username);
+		ClientStorage databaseClient = stubCallbackRegistration.getCallback(username);
 		
 		ArrayList<String> followersUser = db.getFollowerListByUsername(username);
 		
