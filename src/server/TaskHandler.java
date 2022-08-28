@@ -26,23 +26,31 @@ import server.wallet_services.GetWalletServicesImpl;
 import utility.TypeError;
 
 /**
- * Thread that connect to client and receive the client request
- * @author Gianmarco Petrocchi
+ * Server thread that connect to client and receive the client request.
+ * @author Gianmarco Petrocchi.
  *
  */
 public class TaskHandler implements Runnable {
 
+	/** Socket TCP of server.*/
 	private Socket socket;
+	/** Database.*/
 	private Database db;
+	/** BufferedReader used to write/send response to client.*/
 	private BufferedWriter writerOutput;
+	/** BufferedReader used to read/receive request by clien.*/
 	private BufferedReader readerInput;
+	/** Server configuration.*/
 	private ServerConfiguration serverConf;
+	/** Stub of callback service.*/
 	private RMICallback stubCallbackRegistration;
 	
 	/**
 	 * Basic constructor of TaskHandler class
-	 * @param socket Socket created by ServerSocket.accept(), it communicate with the client. Cannot be null
-	 * @param db Database. Cannot be null
+	 * @param socket Socket created by ServerSocket.accept(), it communicate with the client. Cannot be null.
+	 * @param serverConf Server configuration used to set some constructor's variables. Cannot be null.
+	 * @param db Database. Cannot be null.
+	 * @param stubCallbackRegistration Stub callback service. Cannot be null.
 	 */
 	public TaskHandler(Socket socket, Database db, ServerConfiguration serverConf, RMICallback stubCallbackRegistration) {
 		Objects.requireNonNull(socket, "Socket is null");
@@ -85,9 +93,8 @@ public class TaskHandler implements Runnable {
 					if(requestSplitted.length != 3) {
 						sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
 					}else {
-						//take the username written in the request client
 						String username = requestSplitted[1];
-						//take the password written in the request client
+	
 						String password = requestSplitted[2];
 
 						LoginServiceImpl loginService = new LoginServiceImpl(db, writerOutput);

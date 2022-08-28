@@ -2,7 +2,6 @@ package utility;
 
 /**
  * Utility class that contains all the type of error that can occurs during the execution of the client request.
- * It doesn't nedd to be istantiated
  * @author Gianmarco Petrocchi
  */
 public class TypeError {

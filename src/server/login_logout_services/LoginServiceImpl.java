@@ -9,6 +9,11 @@ import configuration.ServerConfiguration;
 import server.database.Database;
 import utility.TypeError;
 
+/**
+ * Class that implements LoginService. This class is used to login a user in Winsome.
+ * @author Gianmarco Petrocchi.
+ *
+ */
 public class LoginServiceImpl implements LoginService{
 
 	private Database db;

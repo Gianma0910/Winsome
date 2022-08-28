@@ -10,6 +10,12 @@ import RMI.RMICallback;
 import server.database.Database;
 import utility.TypeError;
 
+/**
+ * Class that implements UnfollowingService. This class is used to remove follower in ClientStorage's followers list
+ * and to remove follower in Database's collection.
+ * @author Gianmarco Petrocchi.
+ *
+ */
 public class UnfollowingServiceImpl implements UnfollowingService {
 	private Database db;
 	private BufferedWriter writerOutput;
@@ -31,14 +37,11 @@ public class UnfollowingServiceImpl implements UnfollowingService {
 			return;
 		}
 		
-		ClientStorage stubUsernameAssociated = stubCallbackRegistration.getCallback(usernameToUnfollow);
-		
 		String usernameRemoveFollow = db.getUsernameBySocket(socket);
-		String error = stubUsernameAssociated.removeFollower(usernameRemoveFollow);
 		
-		if(error.equals(TypeError.FOLLOWERERROR) || error.equals(TypeError.UNFOLLOWHIMSELFERROR)) {
-			sendError(error, writerOutput);
-		}else if(error.equals(TypeError.SUCCESS)) {
+		//check if the username that represents the following to remove is registered but not logged
+		//if this two conditions are satisfied will not update ClientStorage's followers list of usernameToUnFollow.
+		if(db.isUserRegistered(usernameToUnfollow) == true && db.isUserLogged(usernameToUnfollow) == false) {
 			db.removeFollowing(usernameRemoveFollow, usernameToUnfollow);
 			db.removeFollower(usernameToUnfollow, usernameRemoveFollow);
 			
@@ -46,8 +49,25 @@ public class UnfollowingServiceImpl implements UnfollowingService {
 			ClientStorage stub = stubCallbackRegistration.getCallback(usernameRemoveFollow);
 			stub.setFollowing(followingListUser);
 			
-			sendError(error, writerOutput);
+			sendError(TypeError.SUCCESS, writerOutput);
+		}else {
+			ClientStorage stubUsernameAssociated = stubCallbackRegistration.getCallback(usernameToUnfollow);
+			String error = stubUsernameAssociated.removeFollower(usernameRemoveFollow);
+			
+			if(error.equals(TypeError.FOLLOWERERROR) || error.equals(TypeError.UNFOLLOWHIMSELFERROR)) {
+				sendError(error, writerOutput);
+			}else if(error.equals(TypeError.SUCCESS)) {
+				db.removeFollowing(usernameRemoveFollow, usernameToUnfollow);
+				db.removeFollower(usernameToUnfollow, usernameRemoveFollow);
+				
+				ArrayList<String> followingListUser = db.getFollowingListByUsername(usernameRemoveFollow);
+				ClientStorage stub = stubCallbackRegistration.getCallback(usernameRemoveFollow);
+				stub.setFollowing(followingListUser);
+				
+				sendError(error, writerOutput);
+			}
 		}
+
 	}
 
 	private void sendError(String error, BufferedWriter writerOutput) throws IOException {

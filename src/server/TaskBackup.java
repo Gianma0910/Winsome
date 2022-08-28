@@ -7,18 +7,37 @@ import java.util.Objects;
 import configuration.ServerConfiguration;
 import server.database.Database;
 
+/**
+ * Server thread that do backup at certain interval of time.
+ * @author Gianmarco Petrocchi.
+ *
+ */
 public class TaskBackup implements Runnable{
 
+	/** Database.*/
 	private Database db;
+	/** Interval of time for doing backup.*/
 	private int interval;
+	/** File of user's data for registration.*/
 	private File usersFile;
+	/** File of user's following.*/
 	private File followingFile;
+	/** File of user's transactions.*/
 	private File transactionsFile;
+	/** File of posts' immutable data. */
 	private File postsFile;
+	/** File of posts' votes.*/
 	private File votesFile;
+	/** File of posts' comments.*/
 	private File commentsFile;
+	/** File of posts' mutable data.*/
 	private File mutableDataPostFile;
 	
+	/**
+	 * Basic contructor.
+	 * @param db Database. Cannot be null.
+	 * @param serverConf Server configuration to set the various constructor's variables. Cannot be null.
+	 */
 	public TaskBackup(Database db, ServerConfiguration serverConf) {
 		Objects.requireNonNull(db, "Parameter database is null");
 		Objects.requireNonNull(serverConf, "Server configuration is null");

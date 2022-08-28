@@ -381,6 +381,11 @@ public class Database extends Storage{
 		}
 	}
 	
+	/**
+	 * Method used to send to user specified by parameter username his following list.
+	 * @param username Username used to get his following list. Cannot be null.
+	 * @return A string that represents his list of following.
+	 */
 	public String toStringFollowingListByUsername(String username) {
 		Objects.requireNonNull(username, "Username used to get his following list is null");
 		StringBuilder response = new StringBuilder();
@@ -403,6 +408,11 @@ public class Database extends Storage{
 		return "[]";
 	}
 	
+	/**
+	 * Method used to get the follwing list of user specified by parameter username.
+	 * @param username Username used to get his following list. Cannot be null.
+	 * @return An ArrayList<String> that represents the following list of user.
+	 */
 	public ArrayList<String> getFollowingListByUsername(String username){
 		Objects.requireNonNull(username, "Username used to get his following list is null");
 		
@@ -413,6 +423,12 @@ public class Database extends Storage{
 		return null;
 	}
 	
+	/**
+	 * Method used to send to user a list of registered users with at least one tag in common. The user will see
+	 * for all the users only username and tags list.
+	 * @param username Username used to get the specified user with his tag list. Cannot be null.
+	 * @return A String that represents the list of register users with at least one tag in common.
+	 */
 	public String getRegisteredUsersJson(String username) {
 		Objects.requireNonNull(username, "Username used to get the specified user is null");
 		
@@ -477,10 +493,19 @@ public class Database extends Storage{
 		return "[]";
 	}
 	
+	/**
+	 * Synchronized method used to get and increment the AtomicInteger variable. This variable is common
+	 * for all the server threads that work with Database class.
+	 * @return An Integer that represents idPost.
+	 */
 	public synchronized int getAndIncrementIdPost() {
 		return idPost.getAndIncrement();
 	}
 	
+	/**
+	 * Set the list of posts of user specified by username.
+	 * @param username Username used to set his list of posts. Cannot be null.
+	 */
 	public void setPostListForUser(String username) {
 		Objects.requireNonNull(username, "Username used to set his posts list is null");
 		
@@ -491,6 +516,14 @@ public class Database extends Storage{
 		}
 	}
 	
+	/**
+	 * Add a post in Winsome with the specified idPost, author, title and content.
+	 * @param idPost Id post., incremented by server threads. Cannot be null.
+	 * @param authorPost Author of post. Cannot be null.
+	 * @param titlePost Title of post. Cannot be null.
+	 * @param contentPost Content of post. Cannot be null.
+	 * @return A String that indicates the successfully add post in Winsome, or a String that indicates the erroneous add post.
+	 */
 	public String addPostInWinsome(int idPost, String authorPost, String titlePost, String contentPost) {
 		Objects.requireNonNull(idPost,  "Id post is null");
 		Objects.requireNonNull(authorPost, "Author post is null");
@@ -512,6 +545,11 @@ public class Database extends Storage{
 		return "Impossible to create post with id: " + idPost;
 	}
 
+	/**
+	 * Method used to send to user his list of posts. The user will see for all the posts only idPost, author and title.
+	 * @param username Username used to get the list of posts of the specified user. Cannot be null.
+	 * @return A String that represents his list of posts. 
+	 */
 	public String getUserPostJson(String username) {
 		Objects.requireNonNull(username, "Username used to get his posts list is null");
 		
@@ -550,6 +588,13 @@ public class Database extends Storage{
 		return "[]";
 	}
 	
+	/**
+	 * Method used to send a user his feed, that is the list of posts of the users he follows.
+	 * This method take the list of following of the user specified by username and then build his feed.
+	 * The user for all the posts in his feed will see idPost, author and title.
+	 * @param username Username used to get his following list, used to build his feed. Cannot be null.
+	 * @return A String that represents his feed.
+	 */
 	public String getUserFeedJson(String username) {
 		Objects.requireNonNull(username, "Username used to get his feed is null");
 		
@@ -596,6 +641,12 @@ public class Database extends Storage{
 		return "[]";
 	}
 	
+	/**
+	 * Method used to send to client a certain post specified by parameter idPost. The user will see for this post only 
+	 * title, content, comments, and number of positive and negative votes.
+	 * @param idPost Id of post used to get his data. Cannot be null.
+	 * @return A String that represents the single post with his data specified in the description of method.
+	 */
 	public String getPostByIdJson(int idPost) {
 		Objects.requireNonNull(idPost, "Id used to get the specified post is null");
 		
@@ -618,6 +669,10 @@ public class Database extends Storage{
 		return gson.toJson(p);
 	}
 	
+	/**
+	 * @param idPost Id of post to get from database. Cannot be null.
+	 * @return The post specified by parameter idPost.
+	 */
 	public Post getPostById(int idPost) {
 		Objects.requireNonNull(idPost, "Id used to get the specified post is null");
 		
@@ -636,6 +691,12 @@ public class Database extends Storage{
 		return null;
 	}
 	
+	/**
+	 * Method used to check if the user specified by username is the author of the post specified by idPost.
+	 * @param idPost Id of post. Cannot be null.
+	 * @param username Username of user. Cannot be null.
+	 * @return true if the user is the author of post, false otherwise.
+	 */
 	public boolean isPostAuthor(int idPost, String username) {
 		Objects.requireNonNull(idPost, "Id used to get the specified post is null");
 		Objects.requireNonNull(username, "Username used to get check if the user is the author is null");
@@ -646,6 +707,12 @@ public class Database extends Storage{
 		
 	}
 	
+	/**
+	 * Method used to check if the post specified by idPost is in user's feed specified by username.
+	 * @param idPost Id of post. Cannot be null.
+	 * @param username Username of user. Cannot be null.
+	 * @return true if the post is in user's feed, false otherwise.
+	 */
 	public boolean isPostInFeed(int idPost, String username) {
 		Objects.requireNonNull(idPost, "Id used to get the specified post is null");
 		Objects.requireNonNull(username, "Username used to get user's feed is null");
@@ -669,12 +736,22 @@ public class Database extends Storage{
 		return false;
 	}
 	
+	/**
+	 * Method used to check if the post specified by idPost existed in Winsome.
+	 * @param idPost Id of post. Cannot be null.
+	 * @return true if the post existed, false otherwise.
+	 */
 	public boolean isPostNotNull(int idPost) {
 		Objects.requireNonNull(idPost, "Id used to get the specified post is null");
 		
 		return getPostById(idPost) != null ? true : false;
 	}
 	
+	/**
+	 * Remove post specified by idPost from Winsome. When the post is removed all its votes and comments are deleted.
+	 * This method used a flag to see if the post is deleted since the last backup.
+	 * @param idPost Id of post. Cannot be null.
+	 */
 	public void removePostFromWinsome(int idPost) {
 		Objects.requireNonNull(idPost, "Id used to get the specifies post is null");
 		
@@ -711,6 +788,13 @@ public class Database extends Storage{
 		}
 	}
 
+	/**
+	 * Add a vote to a specified post in Winsome. If it is a positive votes it will be used to calculate the gains of the user,
+	 * othrewise it will not be considered.
+	 * @param idPost Id of post to add vote. Cannot be null.
+	 * @param vote Positive or negative vote, can be only 1 or -1. Cannot be null.
+	 * @param authorVote Author of vote. Cannot be null.
+	 */
 	public void addVoteToPost(int idPost, int vote, String authorVote) {
 		Objects.requireNonNull(idPost, "Id post is null");
 		Objects.requireNonNull(vote, "New vote for post is null");
@@ -736,36 +820,6 @@ public class Database extends Storage{
 				p.setNewVotes(numVotes);
 			}
 			
-//			if(postToBeBackedup.containsKey(idPost)) {
-//				Post post = postToBeBackedup.get(idPost);
-//				post.addVote(v);
-//
-//				if(v.getVote() == 1) {
-//					p.getCurators().add(authorVote);
-//					int numVotes = p.getNewVotes();
-//					numVotes++;
-//					p.setNewVotes(numVotes);
-//				}else {
-//					int numVotes = p.getNewVotes();
-//					numVotes--;
-//					p.setNewVotes(numVotes);
-//				}
-//			}else if(postBackedup.containsKey(idPost)) {
-//				Post post = postBackedup.get(idPost);
-//				post.addVote(v);
-//
-//				if(v.getVote() == 1) {
-//					p.getCurators().add(authorVote);
-//					int numVotes = p.getNewVotes();
-//					numVotes++;
-//					p.setNewVotes(numVotes);
-//				}else {
-//					int numVotes = p.getNewVotes();
-//					numVotes--;
-//					p.setNewVotes(numVotes);
-//				}
-//			}
-			
 			ArrayList<Post> posts = blogUser.get(p.getAuthor());
 			
 			for(Post post : posts) {
@@ -790,6 +844,12 @@ public class Database extends Storage{
 		}
 	}
 	
+	/**
+	 * Method used to check if the post specified by idPost is already voted by user specified by authorVote.
+	 * @param idPost Id of post. Cannot be null.
+	 * @param authorVote Author of vote. Cannot be null.
+	 * @return true if the post is already voted by user, false otherwise.
+	 */
 	public boolean isPostAlreadyVotedByUser(int idPost, String authorVote) {
 		Objects.requireNonNull(idPost, "Id post is null");
 		Objects.requireNonNull(authorVote, "Author vote is null");
@@ -811,6 +871,13 @@ public class Database extends Storage{
 		return false;
 	}
 	
+	/**
+	 * Add a comment to a certain post specified by idPost in Winsome. 
+	 * The new comments added to a post will be used to calculate gains of the user.
+	 * @param idPost Id of post. Cannot be null.
+	 * @param comment Content of comment. Cannot be null.
+	 * @param authorComment Author of comment. Cannot be null.
+	 */
 	public void addCommentToPost(int idPost, String comment, String authorComment) {
 		Objects.requireNonNull(idPost, "Id post is null");
 		Objects.requireNonNull(comment, "New comment for post is null");
@@ -838,24 +905,16 @@ public class Database extends Storage{
 				}else continue;
 			}
 			
-//			if(postToBeBackedup.containsKey(idPost)) {
-//				Post post = postToBeBackedup.get(idPost);
-//				
-//				post.addComment(c);
-//				post.getCurators().add(authorComment);
-//				post.incrementNumUserComments(authorComment);
-//			}else if(postBackedup.containsKey(idPost)) {
-//				Post post = postBackedup.get(idPost);
-//				
-//				post.addComment(c);
-//				post.getCurators().add(authorComment);
-//				post.incrementNumUserComments(authorComment);
-//			}
-			
 			return;
 		}
 	}
 	
+	/**
+	 * Rewin a certain post in Winsome specified by idPost. The post must be in user's feed and this post
+	 * is visible to all the following user of the author of rewin in their feed. The post rewinned is visible also in author rewin blog. 
+	 * @param idPost Id of post. Cannot be null.
+	 * @param authorRewin User that do the rewin. Cannot be null.
+	 */
 	public void addRewinToPost(int idPost, String authorRewin) {
 		Objects.requireNonNull(idPost, "Id to get the specified post is null");
 		Objects.requireNonNull(authorRewin, "Author rewin is null");
@@ -867,16 +926,6 @@ public class Database extends Storage{
 			Post p = getPostById(idPost);
 			
 			p.getRewin().add(authorRewin);
-			
-//			if(postToBeBackedup.containsKey(idPost)) {
-//				Post post = postToBeBackedup.get(idPost);
-//				
-//				post.getRewin().add(authorRewin);
-//			}else if(postBackedup.containsKey(idPost)) {
-//				Post post = postBackedup.get(idPost);
-//				
-//				post.getRewin().add(authorRewin);
-//			}
 			
 			ArrayList<Post> posts = blogUser.get(p.getAuthor());
 			
@@ -900,6 +949,11 @@ public class Database extends Storage{
 		}
 	}
 	
+	/**
+	* Handles the computation of the rewards to be handed out.	 
+	* @return Map of GainAndCurators where the key is the username of user
+	* and the value is an object of GainAndCurators class.
+	*/
 	public ConcurrentHashMap<String, GainAndCurators> calculateGains(){
 		ConcurrentHashMap<String, GainAndCurators> map = new ConcurrentHashMap<String, GainAndCurators>();
 		
@@ -913,6 +967,15 @@ public class Database extends Storage{
 		return map;
 	}
 	
+	/**
+	 * Update the rewards of users by using a map of gains, where the key is the username of user and the value is an object of GainAndCurators class.
+	 * For the calculation of the rewards will be used two percentage, one for author and one for curators.
+	 * @param gains Map of gains for all the users registered in Winsome. Cannot be null.
+	 * @param authorPercentage Author percentage used to calculate the gains.
+	 * @throws IllegalArgumentException Only when the author percentage is not belongs 0 and 100.
+	 * @throws ClientNotRegisteredException Only when the client is not registered in Winsome.
+	 * @throws InvalidAmountException Only when the databse try to create a Transaction object with a negative amount. 
+	 */
 	public void updateRewards(ConcurrentHashMap<String, GainAndCurators> gains, double authorPercentage) throws IllegalArgumentException, ClientNotRegisteredException, InvalidAmountException{
 		if(Objects.requireNonNull(gains, "Map of gains is null") != null) {
 			if(authorPercentage <= 0 || authorPercentage >= 100) throw new IllegalArgumentException("Author percentage is not valid");
@@ -940,6 +1003,11 @@ public class Database extends Storage{
 		}
 	}
 	
+	/**
+	 * Method used to send to user his history of transactions and the total amount. 
+	 * @param username Username of user. Cannot be null.
+	 * @return A String that contains all the transactions and the total amount.
+	 */
 	public String getWalletUserJson(String username) {
 		Objects.requireNonNull(username, "Username to get the specified user is null");
 		
@@ -972,6 +1040,14 @@ public class Database extends Storage{
 		return "[]@0";
 	}
 	
+	/**
+	 * Method used to sent to user his total amount in his wallet but converted in Bitcoin.
+	 * The server communicates with the site RANDOM.org to take random exchange rate.
+	 * @param username Username of user.
+	 * @return A String that represents his total amount in his wallet but converted in Bitcoin.
+	 * @throws MalformedURLException Only when the URL used to communicates with RANDOM.org site is not correct.
+	 * @throws IOException Only when occurs I/O error.
+	 */
 	public String getWalletUserInBitcoin(String username) throws MalformedURLException, IOException {
 		 Objects.requireNonNull(username, "Username to get the user is null");
 	
@@ -988,6 +1064,16 @@ public class Database extends Storage{
 		 return Double.toString(u.getTransactions().stream().mapToDouble(t -> t.getAmount()).sum() * exchangeRate);
 	}	
 	
+	/**
+	 * Take all the files used to stores users' data and load them into the various database's collection. 
+	 * The data relate: user's data for registration, user's following and user's transactions.
+	 * @param usersFile File of user's data for registration. Cannot be null.
+	 * @param followingFile File of user's following data. Cannot be null.
+	 * @param transactionsFile File of user's transactions data. Cannot be null.
+	 * @throws IOException Only when occurs I/O error.
+	 * @throws IllegalFileException Only when, at restart of server, some files are empty.
+	 * @throws FileNotFoundException Only when a path of file doesn't exists.
+	 */
 	public void loadUsersFromJsonFile(File usersFile, File followingFile, File transactionsFile) throws IOException, IllegalFileException, FileNotFoundException {
 		Objects.requireNonNull(usersFile, "Users file is null");
 		Objects.requireNonNull(followingFile, "Following file is null");
@@ -1141,6 +1227,14 @@ public class Database extends Storage{
 		}else {usersFile.createNewFile(); followingFile.createNewFile(); transactionsFile.createNewFile();}
 	}
 	
+	/**
+	 * Backup data about users in three files: file of user's data for registration, 
+	 * file of user's following, file of user's transactions. 
+	 * @param usersFile File of user's data for registration. Cannot be null.
+	 * @param followingFile File of user's following data. Cannot be null.
+	 * @param transactionsFile File of user's transactions data. Cannot be null.
+	 * @throws IOException Only when occurs I/O error.
+	 */
 	public void  backupUsers(File usersFile, File followingFile, File transactionsFile) throws IOException {
 		Objects.requireNonNull(usersFile, "Users file is null");
 		Objects.requireNonNull(followingFile, "Following file is null");
@@ -1192,6 +1286,17 @@ public class Database extends Storage{
 		
 	} 
 	
+	/**
+	 * Take all the files used to stores posts' data and load them into the various database's collection. 
+	 * The data relate: posts' immutable data (idPost, author, content, title), posts' votes, posts' comments and posts' mutable data used to calculate gains for users.
+	 * @param postsFile File of posts' immutable data. Cannot be null.
+	 * @param votesFile File of posts' votes. Cannot be null.
+	 * @param commentsFile File of posts' comments. Cannot be null.
+	 * @param mutableDataPostsFile File of posts' mutable data. Cannot be null.
+	 * @throws IOException Only when occurs I/O error.
+	 * @throws IllegalFileException Only when, at restart of server, some files are empty.
+	 * @throws FileNotFoundException Only when a file path doesn't exists.
+	 */
 	public void loadPostsFromJsonFile(File postsFile, File votesFile, File commentsFile, File mutableDataPostsFile) throws IOException, IllegalFileException, FileNotFoundException {
 		Objects.requireNonNull(postsFile, "Posts file is null");
 		Objects.requireNonNull(votesFile, "Votes file is null");
@@ -1414,6 +1519,17 @@ public class Database extends Storage{
 		return;
 	}
 	
+	/**
+	 * Backup data about posts in four files: file of posts' immutable data, file of posts' votes, file of posts' comments,
+	 * file of posts' mutable data.
+	 * @param postsFile File of posts' immutable data. Cannot be null.
+	 * @param votesFile File of posts' votes. Cannot be null.
+	 * @param commentsFile File of posts' comments. Cannot be null.
+	 * @param mutableDataPostsFile File of posts' mutable data. Cannot be null.
+	 * @throws FileNotFoundException Only when a path of file doesn't exists.
+	 * @throws NullPointerException Only when some objects or variables is null.
+	 * @throws IOException Only when occurs I/O error.
+	 */
 	public void backupPosts(File postsFile, File votesFile, File commentsFile, File mutableDataPostFile) throws FileNotFoundException, NullPointerException, IOException {
 		Objects.requireNonNull(postsFile, "Posts file is null");
 		Objects.requireNonNull(votesFile, "Votes file is null");

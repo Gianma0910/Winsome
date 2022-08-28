@@ -10,6 +10,12 @@ import RMI.RMICallback;
 import server.database.Database;
 import utility.TypeError;
 
+/**
+ * Class that implements FollowingService. This class is used to add follower in ClientStorage's followers list
+ * and to add follower in Database's collection.
+ * @author Gianmarco Petrocchi.
+ *
+ */
 public class FollowingServiceImpl implements FollowingService {
 	private Database db;
 	private BufferedWriter writerOutput;
@@ -33,6 +39,8 @@ public class FollowingServiceImpl implements FollowingService {
 	
 		String usernameNewFollow = db.getUsernameBySocket(socket);
 		
+		//check if the username that represents the new following is registered but not logged
+		//if this two conditions are satisfied will not update ClientStorage's followers list of usernameToFollow.
 		if(db.isUserRegistered(usernameToFollow) == true && db.isUserLogged(usernameToFollow) == false) {
 			db.addFollowing(usernameNewFollow, usernameToFollow);
 			db.addFollower(usernameToFollow, usernameNewFollow);

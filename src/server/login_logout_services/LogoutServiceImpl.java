@@ -8,6 +8,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import server.database.Database;
 import utility.TypeError;
 
+/**
+ * Class that implements LogoutService. This class is used to logout a user from Winsome.
+ * @author Gianmarco Petrocchi.
+ */
 public class LogoutServiceImpl implements LogoutService{
 	
 	private Database db;

@@ -24,6 +24,11 @@ import exceptions.IllegalFileException;
 import exceptions.InvalidConfigurationException;
 import server.database.Database;
 
+/**
+ * Class that represents the Winsome server. It will receive all the client request and execute them.
+ * @author Gianmarco Petrocchi.
+ *
+ */
 public class ServerMain {
 	
 	public static void main(String[] args) throws InvalidConfigurationException, AlreadyBoundException, IOException, InterruptedException {

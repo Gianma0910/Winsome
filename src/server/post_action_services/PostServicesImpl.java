@@ -7,6 +7,11 @@ import java.net.Socket;
 import server.database.Database;
 import utility.TypeError;
 
+/**
+ * Class that implements PostService. This class is used to execute all the possible interaction with posts existed in Winsome.
+ * @author Gianmarco Petrocchi.
+ *
+ */
 public class PostServicesImpl implements PostServices {
 	private Database db;
 	private BufferedWriter writerOutput;

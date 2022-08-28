@@ -7,6 +7,12 @@ import java.net.Socket;
 import server.database.Database;
 import utility.TypeError;
 
+/**
+ * Class that implements ViewListUsersService. This class is used to send the list of users that
+ * has at least one tag in common. 
+ * @author Gianmarco Petrocchi.
+ *
+ */
 public class ViewListUsersServiceImpl implements ViewListUsersService {
 	private Database db;
 	private BufferedWriter writerOutput;

@@ -75,6 +75,7 @@ public class ClientMain {
 			String [] requestSplitted = request.split(" "); //request parsed by using space character
 			String command = requestSplitted[0]; //it represents the first string of the request (login, logout...)
 			
+			//check the kind of command and then execute the right method
 			switch(command) {
 			case "register" : {
 				RegisterRequest.performRegisterAction(requestSplitted, clientConf, writerOutput, readerInput, multicastClient, stubClientDatabase);				
