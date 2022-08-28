@@ -431,7 +431,7 @@ public class Database extends Storage{
 
 				@Override
 				public boolean shouldSkipField(FieldAttributes f) {
-					return (f.getDeclaringClass() == User.class && f.getName().equals("password") && f.getName().equals("transactions") && f.getName().equals("following"));
+					return (f.getDeclaringClass() == User.class && !f.getName().equals("username") && !f.getName().equals("tagList"));
 				}
 				
 			}).create();
@@ -439,9 +439,16 @@ public class Database extends Storage{
 			StringBuilder serializationUsers = new StringBuilder();
 			ArrayList<User> registeredUsers = new ArrayList<>();
 			
-			for(String s : userBackedUp.keySet()) {
-				if(userBackedUp.get(s).getUsername().equals(username)) continue;
-				else registeredUsers.add(userBackedUp.get(s));
+			for(User u : userBackedUp.values()) {
+				if(u.getUsername().equals(username)) continue;
+				else {
+					for(String s : tagList) {
+						if(u.getTagList().contains(s)) {
+							registeredUsers.add(u);
+							break;
+						}else continue;
+					}
+				}
 			}
 			
 			Iterator<User> it = registeredUsers.iterator();
@@ -462,6 +469,8 @@ public class Database extends Storage{
 			}
 			serializationUsers.append("]");
 				
+			System.out.println(serializationUsers.toString());
+			
 			return serializationUsers.toString();
 		}
 		
