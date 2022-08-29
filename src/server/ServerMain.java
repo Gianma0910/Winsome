@@ -33,7 +33,7 @@ public class ServerMain {
 	
 	public static void main(String[] args) throws InvalidConfigurationException, AlreadyBoundException, IOException, InterruptedException {
 		if(args.length != 1) {
-			System.err.println("Usage: java ServerMain <path configuration file>");
+			System.err.println("Usage: java -cp \".:./bin/:./libs/gson-2.8.9.jar\" ServerMain <path file configuration>\n");
 			System.err.println("Check the documentation\n");
 			System.exit(0);
 		}

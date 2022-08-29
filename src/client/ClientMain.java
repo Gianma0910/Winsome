@@ -44,7 +44,7 @@ public class ClientMain {
 	
 	public static void main(String[] args) throws InvalidConfigurationException, IOException, NotBoundException, ClientNotRegisteredException, ClientNotLoggedException {
 		if(args.length != 1) {
-			System.err.println("Usage: java ClientMain <path configuration file>\n");
+			System.err.println("Usage: java -cp \".:./bin/:./libs/gson-2.8.9.jar\" ClientMain <path file configuration>\n");
 			System.err.println("Check the documentation\n");
 			System.exit(0);
 		}
