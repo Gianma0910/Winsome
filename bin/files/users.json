@@ -1,0 +1,35 @@
+[{
+  "username": "pippo",
+  "password": "asdf",
+  "tagList": [
+    "calcio",
+    "viaggiare",
+    "cartoni",
+    "pokemon"
+  ]
+}
+,{
+  "username": "pluto",
+  "password": "sder",
+  "tagList": [
+    "inter",
+    "calcio",
+    "viaggiare"
+  ]
+}
+,{
+  "username": "minnie",
+  "password": "qwerty",
+  "tagList": [
+    "lucchese",
+    "inter"
+  ]
+}
+,{
+  "username": "topolino",
+  "password": "poiuy",
+  "tagList": [
+    "pi",
+    "po"
+  ]
+}]
