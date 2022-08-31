@@ -26,7 +26,7 @@ public class FollowRequest {
 		
 		String username = null;
 		StringBuilder requestClient = new StringBuilder();
-		
+
 		for(int i = 0; i < requestSplitted.length; i++) {
 			requestClient.append(requestSplitted[i]);
 			

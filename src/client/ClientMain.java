@@ -31,7 +31,6 @@ import client.view_list_request.ViewListUsersRequest;
 import client.wallet_action_request.GetWalletInBitcoinRequest;
 import client.wallet_action_request.GetWalletRequest;
 import configuration.ClientConfiguration;
-import exceptions.ClientNotLoggedException;
 import exceptions.ClientNotRegisteredException;
 import exceptions.InvalidConfigurationException;
 
@@ -42,20 +41,16 @@ import exceptions.InvalidConfigurationException;
  */
 public class ClientMain {
 	
-	public static void main(String[] args) throws InvalidConfigurationException, IOException, NotBoundException, ClientNotRegisteredException, ClientNotLoggedException {
-		if(args.length != 1) {
-			System.err.println("Usage: java -cp \".:./bin/:./libs/gson-2.8.9.jar\" ClientMain <path file configuration>\n");
-			System.err.println("Check the documentation\n");
-			System.exit(0);
-		}
-		
-		String pathConfigurationFile = args[0];
+	public static final String pathConfigurationFile = "src/files/client_configuration.txt";
+	
+	public static void main(String[] args) throws InvalidConfigurationException, IOException, NotBoundException, ClientNotRegisteredException{
 		File configurationFile = new File(pathConfigurationFile);
 		
 		ClientConfiguration clientConf = new ClientConfiguration(configurationFile);
 		
 		System.out.println("File properties read successfully\n");
 
+		//set TCP socket and his buffer for read and write
 		Socket socketTCP = new Socket(clientConf.SERVERADDRESS, clientConf.TCPPORT);
 		BufferedWriter writerOutput = new BufferedWriter(new OutputStreamWriter(socketTCP.getOutputStream()));
 		BufferedReader readerInput = new BufferedReader(new InputStreamReader(socketTCP.getInputStream()));
@@ -94,15 +89,9 @@ public class ClientMain {
 					ViewListUsersRequest.performViewListUsers(requestSplitted, writerOutput, readerInput);
 					break;
 				}else if(requestSplitted[1].equals("followers")) {
-					if(requestSplitted.length != 2)
-						System.err.println("Number of arguments insert for view list followers operation is not valid, you must type only: list followers");
-					
 					ViewListFollowersRequest.performViewListFollowers(stubClientDatabase);
 					break;
 				}else if(requestSplitted[1].equals("following")){
-					if(requestSplitted.length != 2)
-						System.err.println("Number of arguments insert for view list following operation is not valid, you must type only: list following");
-					
 					ViewListFollowingRequest.performViewListFollowing(stubClientDatabase);
 					break;
 				}

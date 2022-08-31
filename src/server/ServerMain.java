@@ -31,20 +31,14 @@ import server.database.Database;
  */
 public class ServerMain {
 	
-	public static void main(String[] args) throws InvalidConfigurationException, AlreadyBoundException, IOException, InterruptedException {
-		if(args.length != 1) {
-			System.err.println("Usage: java -cp \".:./bin/:./libs/gson-2.8.9.jar\" ServerMain <path file configuration>\n");
-			System.err.println("Check the documentation\n");
-			System.exit(0);
-		}
-		
-		String pathConfigurationFile = args[0];
+	public static final String pathConfigurationFile = "src/files/server_configuration.txt";
+	
+	public static void main(String[] args) throws AlreadyBoundException, IOException, InterruptedException, InvalidConfigurationException {
 		File configurationFile = new File(pathConfigurationFile);
 		
 		ServerConfiguration serverConf = new ServerConfiguration(configurationFile);
 		
 		ServerSocket serverSocketTCP = new ServerSocket(serverConf.TCPPORT);
-		DatagramSocket serverSocketUDP = new DatagramSocket();
 		
 		BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(serverConf.THREADBLOCKINGQUEUE);
 		ThreadPoolExecutor threadPool = new ThreadPoolExecutor(serverConf.COREPOOLSIZE, serverConf.MAXIMUMCOREPOOLSIZE, serverConf.KEEPALIVETIME, TimeUnit.MILLISECONDS, queue);
@@ -53,6 +47,8 @@ public class ServerMain {
 		
 		Database db = new Database();
 		
+		//list used to save client socket that connects to server. 
+		//When the server run the shutdownHook, it closes all the client socket.
 		ArrayList<Socket> userLogged = new ArrayList<>();
 		
 		RMIRegistrationImpl registrationImpl = new RMIRegistrationImpl(db);
@@ -130,7 +126,7 @@ public class ServerMain {
 					System.err.println("I/O error occured during shutdown");
 					e.printStackTrace();
 				}
-				serverSocketUDP.close();
+				
 			}
 		});
 		

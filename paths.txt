@@ -25,7 +25,6 @@
 ./src/client/wallet_action_request/GetWalletRequest.java
 ./src/configuration/ClientConfiguration.java
 ./src/configuration/ServerConfiguration.java
-./src/exceptions/ClientNotLoggedException.java
 ./src/exceptions/ClientNotRegisteredException.java
 ./src/exceptions/IllegalFileException.java
 ./src/exceptions/InvalidAmountException.java

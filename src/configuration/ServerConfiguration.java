@@ -35,8 +35,6 @@ public class ServerConfiguration {
 	public String REGISTRATIONSERVICENAME;
 	/** Name of follower callback service offered by Registry.*/
 	public String CALLBACKSERVICENAME;
-	/** Socket timeout for thread pool.*/
-	public int SOCKETTIMEOUT;
 	/** Core pool size of thread pool.*/
 	public int COREPOOLSIZE;
 	/** Keep alive time of thread pool.*/
@@ -86,7 +84,7 @@ public class ServerConfiguration {
 			//check if the configuration file contains all the server's parameters
 			if(prop.containsKey("SERVERADDRESS") && prop.containsKey("TCPPORT") && prop.containsKey("UDPPORT") && prop.containsKey("RMIREGISTRYPORT")
 			   && prop.containsKey("RMIREGISTRYHOST") && prop.containsKey("MULTICASTPORT") && prop.containsKey("MULTICASTADDRESS") && prop.containsKey("REGISTRATIONSERVICENAME")
-			   && prop.containsKey("CALLBACKSERVICENAME") && prop.containsKey("SOCKETTIMEOUT") && prop.containsKey("COREPOOLSIZE") && prop.containsKey("MAXIMUMCOREPOOLSIZE")
+			   && prop.containsKey("CALLBACKSERVICENAME") && prop.containsKey("COREPOOLSIZE") && prop.containsKey("MAXIMUMCOREPOOLSIZE")
 			   && prop.containsKey("KEEPALIVETIME") && prop.containsKey("THREADBLOCKINGQUEUE") && prop.containsKey("DELAYBACKUP") && prop.containsKey("DELAYEARNINGSCALCULATION")
 			   && prop.containsKey("AUTHORPERCENTAGEEARN") && prop.containsKey("DIRECTORYFORFILE") && prop.containsKey("DELAYSHUTDOWNTHREADPOOL")) {
 				
@@ -123,13 +121,6 @@ public class ServerConfiguration {
 				}
 				//check if the multicast address is legal
 				if(!MULTICASTADDRESS.isMulticastAddress()) throw new InvalidConfigurationException("The specified address isn't multicast");
-				
-				//check the socket timeout
-				try {
-					SOCKETTIMEOUT = Integer.parseInt(prop.getProperty("SOCKETTIMEOUT"));
-				}catch(NumberFormatException e) {
-					throw new InvalidConfigurationException(e.getMessage());
-				}
 				
 				//check the delay of backup
 				try {
