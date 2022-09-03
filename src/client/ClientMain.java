@@ -147,6 +147,7 @@ public class ClientMain {
 						GetWalletRequest.performGetWalletAction(requestSplitted, writerOutput, readerInput);
 					else if(requestSplitted.length == 2)
 						GetWalletInBitcoinRequest.performGetWalletInBitcoinAction(requestSplitted, writerOutput, readerInput);
+					else throw new IllegalArgumentException("Number of arguments insert for get wallet operation is not valid, you must type only: wallet or wallet btc");
 					
 					break;
 				}
