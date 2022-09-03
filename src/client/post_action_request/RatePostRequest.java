@@ -44,6 +44,9 @@ public class RatePostRequest {
 			}else if(error.equals(TypeError.CLIENTNOTLOGGED)) {
 				System.err.println("You can't do this operation because you are not logged in Winsome");
 				return;
+			}else if(error.equals(TypeError.NUMBERFORMATERRROR)) {
+				System.err.println("Expected integer arguments in request");
+				return;
 			}else if(error.equals(TypeError.VOTEPOSTNOTEXISTS)) {
 				System.err.println("You can't vote this post because it doesn't exists");
 				return;

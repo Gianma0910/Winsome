@@ -51,6 +51,9 @@ public class ShowPostRequest {
 			}else if(error.equals(TypeError.CLIENTNOTLOGGED)) {
 				System.err.println("You can't do this operation because you are not logged in Winsome");
 				return;
+			}else if(error.equals(TypeError.NUMBERFORMATERRROR)) {
+				System.err.println("Expected integer argument in request");
+				return;
 			}else if(error.equals(TypeError.IDPOSTNOTEXISTS)) {
 				System.err.println("The specified idPost doesn't exists");
 				return;

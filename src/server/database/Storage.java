@@ -25,6 +25,17 @@ public abstract class Storage {
 
 	private static final int BUFFERSIZE = 1024;
 	
+	/**
+	 * Creates a backup of a data structure and stores it inside given file which will be overwritten.
+	 * @param <K> Type of the keys of the data Map.
+	 * @param <V> Type of the values of the data Map.
+	 * @param strategy cannot be null. It is used to specify whichever fields are not to be stored.
+	 * @param fileToBeStoredIn cannot be null.
+	 * @param data cannot be null.
+	 * @throws FileNotFoundException Only when the file isn't found.
+	 * @throws IOException Only when occurs I/O errors.
+	 * @throws NullPointerException Only when any parameter is null.
+	 */
 	public static <K, V> void backupNonCached(ExclusionStrategy strategy, File fileToBeStoredIn, Map<K, V> data) throws FileNotFoundException, IOException, NullPointerException {
 		Objects.requireNonNull(strategy, "Exclusion strategy is null");
 		Objects.requireNonNull(fileToBeStoredIn, "File to store data is null");
@@ -56,6 +67,15 @@ public abstract class Storage {
 		}
 	}
 	
+	/**
+	 * Creates a backup of a data structure and stores it inside given file which will be overwritten.
+	 * @param <T> Type of the items of the data Collection.
+	 * @param strategy cannot be null. It is used to specify whichever fields are not to be stored in.
+	 * @param fileToBeStoredIn cannot be null.
+	 * @param data cannot be null.
+	 * @throws FileNotFoundException Only when the file isn't found.
+	 * @throws IOException Only when occurs I/O error.
+	 */
 	public static <T> void backupNonCached(ExclusionStrategy strategy, File fileToBeStoredIn, Collection<T> data) throws FileNotFoundException, IOException{
 		Objects.requireNonNull(strategy, "Exclusion strategy is null");
 		Objects.requireNonNull(fileToBeStoredIn, "File to store data is null");
@@ -89,6 +109,19 @@ public abstract class Storage {
 		}
 	}
 	
+	/**
+	 * Creates a backup of a data structure and appends it to given file.
+	 * backedUpData: POST(backedUpData) = PREV(backedUpData) U toBeBackedUpData.
+	 * toBeBackedUpData: POST(toBeBackedUpData) = EMPTY_MAP.
+	 * @param <K> Type of the keys of the data Maps.
+	 * @param <V> Type of the values of the data Maps.
+	 * @param strategy cannot be null. It is used to specify whichever fields are not to be stored in.
+	 * @param fileToBeStoredIn cannot be null.
+	 * @param backedUpData cannot be null.
+	 * @param toBeBackedUpData cannot be null.
+	 * @param firtsBackupAndNonEmptyStorage Should be toggled on if and only if this is the first backup and the storage is non-empty.
+	 * @throws IOException Only when occurs I/O error.
+	 */
 	public static <K, V> void backupCached(ExclusionStrategy strategy, File fileToBeStoredIn, Map<K, V> backedUpData, Map<K, V> toBeBackedUpData, boolean firtsBackupAndNonEmptyStorage) throws IOException {
 		Objects.requireNonNull(strategy, "Exclusion strategy is null");
 		Objects.requireNonNull(fileToBeStoredIn, "File to store data is null");

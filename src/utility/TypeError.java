@@ -65,4 +65,6 @@ public class TypeError {
 	public static final String CLIENTNOTLOGGED = "CLIENTNOTLOGGED";
 	/** This error occurs only when a user send an invalid request */
 	public static final String INVALIDREQUESTERROR = "INVALIDREQUESTERROR";
+	/** This error occurs only when an argument of request isn't a number*/
+	public static final String NUMBERFORMATERRROR = "NUMBERFORMATERROR";
 }

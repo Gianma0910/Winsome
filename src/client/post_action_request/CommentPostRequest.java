@@ -49,6 +49,9 @@ public class CommentPostRequest {
 			}else if(error.equals(TypeError.INVALIDREQUESTERROR)) {
 				System.err.println("Number of arguments insert for add comment operation is not valid, you must only type: comment <id post>");
 				return;
+			}else if(error.equals(TypeError.NUMBERFORMATERRROR)) {
+				System.err.println("Expected number argument in request");
+				return;
 			}else if(error.equals(TypeError.SUCCESS)){
 				int idPost = Integer.parseInt(requestSplitted[1]);
 				

@@ -20,11 +20,8 @@ public class GetWalletInBitcoinRequest {
 	 * @param writerOutput BufferedWriter used to write/send request to server.
 	 * @param readerInput BufferedReader used to read/receive response by server.
 	 * @throws IOException Only when occurs I/O error.
-	 * @throws IllegalArgumentException Only when the keyword for get wallet operation is different from btc in request.
 	 */
-	public static void performGetWalletInBitcoinAction(String [] requestSplitted, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException, IllegalArgumentException {
-		if(!requestSplitted[1].equals("btc"))
-			throw new IllegalArgumentException("If you want to get your wallet in Bitcoin, you must type the keyword btc");
+	public static void performGetWalletInBitcoinAction(String [] requestSplitted, BufferedWriter writerOutput, BufferedReader readerInput) throws IOException{
 		
 		StringBuilder request = new StringBuilder();
 		
@@ -42,7 +39,7 @@ public class GetWalletInBitcoinRequest {
 		String walletConverted = readerInput.readLine();
 			
 		if(walletConverted.equals(TypeError.INVALIDREQUESTERROR)) {
-			System.err.println("Number of arguments insert for get wallet in bitcoin is not valid, you must type only: wallet btc");
+			System.err.println("Arguments insert for get wallet in bitcoin is not valid, you must type only: wallet btc");
 			return;
 		}else if(walletConverted.equals(TypeError.CLIENTNOTLOGGED)) {
 			System.err.println("You can't do this operation because you are not logged in Winsome");

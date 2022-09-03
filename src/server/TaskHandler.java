@@ -38,7 +38,7 @@ public class TaskHandler implements Runnable {
 	private Database db;
 	/** BufferedReader used to write/send response to client.*/
 	private BufferedWriter writerOutput;
-	/** BufferedReader used to read/receive request by clien.*/
+	/** BufferedReader used to read/receive request by client.*/
 	private BufferedReader readerInput;
 	/** Server configuration.*/
 	private ServerConfiguration serverConf;
@@ -232,6 +232,13 @@ public class TaskHandler implements Runnable {
 					if(requestSplitted.length != 2) {
 						sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
 					}else {
+						try {
+							int idPost = Integer.parseInt(requestSplitted[1]);
+						}catch(NumberFormatException e) {
+							sendError(TypeError.NUMBERFORMATERRROR, writerOutput);
+							break;
+						}
+						
 						sendError(TypeError.SUCCESS, writerOutput);
 					
 						String idPostToParse = requestSplitted[1];
@@ -265,9 +272,15 @@ public class TaskHandler implements Runnable {
 					
 					if(requestSplitted.length == 1)
 						walletServicesImpl.getWallet(socket);
-					else if(requestSplitted.length == 2)
-						walletServicesImpl.getWalletInBitcoin(socket);
-					else 
+					else if(requestSplitted.length == 2) {
+						if(requestSplitted[1].equals("btc") == false) {
+							sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
+							break;
+						}else {
+							walletServicesImpl.getWalletInBitcoin(socket);
+							break;
+						}
+					}else 
 						sendError(TypeError.INVALIDREQUESTERROR, writerOutput);
 					
 					break;

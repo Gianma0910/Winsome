@@ -35,14 +35,6 @@ public class ServerConfiguration {
 	public String REGISTRATIONSERVICENAME;
 	/** Name of follower callback service offered by Registry.*/
 	public String CALLBACKSERVICENAME;
-	/** Core pool size of thread pool.*/
-	public int COREPOOLSIZE;
-	/** Keep alive time of thread pool.*/
-	public int KEEPALIVETIME;
-	/** Maximum core pool size of thread pool. */
-	public int MAXIMUMCOREPOOLSIZE;
-	/** Number of thread in threadpool's BlockingQueue. */
-	public int THREADBLOCKINGQUEUE;
 	/** Delay of calculation earnings. */
 	public int DELAYEARNINGSCALCULATION;
 	/** Delay of database backup.*/
@@ -63,7 +55,7 @@ public class ServerConfiguration {
 	public String COMMENTSFILENAMEPATH = "comments.json";
 	/** Name of the file where there are stored all the posts' votes.*/
 	public String VOTESFILENAMEPATH = "votes.json";
-	/** Name of the fie where there are stored all the transactions made by the server to distributed the earns.*/
+	/** Name of the file where there are stored all the transactions made by the server to distributed the earns.*/
 	public String TRANSACTIONSFILENAMEPATH = "transactions.json";
 	/** Name of the file where there are stored all the users that a certain user x is following in Winsome. */
 	public String FOLLOWINGFILENAMEPATH = "following.json";
@@ -84,8 +76,7 @@ public class ServerConfiguration {
 			//check if the configuration file contains all the server's parameters
 			if(prop.containsKey("SERVERADDRESS") && prop.containsKey("TCPPORT") && prop.containsKey("UDPPORT") && prop.containsKey("RMIREGISTRYPORT")
 			   && prop.containsKey("RMIREGISTRYHOST") && prop.containsKey("MULTICASTPORT") && prop.containsKey("MULTICASTADDRESS") && prop.containsKey("REGISTRATIONSERVICENAME")
-			   && prop.containsKey("CALLBACKSERVICENAME") && prop.containsKey("COREPOOLSIZE") && prop.containsKey("MAXIMUMCOREPOOLSIZE")
-			   && prop.containsKey("KEEPALIVETIME") && prop.containsKey("THREADBLOCKINGQUEUE") && prop.containsKey("DELAYBACKUP") && prop.containsKey("DELAYEARNINGSCALCULATION")
+			   && prop.containsKey("CALLBACKSERVICENAME") && prop.containsKey("DELAYBACKUP") && prop.containsKey("DELAYEARNINGSCALCULATION")
 			   && prop.containsKey("AUTHORPERCENTAGEEARN") && prop.containsKey("DIRECTORYFORFILE") && prop.containsKey("DELAYSHUTDOWNTHREADPOOL")) {
 				
 				//check the port
@@ -139,34 +130,6 @@ public class ServerConfiguration {
 				//check the author percentage earn
 				try {
 					AUTHORPERCENTAGEEARN = Float.parseFloat(prop.getProperty("AUTHORPERCENTAGEEARN"));
-				}catch(NumberFormatException e) {
-					throw new InvalidConfigurationException(e.getMessage());
-				}
-				
-				//check the core pool size of threadpool
-				try {
-					COREPOOLSIZE = Integer.parseInt(prop.getProperty("COREPOOLSIZE"));
-				}catch(NumberFormatException e) {
-					throw new InvalidConfigurationException(e.getMessage());
-				}
-				
-				//check the maximum core pool size of threapool
-				try {
-					MAXIMUMCOREPOOLSIZE = Integer.parseInt(prop.getProperty("MAXIMUMCOREPOOLSIZE"));
-				}catch(NumberFormatException e) {
-					throw new InvalidConfigurationException(e.getMessage());
-				}
-				
-				//check the keep alive time
-				try {
-					KEEPALIVETIME = Integer.parseInt(prop.getProperty("KEEPALIVETIME"));
-				}catch(NumberFormatException e) {
-					throw new InvalidConfigurationException(e.getMessage());
-				}
-				
-				//check the number of thread in blocking queue
-				try {
-					THREADBLOCKINGQUEUE = Integer.parseInt(prop.getProperty("THREADBLOCKINGQUEUE"));
 				}catch(NumberFormatException e) {
 					throw new InvalidConfigurationException(e.getMessage());
 				}

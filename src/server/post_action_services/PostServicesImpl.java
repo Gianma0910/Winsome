@@ -92,32 +92,37 @@ public class PostServicesImpl implements PostServices {
 			return;
 		}
 		
-		int idPost = Integer.parseInt(idPostToParse);
-		
-		String username = db.getUsernameBySocket(socket);
-		
-		if(db.isPostNotNull(idPost) == false) {
-			sendError(TypeError.IDPOSTNOTEXISTS, writerOutput);
+		try {
+			int idPost = Integer.parseInt(idPostToParse);
+			
+			String username = db.getUsernameBySocket(socket);
+			
+			if(db.isPostNotNull(idPost) == false) {
+				sendError(TypeError.IDPOSTNOTEXISTS, writerOutput);
+				return;
+			}
+			
+			sendError(TypeError.SUCCESS, writerOutput);
+			
+			String serializedPost = db.getPostByIdJson(idPost);
+			
+			writerOutput.write(serializedPost);
+			writerOutput.newLine();
+			writerOutput.flush();
+			
+			if(db.isPostAuthor(idPost, username)) {
+				sendError(TypeError.POSTINYOURBLOG, writerOutput);
+			}
+			
+			if(db.isPostInFeed(idPost, username)) {
+				sendError(TypeError.POSTINYOURFEED, writerOutput);
+			}
+			
+			return;
+		}catch(NumberFormatException e) {
+			sendError(TypeError.NUMBERFORMATERRROR, writerOutput);
 			return;
 		}
-		
-		sendError(TypeError.SUCCESS, writerOutput);
-		
-		String serializedPost = db.getPostByIdJson(idPost);
-		
-		writerOutput.write(serializedPost);
-		writerOutput.newLine();
-		writerOutput.flush();
-		
-		if(db.isPostAuthor(idPost, username)) {
-			sendError(TypeError.POSTINYOURBLOG, writerOutput);
-		}
-		
-		if(db.isPostInFeed(idPost, username)) {
-			sendError(TypeError.POSTINYOURFEED, writerOutput);
-		}
-		
-		return;
 	}
 	
 	@Override
@@ -127,36 +132,42 @@ public class PostServicesImpl implements PostServices {
 			return;
 		}
 		
-		int idPost = Integer.parseInt(idPostToParse);
-		
-		String username = db.getUsernameBySocket(socket);
-		
-		if(db.isPostNotNull(idPost) == false) {
-			sendError(TypeError.IDPOSTNOTEXISTS, writerOutput);
-			return;
-		}
-		
-		if(db.isPostInFeed(idPost, username) && db.isPostAuthor(idPost, username)) {
+		try {
+			int idPost = Integer.parseInt(idPostToParse);
+			
+			String username = db.getUsernameBySocket(socket);
+			
+			if(db.isPostNotNull(idPost) == false) {
+				sendError(TypeError.IDPOSTNOTEXISTS, writerOutput);
+				return;
+			}
+			
+			if(db.isPostInFeed(idPost, username) && db.isPostAuthor(idPost, username)) {
+				db.removePostFromWinsome(idPost);
+				
+				sendError(TypeError.SUCCESS, writerOutput);
+				return;
+			}
+			
+			if(db.isPostInFeed(idPost, username)) {
+				sendError(TypeError.DELETEPOSTFEEDERROR, writerOutput);
+				return;
+			}
+			
+			if(db.isPostAuthor(idPost, username) == false) {
+				sendError(TypeError.POSTNOTINYOURBLOG, writerOutput);
+				return;
+			}
+			
 			db.removePostFromWinsome(idPost);
 			
 			sendError(TypeError.SUCCESS, writerOutput);
 			return;
-		}
-		
-		if(db.isPostInFeed(idPost, username)) {
-			sendError(TypeError.DELETEPOSTFEEDERROR, writerOutput);
+		}catch(NumberFormatException e) {
+			sendError(TypeError.NUMBERFORMATERRROR, writerOutput);
 			return;
 		}
 		
-		if(db.isPostAuthor(idPost, username) == false) {
-			sendError(TypeError.POSTNOTINYOURBLOG, writerOutput);
-			return;
-		}
-		
-		db.removePostFromWinsome(idPost);
-		
-		sendError(TypeError.SUCCESS, writerOutput);
-		return;
 	}
 	
 	@Override
@@ -166,40 +177,46 @@ public class PostServicesImpl implements PostServices {
 			return;
 		}
 		
-		int idPost = Integer.parseInt(idPostToParse);
-		int vote = Integer.parseInt(voteToParse);
+		try {
+			int idPost = Integer.parseInt(idPostToParse);
+			int vote = Integer.parseInt(voteToParse);
+			
+			String authorVote = db.getUsernameBySocket(socket);
+			
+			if(db.isPostNotNull(idPost) == false) {
+				sendError(TypeError.VOTEPOSTNOTEXISTS, writerOutput);
+				return;
+			}
+			
+			if(db.isPostAuthor(idPost, authorVote)) {
+				sendError(TypeError.VOTEAUTHORPOST, writerOutput);
+				return;
+			}
+			
+			if(db.isPostInFeed(idPost, authorVote) == false) {
+				sendError(TypeError.VOTEPOSTNOTINFEED, writerOutput);
+				return;
+			}
+			
+			if(db.isPostAlreadyVotedByUser(idPost, authorVote)) {
+				sendError(TypeError.VOTEALREADYEXISTS, writerOutput);
+				return;
+			}
+			
+			if(vote != 1 && vote != -1) {
+				sendError(TypeError.VOTENUMBERNOTVALID, writerOutput);
+				return;
+			}
+			
+			db.addVoteToPost(idPost, vote, authorVote);
+			sendError(TypeError.SUCCESS, writerOutput);
 		
-		String authorVote = db.getUsernameBySocket(socket);
-		
-		if(db.isPostNotNull(idPost) == false) {
-			sendError(TypeError.VOTEPOSTNOTEXISTS, writerOutput);
+			return;
+		}catch(NumberFormatException e) {
+			sendError(TypeError.NUMBERFORMATERRROR, writerOutput);
 			return;
 		}
 		
-		if(db.isPostAuthor(idPost, authorVote)) {
-			sendError(TypeError.VOTEAUTHORPOST, writerOutput);
-			return;
-		}
-		
-		if(db.isPostInFeed(idPost, authorVote) == false) {
-			sendError(TypeError.VOTEPOSTNOTINFEED, writerOutput);
-			return;
-		}
-		
-		if(db.isPostAlreadyVotedByUser(idPost, authorVote)) {
-			sendError(TypeError.VOTEALREADYEXISTS, writerOutput);
-			return;
-		}
-		
-		if(vote != 1 && vote != -1) {
-			sendError(TypeError.VOTENUMBERNOTVALID, writerOutput);
-			return;
-		}
-		
-		db.addVoteToPost(idPost, vote, authorVote);
-		sendError(TypeError.SUCCESS, writerOutput);
-	
-		return;
 	}
 	
 	@Override
@@ -210,28 +227,29 @@ public class PostServicesImpl implements PostServices {
 		}
 		
 		int idPost = Integer.parseInt(idPostToParse);
-		
+
 		String authorComment = db.getUsernameBySocket(socket);
-		
+
 		if(db.isPostNotNull(idPost) == false) {
 			sendError(TypeError.IDPOSTNOTEXISTS, writerOutput);
 			return;
 		}
-		
+
 		if(db.isPostAuthor(idPost, authorComment)) {
 			sendError(TypeError.POSTINYOURBLOG, writerOutput);
 			return;
 		}
-		
+
 		if(db.isPostInFeed(idPost, authorComment) == false) {
 			sendError(TypeError.POSTNOTINYOURFEED, writerOutput);
 			return;
 		}
-		
+
 		db.addCommentToPost(idPost, contentComment, authorComment);
 		sendError(TypeError.SUCCESS, writerOutput);
-		
+
 		return;
+
 	}
 	
 	@Override
@@ -240,29 +258,35 @@ public class PostServicesImpl implements PostServices {
 			sendError(TypeError.CLIENTNOTLOGGED, writerOutput);
 			return;
 		}
+		
+		try {
+			int idPost = Integer.parseInt(idPostToParse);
+			String authorRewin = db.getUsernameBySocket(socket);
 			
-		int idPost = Integer.parseInt(idPostToParse);
-		String authorRewin = db.getUsernameBySocket(socket);
+			if(db.isPostNotNull(idPost) == false) {
+				sendError(TypeError.IDPOSTNOTEXISTS, writerOutput);
+				return;
+			}
+			
+			if(db.isPostAuthor(idPost, authorRewin)) {
+				sendError(TypeError.POSTINYOURBLOG, writerOutput);
+				return;
+			}
 		
-		if(db.isPostNotNull(idPost) == false) {
-			sendError(TypeError.IDPOSTNOTEXISTS, writerOutput);
+			if(db.isPostInFeed(idPost, authorRewin) == false) {
+				sendError(TypeError.POSTNOTINYOURFEED, writerOutput);
+				return;
+			}
+			
+			db.addRewinToPost(idPost, authorRewin);
+			sendError(TypeError.SUCCESS, writerOutput);
+		
+			return;
+		}catch(NumberFormatException e) {
+			sendError(TypeError.NUMBERFORMATERRROR, writerOutput);
 			return;
 		}
 		
-		if(db.isPostAuthor(idPost, authorRewin)) {
-			sendError(TypeError.POSTINYOURBLOG, writerOutput);
-			return;
-		}
-	
-		if(db.isPostInFeed(idPost, authorRewin) == false) {
-			sendError(TypeError.POSTNOTINYOURFEED, writerOutput);
-			return;
-		}
-		
-		db.addRewinToPost(idPost, authorRewin);
-		sendError(TypeError.SUCCESS, writerOutput);
-	
-		return;
 	}
 
 	private void sendError(String error, BufferedWriter writerOutput) throws IOException {
